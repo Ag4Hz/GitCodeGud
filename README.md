@@ -1,6 +1,7 @@
 # GitCodeGud
 ## Competition: 
 **boot.dev, devActivity, BountyHub**
+
 On **boot.dev**, users can learn programming and earn XP in the process.
 On **devActivity**, users can gain experience while contributing to a project and earn XP.
 On **BountyHub**, users can fix bugs in other people’s repositories for money, but the platform lacks skill progression, personal development features, and gamification.
