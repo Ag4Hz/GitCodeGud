@@ -13,7 +13,7 @@ This application would assist programmers by allowing them to link their git rep
  Bug hunting, with a modern, more engaging look and feel.
 
 ## Technology stack:
-- GitHub/GitLab login using OAuth2 (Laravel Socialite)
+- GitHub/~~GitLab~~ login using OAuth2 (Laravel Socialite)
 - PostgreSQL database for storing data
 - Vue.js, Tailwind CSS – frontend
 - Laravel – backend
