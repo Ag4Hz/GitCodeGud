@@ -10,7 +10,7 @@ class UsersReview extends Model
 {
     use HasFactory;
 
-    protected $table = 'users_reviews';
+    protected $table = 'users_review';
 
     public $timestamps = true;
 

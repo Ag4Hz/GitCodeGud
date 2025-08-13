@@ -49,65 +49,47 @@ class User extends Authenticatable
             'xp' => 'integer',
         ];
     }
-
-
     //Users - Repos
-    public function repos(): BelongsToMany
+    public function repos(): HasMany
     {
-        return $this -> belongsToMany(Repo::class,'user_repos')
-                     -> withPivot('role')
-                     -> withTimestamps();
+        return $this -> hasMany(Repo::class);
     }
-
-    //Users - User_Skills
-    public function skills(): BelongsToMany
+    //Users Users_Review
+    public function reviewsAsReviewer(): HasMany
     {
-        return $this -> belongsToMany(Skill::class,'user_skills')
-                     -> withPivot('xp','level')
-                     -> withTimestamps();
+        return $this->hasMany(UsersReview::class, 'reviewer_id');
     }
-
+    public function reviewsAsReviewee(): HasMany
+    {
+        return $this->hasMany(UsersReview::class, 'reviewee_id');
+    }
+    //Users Submissions
+    public function submissions(): HasMany
+    {
+        return $this -> hasMany(Submission::class);
+    }
     //Users - User_Badges
     public function badges(): BelongsToMany
     {
         return $this -> belongsToMany(Badge::class,'user_badges')
                      ->withTimestamps();
     }
-
-    //Users Submissions
-    public function submissions(): HasMany
+    //Users - User_Skills
+    public function skills(): BelongsToMany
     {
-        return $this -> hasMany(Submission::class);
+        return $this -> belongsToMany(Skill::class,'user_skills')
+            -> withPivot('xp','level')
+            -> withTimestamps();
     }
-
-    // Users - Users_Review
-    // Get reviews this user has written (as reviewer).
-    public function reviewsGiven(): BelongsToMany
-    {
-        return $this->belongsToMany(Review::class, 'users_review', 'reviewer_id', 'review_id')
-            ->withPivot('reviewee_id')
-            ->withTimestamps();
-    }
-
-    // Users - Users_Review
-    // Get reviews this user has received (as reviewee).
-    public function reviewsReceived(): BelongsToMany
-    {
-        return $this->belongsToMany(Review::class, 'users_review', 'reviewee_id', 'review_id')
-            ->withPivot('reviewer_id')
-            ->withTimestamps();
-    }
-
     //Users - Followers
-    public function followers():HasMany
+    public function followers(): BelongsToMany
     {
-        return $this->hasMany(Follower::class,'user_id');
+        return $this->belongsToMany(User::class, 'followers', 'followed_id', 'follower_id')
+            ->withTimestamps();
     }
-
-    public function following():HasMany
+    public function following(): BelongsToMany
     {
-        return $this ->hasMany(Follower::class,'follower_user_id');
+        return $this->belongsToMany(User::class, 'followers', 'follower_id', 'followed_id')
+            ->withTimestamps();
     }
-
-
 }

@@ -22,33 +22,9 @@ class Review extends Model
             'updated_at' => 'datetime',
         ];
     }
-
-    //Many-to-many relationship through users_review pivot table.
-    public function reviewers():BelongsToMany
-    {
-        return $this -> belongsToMany(User::class, 'users_review', 'review_id', 'reviewer_id')
-            ->withPivot('reviewee_id')
-            ->withTimestamps();
-    }
-    public function reviewee():BelongsToMany
-    {
-        return $this -> belongsToMany(User::class, 'users_review', 'review_id', 'reviewee_id')
-                     ->withPivot('reviewee_id')
-                     ->withTimestamps();
-    }
-
-    //Many-to-many relationship through users_review pivot table.
-    public function reviewees(): BelongsToMany
-    {
-        return $this->belongsToMany(User::class, 'users_review', 'review_id', 'reviewee_id')
-            ->withPivot('reviewer_id')
-            ->withTimestamps();
-    }
-
-    //gives you access to reviewer, reviewee, and review in one query.
-    public function reviewRelationships()
+    // Users_Review - Review (n-1 kapcsolat)
+    public function reviewRelationships(): HasMany
     {
         return $this->hasMany(UsersReview::class, 'review_id');
     }
-
 }
