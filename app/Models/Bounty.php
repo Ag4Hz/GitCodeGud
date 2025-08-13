@@ -13,6 +13,7 @@ class Bounty extends Model
     use HasFactory;
 
     protected $fillable = [
+        'issue_id',
         'status',
         'description',
         'reward_xp'
@@ -31,5 +32,11 @@ class Bounty extends Model
     {
         return $this->hasMany(Submission::class);
     }
+
+    public function issue(): belongsTo
+    {
+        return $this->belongsTo(Issue::class);
+    }
+
 
 }

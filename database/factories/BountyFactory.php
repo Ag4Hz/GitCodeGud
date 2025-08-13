@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Bounty;
+use App\Models\Issue;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -18,8 +19,9 @@ class BountyFactory extends Factory
     public function definition(): array
     {
         return [
+            'issue_id' => Issue::factory(),
             'status' => $this->faker->randomElement(['open', 'closed']),
-            'title'       => $this->faker->title(),
+            'title' => 'Fix ' . $this->faker->word() . ' ' . $this->faker->word(),
             'description' => $this->faker->sentence(),
             'reward_xp' => $this->faker->numberBetween(5, 100),
 
