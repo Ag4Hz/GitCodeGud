@@ -5,7 +5,7 @@ namespace App\Models;
 use Database\Factories\FollowerFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Follower extends Model
 {
@@ -13,8 +13,8 @@ class Follower extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id',
-        'follower_user_id'
+        'follower_id',
+        'followed_id'
     ];
 
     protected $casts = [
@@ -24,8 +24,13 @@ class Follower extends Model
 
     public $timestamps = true;
 
-    public function user(): BelongsTo
+    public function follower(): BelongsToMany
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsToMany(User::class, 'follower_id');
+    }
+
+    public function followed(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'followed_id');
     }
 }
