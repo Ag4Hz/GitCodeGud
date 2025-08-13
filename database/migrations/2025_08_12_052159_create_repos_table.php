@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->string('description')->nullable();
-            $table->string('link');
+            $table->string('url');
             $table->string('git_id')->unique();
             $table->timestamps();
         });

@@ -3,9 +3,9 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -14,10 +14,13 @@ return new class extends Migration
         Schema::create('followers', function (Blueprint $table) {
             $table->id();
             $table->foreignId('follower_id')->constrained('users')->cascadeOnDelete();
-
-//            $table->check('follower_id <> followed_id');
+            $table->foreignId('followed_id')->constrained('users')->cascadeOnDelete();
             $table->timestamps();
+
+            $table->unique(['follower_id', 'followed_id']);
         });
+
+        DB::statement('ALTER TABLE followers ADD CONSTRAINT no_self_follow CHECK (follower_id <> followed_id)');
     }
 
     /**

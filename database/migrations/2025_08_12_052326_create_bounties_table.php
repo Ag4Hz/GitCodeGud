@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('bounties', function (Blueprint $table) {
             $table->id();
-            $table->string('status')->default('open');
+            $table->enum('status', ['open','closed'])->default('open');
             $table->string('title');
             $table->text('description')->nullable();
             $table->unsignedInteger('reward_xp')->default(0);
