@@ -26,11 +26,11 @@ class UserFactory extends Factory
         return [
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
-            'email_verified_at' => now(),
-            'password' => static::$password ??= Hash::make('password'),
-            'remember_token' => Str::random(10),
+            'oauth_provider' => fake()->randomElement(['github', null]),
+            'xp' => fake()->numberBetween(0, 500000),
         ];
     }
+
 
     /**
      * Indicate that the model's email address should be unverified.
