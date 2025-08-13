@@ -30,8 +30,6 @@ class UserFactory extends Factory
             'xp' => fake()->numberBetween(0, 500000),
         ];
     }
-
-
     /**
      * Indicate that the model's email address should be unverified.
      */
