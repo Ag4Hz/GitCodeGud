@@ -19,6 +19,7 @@ class BountyFactory extends Factory
     {
         return [
             'status' => $this->faker->randomElement(['open', 'closed']),
+            'title'       => $this->faker->title(),
             'description' => $this->faker->sentence(),
             'reward_xp' => $this->faker->numberBetween(5, 100),
 
