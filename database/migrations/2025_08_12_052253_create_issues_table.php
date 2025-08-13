@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('repo_id')->constrained('repos')->cascadeOnDelete();
             $table->text('description')->nullable();
+            $table->string('url');
             $table->timestamps();
         });
     }
