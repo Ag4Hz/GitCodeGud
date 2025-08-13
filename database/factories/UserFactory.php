@@ -26,7 +26,7 @@ class UserFactory extends Factory
         return [
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
-            'oauth_provider' => fake()->randomElement(['github', null]),
+            'oauth_provider' => fake()->randomElement(['github']),
             'xp' => fake()->numberBetween(0, 500000),
         ];
     }
