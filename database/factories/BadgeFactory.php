@@ -16,14 +16,9 @@ class BadgeFactory extends Factory
      */
     public function definition(): array
     {
-        $adjectives = ['Expert', 'Master', 'Pro', 'Champion', 'Ninja', 'Wizard', 'Guru', 'Legend',
-            'Hero', 'Elite', 'Ace', 'Specialist', 'Commander', 'Senior', 'Chief', 'Prime'];
-        $skills = ['Code', 'Bug', 'Team', 'Performance', 'Security', 'API', 'Database', 'Frontend',
-            'Backend', 'Testing', 'DevOps', 'Design', 'Mobile', 'Cloud', 'AI', 'Data'];
-
         return [
-            'name' => $this->faker->randomElement($skills) . ' ' . $this->faker->randomElement($adjectives),
-            'description' => $this->faker->sentence(8, true),
+            'name' => $this->faker->unique()->word() . ' ' . $this->faker->randomElement(['Expert', 'Master', 'Pro']),
+            'description' => $this->faker->sentence(6, true),
         ];
     }
 }

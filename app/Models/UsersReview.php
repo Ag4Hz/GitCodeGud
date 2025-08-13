@@ -11,8 +11,9 @@ class UsersReview extends Model
     use HasFactory;
 
     protected $table = 'users_review';
-
     public $timestamps = true;
+
+    public $incrementing = false;
 
     protected $fillable = [
         'review_id',
@@ -30,7 +31,7 @@ class UsersReview extends Model
 
     public function review():BelongsTo
     {
-        return $this->belongsTo(Review::class);
+        return $this->belongsTo(Review::class,'review_id');
     }
     public function reviewer(): BelongsTo
     {
