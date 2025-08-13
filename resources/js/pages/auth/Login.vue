@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import AuthBase from '@/layouts/AuthLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import { LoaderCircle } from 'lucide-vue-next';
+import NavBar from '@/components/NavBar.vue';
 
 defineProps<{
     status?: string;
@@ -28,6 +29,8 @@ const submit = () => {
 </script>
 
 <template>
+    <NavBar />
+
     <AuthBase title="Log in to your account" description="Enter your email and password below to log in">
         <Head title="Log in" />
 
