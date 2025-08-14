@@ -52,5 +52,8 @@ class BadgeUserSeeder extends Seeder
                 }
             }
         }
+        if (!empty($userBadgeData)) {
+            DB::table('user_badges')->insert($userBadgeData);
+        }
     }
 }
