@@ -18,7 +18,7 @@ class ReviewFactory extends Factory
     public function definition(): array
     {
         return [
-            'reviewer_id' => User::inRandomOrder()->first()?->id ?? User::factory(),
+            'user_id' => User::inRandomOrder()->first()?->id ?? User::factory(),
             'reviewee_id' => User::inRandomOrder()->first()?->id ?? User::factory(),
             'comment' => $this->faker->sentence($nbWords = 15, $variableNbWords = true),
             'date' => $this->faker->dateTimeBetween('-5 years', 'now'),

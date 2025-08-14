@@ -13,14 +13,6 @@ class Skill extends Model
         'skill_name',
     ];
 
-    protected function casts(): array
-    {
-        return[
-          'created_at' => 'datetime',
-          'updated_at' => 'datetime',
-        ];
-    }
-
     //Many-to-many relationship with User through user_skills pivot table.
     public function users(): BelongsToMany
     {

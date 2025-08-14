@@ -15,14 +15,6 @@ class Badge extends Model
         'description',
     ];
 
-    protected  function casts():array
-    {
-        return [
-            'created_at' => 'datetime',
-            'updated_at' => 'datetime',
-        ];
-    }
-
     public function users():BelongsToMany
     {
         return $this->belongsToMany(User::class)

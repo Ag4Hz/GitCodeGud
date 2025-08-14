@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class UserSkill extends Model
+class SkillUser extends Model
 {
     use HasFactory;
 
@@ -25,8 +25,6 @@ class UserSkill extends Model
         return[
             'xp'=>'integer',
             'level'=>'integer',
-            'created_at'=>'datetime',
-            'updated_at'=>'datetime',
         ];
     }
 
@@ -35,8 +33,6 @@ class UserSkill extends Model
     {
         return $this->belongsTo(User::class);
     }
-
-    //et the skill that belongs to this relationship.
     public function skill(): BelongsTo
     {
         return $this->belongsTo(Skill::class);

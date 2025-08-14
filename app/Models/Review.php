@@ -10,7 +10,7 @@ class Review extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'reviewer_id',
+        'user_id',
         'reviewee_id',
         'comment',
         'date',
@@ -20,14 +20,12 @@ class Review extends Model
     {
         return [
             'date' => 'date',
-            'created_at' => 'datetime',
-            'updated_at' => 'datetime',
         ];
     }
     // Review - Users (reviewer)
     public function reviewer(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'reviewer_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
     // Review - Users (reviewee)
     public function reviewee(): BelongsTo

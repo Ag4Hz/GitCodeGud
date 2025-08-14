@@ -4,15 +4,15 @@ namespace Database\Factories;
 
 use App\Models\User;
 use App\Models\Skill;
-use App\Models\UserSkill;
+use App\Models\SkillUser;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\UserSkill>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\SkillUser>
  */
 class SkillUserFactory extends Factory
 {
-    protected $model = UserSkill::class;
+    protected $model = SkillUser::class;
 
     public function definition(): array
     {

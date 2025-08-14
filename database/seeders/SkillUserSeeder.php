@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use App\Models\Skill;
-use App\Models\UserSkill;
+use App\Models\SkillUser;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -47,7 +47,7 @@ class SkillUserSeeder extends Seeder
                     $xp = rand(200000, 500000);
                 }
 
-                UserSkill::firstOrCreate(
+                SkillUser::firstOrCreate(
                     [
                         'user_id' => $user->id,
                         'skill_id' => $skill->id,
@@ -68,10 +68,10 @@ class SkillUserSeeder extends Seeder
             $userId = $users->random()->id;
             $skillId = $skills->random()->id;
 
-            if (!UserSkill::where('user_id', $userId)->where('skill_id', $skillId)->exists()) {
+            if (!SkillUser::where('user_id', $userId)->where('skill_id', $skillId)->exists()) {
                 $xp = rand(0, 500000);
 
-                UserSkill::create([
+                SkillUser::create([
                     'user_id' => $userId,
                     'skill_id' => $skillId,
                     'xp' => $xp,
