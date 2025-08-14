@@ -19,8 +19,8 @@ class UserSkillFactory extends Factory
         $xp = fake()->numberBetween(0, 500000);
 
         return [
-            'user_id' => User::factory(),
-            'skill_id' => Skill::factory(),
+            'user_id' => User::inRandomOrder()->first()?->id ?? User::factory(),
+            'skill_id' => Skill::inRandomOrder()->first()?->id ?? Skill::factory(),
             'xp' => $xp,
             'level' => $this->calculateLevel($xp),
         ];
