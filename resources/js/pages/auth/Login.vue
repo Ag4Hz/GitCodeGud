@@ -85,8 +85,8 @@ const submit = () => {
             </div>
 
             <div class="text-center text-sm text-muted-foreground">
-                Don't have an account?
-                <TextLink :href="route('register')" :tabindex="5">Sign up</TextLink>
+                Login with Github
+                <a :href="route('github.redirect')" tabindex="5" class="text-primary hover:underline"> Log in </a>
             </div>
         </form>
     </AuthBase>
