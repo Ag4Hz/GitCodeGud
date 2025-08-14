@@ -15,7 +15,6 @@ return new class extends Migration
             $table->string('oauth_provider_id')->nullable()->after('password');
             $table->string('oauth_provider')->nullable()->after('oauth_provider_id');
             $table->string('oauth_provider_token')->nullable()->after('oauth_provider');
-            $table->string('oauth_provider_refresh_token')->nullable()->after('oauth_provider_token');
         });
     }
 
@@ -28,7 +27,6 @@ return new class extends Migration
             $table->dropColumn('oauth_provider_id');
             $table->dropColumn('oauth_provider');
             $table->dropColumn('oauth_provider_token');
-            $table->dropColumn('oauth_provider_refresh_token');
         });
     }
 };
