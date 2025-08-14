@@ -29,7 +29,7 @@ class FollowerSeeder extends Seeder
 
             foreach ($targets as $target) {
                 Follower::query()->firstOrCreate([
-                    'follower_id' => $user->id,
+                    'user_id' => $user->id,
                     'followed_id' => $target->id,
                 ]);
             }

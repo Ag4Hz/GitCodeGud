@@ -19,15 +19,13 @@ class Bounty extends Model
         'description',
         'reward_xp'
     ];
-
-    protected $casts = [
-        'reward_xp' => 'integer',
-        'status' => 'string',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
-    ];
-
-    public $timestamps = true;
+    protected function casts(): array
+    {
+        return [
+            'reward_xp' => 'integer',
+            'status' => 'string',
+        ];
+    }
 
     public function submissions(): HasMany
     {

@@ -12,7 +12,6 @@ class Submission extends Model
     /** @use HasFactory<SubmissionFactory> */
     use HasFactory;
 
-    public $timestamps = true;
 
     protected $fillable = [
         'bounty_id',
@@ -20,11 +19,12 @@ class Submission extends Model
         'status'
     ];
 
-    protected $casts = [
-        'status' => 'string',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'status' => 'string',
+        ];
+    }
 
     public function bounty(): BelongsTo
     {

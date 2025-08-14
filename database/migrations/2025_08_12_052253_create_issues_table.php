@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('issues', function (Blueprint $table) {
             $table->id();
+            $table->string('title');
             $table->foreignId('repo_id')->constrained('repos')->cascadeOnDelete();
             $table->text('description')->nullable();
             $table->string('url');

@@ -13,20 +13,14 @@ class Follower extends Model
     use HasFactory;
 
     protected $fillable = [
-        'follower_id',
+        'user_id',
         'followed_id'
     ];
 
-    protected $casts = [
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
-    ];
-
-    public $timestamps = true;
 
     public function follower(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'follower_id');
+        return $this->belongsToMany(User::class, 'user_id');
     }
 
     public function followed(): BelongsToMany

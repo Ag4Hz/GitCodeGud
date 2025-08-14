@@ -13,8 +13,6 @@ class Repo extends Model
     /** @use HasFactory<RepoFactory> */
     use HasFactory;
 
-    public $timestamps = true;
-
     protected $fillable = [
         'user_id',
         'description',
@@ -22,14 +20,10 @@ class Repo extends Model
         'git_id'
     ];
 
-    protected $casts = [
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
-    ];
 
     public function users(): BelongsTo
     {
-        return $this -> BelongsTo(User::class);
+        return $this->BelongsTo(User::class);
     }
 
     public function issues(): HasMany

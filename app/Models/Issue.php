@@ -14,17 +14,11 @@ class Issue extends Model
     /** @use HasFactory<IssueFactory> */
     use HasFactory;
 
-    public $timestamps = true;
-
     protected $fillable = [
         'repo_id',
         'url',
-        'description'
-    ];
-
-    protected $casts = [
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
+        'description',
+        'name'
     ];
 
 
