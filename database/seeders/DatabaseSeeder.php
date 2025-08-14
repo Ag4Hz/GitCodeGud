@@ -19,5 +19,13 @@ class DatabaseSeeder extends Seeder
             UserSkillSeeder::class,
             UserBadgeSeeder::class,
         ]);
+
+        $this->call([
+            RepoSeeder::class,
+            IssueSeeder::class,
+            BountySeeder::class,
+            SubmissionSeeder::class,
+            FollowerSeeder::class,
+        ]);
     }
 }

@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('bounties', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('issue_id')->constrained('issues')->cascadeOnDelete();
+            $table->foreignId('issue_id')->unique()->constrained('issues')->cascadeOnDelete();
             $table->enum('status', ['open','closed'])->default('open');
             $table->string('title');
             $table->text('description')->nullable();
