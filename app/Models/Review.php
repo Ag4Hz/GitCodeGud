@@ -4,12 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Review extends Model
 {
     use HasFactory;
     protected $fillable = [
+        'reviewer_id',
+        'reviewee_id',
         'comment',
         'date',
     ];
@@ -22,9 +24,14 @@ class Review extends Model
             'updated_at' => 'datetime',
         ];
     }
-    // Users_Review - Review (n-1 kapcsolat)
-    public function reviewRelationships(): HasMany
+    // Review - Users (reviewer)
+    public function reviewer(): BelongsTo
     {
-        return $this->hasMany(UsersReview::class, 'review_id');
+        return $this->belongsTo(User::class, 'reviewer_id');
+    }
+    // Review - Users (reviewee)
+    public function reviewee(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'reviewee_id');
     }
 }

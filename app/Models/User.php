@@ -55,14 +55,14 @@ class User extends Authenticatable
     {
         return $this -> hasMany(Repo::class);
     }
-    //Users Users_Review
+    //Users - Reviews
     public function reviewsAsReviewer(): HasMany
     {
-        return $this->hasMany(UsersReview::class, 'reviewer_id');
+        return $this->hasMany(Review::class, 'reviewer_id');
     }
     public function reviewsAsReviewee(): HasMany
     {
-        return $this->hasMany(UsersReview::class, 'reviewee_id');
+        return $this->hasMany(Review::class, 'reviewee_id');
     }
     //Users Submissions
     public function submissions(): HasMany

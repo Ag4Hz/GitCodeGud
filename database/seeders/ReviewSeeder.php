@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Review;
+use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -10,8 +11,27 @@ class ReviewSeeder extends Seeder
 {
     public function run(): void
     {
+        $users = User::all();
+
+        if ($users->isEmpty()) {
+            $this->call(UserSeeder::class);
+            $users = User::all();
+        }
+
         $reviewCount = rand(50, 200);
-        Review::factory($reviewCount)->create();
+
+        for ($i = 0; $i < $reviewCount; $i++) {
+            $reviewer = $users->random();
+            $reviewee = $users->where('id', '!=', $reviewer->id)->random();
+
+            Review::create([
+                'reviewer_id' => $reviewer->id,
+                'reviewee_id' => $reviewee->id,
+                'comment' => fake()->sentence(rand(5, 20), true),
+                'date' => fake()->dateTimeBetween('-5 years', 'now'),
+            ]);
+        }
+
         $reviews = Review::all();
 
         $oldReviews = $reviews->random(rand(5, 15));
