@@ -13,7 +13,7 @@ class ReviewSeeder extends Seeder
     {
         $users = User::all();
 
-        if ($users->isEmpty()) {
+        if ($users->count() <= 1) {
             $this->call(UserSeeder::class);
             $users = User::all();
         }
