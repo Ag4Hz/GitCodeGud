@@ -13,7 +13,7 @@ defineProps<Props>();
 </script>
 
 <template>
-    <img src="@/../assets/logo.svg" alt="Logo icon">
+    <img src="@/../assets/logo.svg" alt="Logo icon" />
     <!--<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 42" :class="className" v-bind="$attrs">
         <path
             fill="currentColor"
