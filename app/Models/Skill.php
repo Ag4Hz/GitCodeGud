@@ -24,7 +24,7 @@ class Skill extends Model
     //Many-to-many relationship with User through user_skills pivot table.
     public function users(): BelongsToMany
     {
-        return $this -> belongsToMany(User::class,'user_skills')
+        return $this -> belongsToMany(User::class)
             ->withPivot('xp','level')
             ->withTimestamps();
     }

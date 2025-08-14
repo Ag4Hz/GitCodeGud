@@ -72,13 +72,13 @@ class User extends Authenticatable
     //Users - User_Badges
     public function badges(): BelongsToMany
     {
-        return $this -> belongsToMany(Badge::class,'user_badges')
+        return $this -> belongsToMany(Badge::class)
                      ->withTimestamps();
     }
     //Users - User_Skills
     public function skills(): BelongsToMany
     {
-        return $this -> belongsToMany(Skill::class,'user_skills')
+        return $this -> belongsToMany(Skill::class)
             -> withPivot('xp','level')
             -> withTimestamps();
     }

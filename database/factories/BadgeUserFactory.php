@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\UserBadge>
  */
-class UsersBadgeFactory extends Factory
+class BadgeUserFactory extends Factory
 {
     protected $model = UserBadge::class;
 

@@ -8,7 +8,7 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
-class UserBadgeSeeder extends Seeder
+class BadgeUserSeeder extends Seeder
 {
     /**
      * Run the database seeds.
