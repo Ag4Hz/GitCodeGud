@@ -10,19 +10,10 @@ class BadgeUser extends Model
 {
     use HasFactory;
     protected $table = 'user_badges';
-
-    public $timestamps = true;
     protected $fillable = [
       'user_id',
       'badge_id',
     ];
-    protected function casts(): array
-    {
-        return [
-            'created_at' => 'datetime',
-            'updated_at' => 'datetime',
-        ];
-    }
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
