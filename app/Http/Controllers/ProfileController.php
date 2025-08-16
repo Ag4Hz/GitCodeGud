@@ -9,9 +9,6 @@ use Inertia\Response;
 
 class ProfileController extends Controller
 {
-    /**
-     * Show the user's public profile page with XP and level information.
-     */
     public function show(Request $request): Response
     {
         $user = $request->user();
