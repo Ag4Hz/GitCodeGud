@@ -7,8 +7,9 @@ class XPHelper
     public static function getUserXPData(): array
     {
         return [
-            'total_xp' => 9000,
+            'total_xp' => 19000,
             'skills' => [
+
                 [
                     'skill_name' => 'PHP',
                     'xp' => 800,
