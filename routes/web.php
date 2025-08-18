@@ -16,5 +16,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
 });
 
+Route::get('leaderboard', function () {
+    return Inertia::render('Leaderboard');
+})->name('leaderboard');
+
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

@@ -14,6 +14,10 @@ const mainNavItems: NavItem[] = [
         href: '/dashboard',
         icon: LayoutGrid,
     },
+    {
+        title: 'Leaderboard',
+        href: '/leaderboard',
+    },
 ];
 
 const footerNavItems: NavItem[] = [
@@ -37,6 +41,9 @@ const footerNavItems: NavItem[] = [
                 <SidebarMenuItem>
                     <SidebarMenuButton size="lg" as-child>
                         <Link :href="route('dashboard')">
+                            <AppLogo />
+                        </Link>
+                        <Link :href="route('leaderboard')">
                             <AppLogo />
                         </Link>
                     </SidebarMenuButton>
