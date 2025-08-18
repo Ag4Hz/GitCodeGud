@@ -3,6 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useInitials } from '@/composables/useInitials';
+import { useXP } from '@/composables/useXP';
 import type { User } from '@/types';
 import { Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
@@ -21,33 +22,10 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const { getInitials } = useInitials();
+const { getUserXP } = useXP();
 
 const showAvatar = computed(() => props.user.avatar && props.user.avatar !== '');
-
-const userLevel = computed(() => {
-    if (props.user.level) return props.user.level;
-    if (props.user.total_xp) {
-        const xp = props.user.total_xp;
-        if (xp < 1000) return 1;
-        if (xp < 5000) return 2;
-        if (xp < 15000) return 3;
-        if (xp < 30000) return 4;
-        if (xp < 60000) return 5;
-        if (xp < 120000) return 6;
-        if (xp < 250000) return 7;
-        if (xp < 400000) return 8;
-        return 9;
-    }
-    return 1;
-});
-
-const formatXP = computed(() => {
-    const xp = props.user.total_xp || 0;
-    if (xp >= 1000) {
-        return `${(xp / 1000).toFixed(1)}k`;
-    }
-    return xp.toString();
-});
+const userXPData = computed(() => getUserXP(props.user));
 </script>
 
 <template>
@@ -70,15 +48,15 @@ const formatXP = computed(() => {
                 <TooltipTrigger as-child>
                     <div class="absolute -bottom-1 -right-1 flex items-center justify-center">
                         <Badge variant="secondary"
-                            class="h-5 min-w-5 px-1 text-xs font-bold bg-orange-500 text-white border-2 border-white dark:border-gray-900 shadow-sm cursor-help"
-                            :aria-label="`Level ${userLevel}, ${user.total_xp || 0} experience points`"
+                               class="h-5 min-w-5 px-1 text-xs font-bold bg-orange-500 text-white border-2 border-white dark:border-gray-900 shadow-sm cursor-help"
+                               :aria-label="`Level ${userXPData.level}, ${userXPData.totalXP} experience points`"
                         >
-                            {{ userLevel }}
+                            {{ userXPData.level }}
                         </Badge>
                     </div>
                 </TooltipTrigger>
                 <TooltipContent side="top" align="center">
-                    <p>Level {{ userLevel }} • {{ user.total_xp || 0 }} XP</p>
+                    <p>Level {{ userXPData.level }} • {{ userXPData.totalXP }} XP</p>
                 </TooltipContent>
             </Tooltip>
         </div>
@@ -86,8 +64,8 @@ const formatXP = computed(() => {
             <span class="truncate font-medium">{{ user.name }}</span>
             <div class="flex items-center gap-2">
                 <span v-if="showEmail" class="truncate text-xs text-muted-foreground">{{ user.email }}</span>
-                <span v-if="showXP && user.total_xp" class="text-xs text-muted-foreground">
-                    {{ formatXP }} XP
+                <span v-if="showXP && userXPData.totalXP" class="text-xs text-muted-foreground">
+                    {{ userXPData.formattedXP }} XP
                 </span>
             </div>
         </div>
