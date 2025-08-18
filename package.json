@@ -9,6 +9,7 @@
         "format:check": "prettier --check resources/",
         "lint": "eslint . --fix",
         "start": "concurrently \"npm run dev\" \"php -S localhost:8000 -t public\""
+
     },
     "devDependencies": {
         "@eslint/js": "^9.19.0",
