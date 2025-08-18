@@ -34,8 +34,7 @@ const activeItemStyles = computed(
     () => (url: string) => (isCurrentRoute.value(url) ? 'text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100' : ''),
 );
 
-const { getUserXP } = useXP();
-const userXPData = computed(() => getUserXP(auth.value.user));
+const { userXPData } = useXP();
 
 const mainNavItems: NavItem[] = [
     {

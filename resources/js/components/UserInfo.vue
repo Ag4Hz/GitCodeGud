@@ -25,7 +25,7 @@ const { getInitials } = useInitials();
 const { getUserXP } = useXP();
 
 const showAvatar = computed(() => props.user.avatar && props.user.avatar !== '');
-const userXPData = computed(() => getUserXP(props.user));
+const userXPData = computed(() => getUserXP.value(props.user));
 </script>
 
 <template>
