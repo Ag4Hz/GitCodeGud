@@ -15,10 +15,6 @@ class ProviderRedirectController extends Controller
     {
         $provider = 'github';
 
-        if ($provider != 'github') {
-            return redirect(route('login'))->withErrors(['provider' => 'Invalid provider']);
-        }
-
         try {
             return Socialite::driver($provider)->redirect();
         } catch (\Exception $e) {
