@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useInitials } from '@/composables/useInitials';
 import type { User } from '@/types';
 import { Link } from '@inertiajs/vue3';
@@ -65,19 +66,22 @@ const formatXP = computed(() => {
                     </AvatarFallback>
                 </Avatar>
             </component>
-            <div
-                v-if="showXP"
-                class="absolute -bottom-1 -right-1 flex items-center justify-center"
-            >
-                <Badge
-                    variant="secondary"
-                    class="h-5 min-w-5 px-1 text-xs font-bold bg-orange-500 text-white border-2 border-white dark:border-gray-900 shadow-sm"
-                >
-                    {{ userLevel }}
-                </Badge>
-            </div>
+            <Tooltip v-if="showXP">
+                <TooltipTrigger as-child>
+                    <div class="absolute -bottom-1 -right-1 flex items-center justify-center">
+                        <Badge variant="secondary"
+                            class="h-5 min-w-5 px-1 text-xs font-bold bg-orange-500 text-white border-2 border-white dark:border-gray-900 shadow-sm cursor-help"
+                            :aria-label="`Level ${userLevel}, ${user.total_xp || 0} experience points`"
+                        >
+                            {{ userLevel }}
+                        </Badge>
+                    </div>
+                </TooltipTrigger>
+                <TooltipContent side="top" align="center">
+                    <p>Level {{ userLevel }} • {{ user.total_xp || 0 }} XP</p>
+                </TooltipContent>
+            </Tooltip>
         </div>
-
         <div class="grid flex-1 text-left text-sm leading-tight">
             <span class="truncate font-medium">{{ user.name }}</span>
             <div class="flex items-center gap-2">

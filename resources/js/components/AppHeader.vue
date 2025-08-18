@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { NavigationMenu, NavigationMenuItem, NavigationMenuList, navigationMenuTriggerStyle } from '@/components/ui/navigation-menu';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import UserMenuContent from '@/components/UserMenuContent.vue';
 import { getInitials } from '@/composables/useInitials';
 import type { BreadcrumbItem, NavItem } from '@/types';
@@ -144,15 +145,21 @@ const mainNavItems: NavItem[] = [
                                         </AvatarFallback>
                                     </Avatar>
 
-                                    <!-- XP Level Badge Overlay -->
-                                    <div class="absolute -bottom-1 -right-1 flex items-center justify-center">
-                                        <Badge
-                                            variant="secondary"
-                                            class="h-4 min-w-4 px-1 text-xs font-bold bg-orange-500 text-white border-2 border-white dark:border-gray-900 shadow-sm"
-                                        >
-                                            {{ userLevel }}
-                                        </Badge>
-                                    </div>
+                                    <!-- XP Level Badge Overlay with Tooltip -->
+                                    <Tooltip>
+                                        <TooltipTrigger as-child>
+                                            <div class="absolute -bottom-1 -right-1 flex items-center justify-center">
+                                                <Badge
+                                                    variant="secondary" class="h-4 min-w-4 px-1 text-xs font-bold bg-orange-500 text-white border-2 border-white dark:border-gray-900 shadow-sm cursor-help"
+                                                    :aria-label="`Level ${userLevel}, ${auth.user.total_xp || 0} experience points`">
+                                                    {{ userLevel }}
+                                                </Badge>
+                                            </div>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="top" align="center">
+                                            <p>Level {{ userLevel }} • {{ auth.user.total_xp || 0 }} XP</p>
+                                        </TooltipContent>
+                                    </Tooltip>
                                 </div>
                             </Button>
                         </DropdownMenuTrigger>
