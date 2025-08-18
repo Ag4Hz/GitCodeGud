@@ -24,10 +24,15 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+<<<<<<< HEAD
+        'oauth_provider',
+        'xp',
+=======
         'oauth_provider_id',
         'oauth_provider',
         'oauth_provider_token',
         'oauth_provider_refresh_token'
+>>>>>>> 56148c818159dd160bcf6955cd0593624a88a4f9
     ];
 
     /**
