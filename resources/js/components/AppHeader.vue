@@ -47,6 +47,13 @@ const mainNavItems: NavItem[] = [
         href: '/leaderboard',
     },
 ];
+
+const rightNavItems: NavItem[] = [
+    {
+        title: 'Leaderboard',
+        href: '/leaderboard',
+    },
+];
 </script>
 
 <template>
