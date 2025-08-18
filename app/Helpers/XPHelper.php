@@ -4,12 +4,13 @@ namespace App\Helpers;
 
 class XPHelper
 {
+    private static array $xpThresholds = [0, 1000, 5000, 15000, 30000, 60000, 120000, 250000, 400000, 500000];
+
     public static function getUserXPData(): array
     {
         return [
             'total_xp' => 19000,
             'skills' => [
-
                 [
                     'skill_name' => 'PHP',
                     'xp' => 800,
@@ -26,25 +27,53 @@ class XPHelper
 
     public static function calculateLevel(int $xp): int
     {
-        if ($xp < 1000) return 1;
-        if ($xp < 5000) return 2;
-        if ($xp < 15000) return 3;
-        if ($xp < 30000) return 4;
-        if ($xp < 60000) return 5;
-        if ($xp < 120000) return 6;
-        if ($xp < 250000) return 7;
-        if ($xp < 400000) return 8;
-        return 9;
+        return match (true) {
+            $xp < 1000 => 1,
+            $xp < 5000 => 2,
+            $xp < 15000 => 3,
+            $xp < 30000 => 4,
+            $xp < 60000 => 5,
+            $xp < 120000 => 6,
+            $xp < 250000 => 7,
+            $xp < 400000 => 8,
+            default => 9,
+        };
     }
+
+    public static function getLevelProgress(int $totalXP, int $currentLevel): array
+    {
+        $currentLevelXP = self::$xpThresholds[$currentLevel - 1] ?? 0;
+        $nextLevelXP = self::$xpThresholds[$currentLevel] ?? 500000;
+
+        $progressXP = $totalXP - $currentLevelXP;
+        $totalNeeded = $nextLevelXP - $currentLevelXP;
+
+        $percentage = $totalNeeded > 0 ? round(($progressXP / $totalNeeded) * 100) : 100;
+        $percentage = min(100, max(0, $percentage));
+
+        return [
+            'current_level_xp' => $currentLevelXP,
+            'next_level_xp' => $nextLevelXP,
+            'progress_xp' => $progressXP,
+            'total_needed' => $totalNeeded,
+            'progress_percentage' => $percentage,
+        ];
+    }
+
     public static function getUserWithXP($user): array
     {
         $xpData = self::getUserXPData();
         $totalXP = $xpData['total_xp'];
+        $level = self::calculateLevel($totalXP);
+        $levelProgress = self::getLevelProgress($totalXP, $level);
 
         return array_merge($user->toArray(), [
             'total_xp' => $totalXP,
-            'level' => self::calculateLevel($totalXP),
+            'level' => $level,
             'skills' => $xpData['skills'],
+            'current_level_xp' => $levelProgress['current_level_xp'],
+            'next_level_xp' => $levelProgress['next_level_xp'],
+            'progress_percentage' => $levelProgress['progress_percentage'],
         ]);
     }
 }

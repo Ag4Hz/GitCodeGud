@@ -11,6 +11,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import UserMenuContent from '@/components/UserMenuContent.vue';
 import { getInitials } from '@/composables/useInitials';
+import { useXP } from '@/composables/useXP';
 import type { BreadcrumbItem, NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
 import { LayoutGrid, Menu, Search } from 'lucide-vue-next';
@@ -33,19 +34,8 @@ const activeItemStyles = computed(
     () => (url: string) => (isCurrentRoute.value(url) ? 'text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100' : ''),
 );
 
-// Use level from backend (calculated by XPHelper)
-const userLevel = computed(() => {
-    return auth.value.user.level || 1;
-});
-
-// Use formatted XP display
-const formatXP = computed(() => {
-    const xp = auth.value.user.total_xp || 0;
-    if (xp >= 1000) {
-        return `${(xp / 1000).toFixed(1)}k`;
-    }
-    return xp.toString();
-});
+const { getUserXP } = useXP();
+const userXPData = computed(() => getUserXP(auth.value.user));
 
 const mainNavItems: NavItem[] = [
     {
@@ -150,14 +140,16 @@ const mainNavItems: NavItem[] = [
                                         <TooltipTrigger as-child>
                                             <div class="absolute -bottom-1 -right-1 flex items-center justify-center">
                                                 <Badge
-                                                    variant="secondary" class="h-4 min-w-4 px-1 text-xs font-bold bg-orange-500 text-white border-2 border-white dark:border-gray-900 shadow-sm cursor-help"
-                                                    :aria-label="`Level ${userLevel}, ${auth.user.total_xp || 0} experience points`">
-                                                    {{ userLevel }}
+                                                    variant="secondary"
+                                                    class="h-4 min-w-4 px-1 text-xs font-bold bg-orange-500 text-white border-2 border-white dark:border-gray-900 shadow-sm cursor-help"
+                                                    :aria-label="`Level ${userXPData.level}, ${userXPData.totalXP} experience points`"
+                                                >
+                                                    {{ userXPData.level }}
                                                 </Badge>
                                             </div>
                                         </TooltipTrigger>
                                         <TooltipContent side="top" align="center">
-                                            <p>Level {{ userLevel }} • {{ auth.user.total_xp || 0 }} XP</p>
+                                            <p>Level {{ userXPData.level }} • {{ userXPData.totalXP }} XP</p>
                                         </TooltipContent>
                                     </Tooltip>
                                 </div>
@@ -168,7 +160,7 @@ const mainNavItems: NavItem[] = [
                                 <div class="flex flex-col space-y-1 leading-none">
                                     <p class="font-medium">{{ auth.user.name }}</p>
                                     <p class="text-xs text-muted-foreground">
-                                        Level {{ userLevel }} • {{ formatXP }} XP
+                                        Level {{ userXPData.level }} • {{ userXPData.formattedXP }} XP
                                     </p>
                                 </div>
                             </div>
