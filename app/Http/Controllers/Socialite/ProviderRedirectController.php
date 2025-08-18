@@ -16,7 +16,12 @@ class ProviderRedirectController extends Controller
         $provider = 'github';
 
         try {
-            return Socialite::driver($provider)->redirect();
+            return Socialite::driver($provider)
+                ->scopes([
+                    'read:repo',
+                    'read:issue'
+                ])
+                ->redirect();
         } catch (\Exception $e) {
             return redirect(route('login'))->withErrors(['provider' => 'Unable to connect to GitHub.']);
         }
