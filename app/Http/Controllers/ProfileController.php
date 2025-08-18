@@ -11,13 +11,8 @@ class ProfileController extends Controller
 {
     public function show(Request $request): Response
     {
-        $user = $request->user();
-
-        // Use centralized XP helper for consistency
-        $userWithXP = XPHelper::getUserWithXP($user);
-
         return Inertia::render('Profile', [
-            'user' => $userWithXP,
+            'user' => XPHelper::getUserWithXP($request->user()),
         ]);
     }
 }
