@@ -28,5 +28,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/bounties/{bounty}/edit', [BountyController::class, 'edit'])->name('bounties.edit');;
 });
 
+Route::get('leaderboard', function () {
+    return Inertia::render('Leaderboard');
+})->name('leaderboard');
+
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
