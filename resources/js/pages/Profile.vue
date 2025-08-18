@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useInitials } from '@/composables/useInitials';
+import { useXP } from '@/composables/useXP';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem, type User } from '@/types';
 import { Trophy, Zap, Star, Target } from 'lucide-vue-next';
@@ -12,6 +13,9 @@ import { computed } from 'vue';
 interface UserWithXP extends Omit<User, 'skills'> {
     total_xp: number;
     level: number;
+    current_level_xp: number;
+    next_level_xp: number;
+    progress_percentage: number;
     skills: Array<{
         skill_name: string;
         xp: number;
@@ -26,6 +30,7 @@ interface Props {
 const props = defineProps<Props>();
 
 const { getInitials } = useInitials();
+const { formatXP } = useXP();
 
 const breadcrumbItems: BreadcrumbItem[] = [
     {
@@ -34,31 +39,15 @@ const breadcrumbItems: BreadcrumbItem[] = [
     },
 ];
 
-// Calculate progress to next level
-const nextLevelXP = computed(() => {
-    const currentLevel = props.user.level;
-    const xpThresholds = [0, 1000, 5000, 15000, 30000, 60000, 120000, 250000, 400000, 500000];
-    return xpThresholds[currentLevel] || 500000;
+const levelProgress = computed(() => {
+    return {
+        currentLevelXP: props.user.current_level_xp ?? 0,
+        nextLevelXP: props.user.next_level_xp ?? 0,
+        progressXP: props.user.total_xp - (props.user.current_level_xp ?? 0),
+        totalNeeded: (props.user.next_level_xp ?? 0) - (props.user.current_level_xp ?? 0),
+        percentage: props.user.progress_percentage ?? 0
+    };
 });
-
-const currentLevelXP = computed(() => {
-    const currentLevel = props.user.level;
-    const xpThresholds = [0, 1000, 5000, 15000, 30000, 60000, 120000, 250000, 400000];
-    return xpThresholds[currentLevel - 1] || 0;
-});
-
-const progressToNextLevel = computed(() => {
-    const current = props.user.total_xp - currentLevelXP.value;
-    const total = nextLevelXP.value - currentLevelXP.value;
-    return Math.round((current / total) * 100);
-});
-
-const formatXP = (xp: number) => {
-    if (xp >= 1000) {
-        return `${(xp / 1000).toFixed(1)}k`;
-    }
-    return xp.toString();
-};
 </script>
 
 <template>
@@ -113,18 +102,18 @@ const formatXP = (xp: number) => {
                             Level Progress
                         </CardTitle>
                         <CardDescription>
-                            {{ formatXP(props.user.total_xp - currentLevelXP) }} / {{ formatXP(nextLevelXP - currentLevelXP) }} XP to next level
+                            {{ formatXP(levelProgress.progressXP) }} / {{ formatXP(levelProgress.totalNeeded) }} XP to next level
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div class="space-y-2">
                             <div class="w-full bg-gray-200 rounded-full h-3 dark:bg-gray-700">
-                                <div class="bg-blue-600 h-3 rounded-full transition-all duration-300 ease-in-out" :style="`width: ${progressToNextLevel}%`"></div>
+                                <div class="bg-blue-600 h-3 rounded-full transition-all duration-300 ease-in-out" :style="`width: ${levelProgress.percentage}%`"></div>
                             </div>
                             <div class="flex justify-between text-xs text-muted-foreground">
-                                <span>Level {{ props.user.level }}</span>
-                                <span v-if="props.user.level < 9">{{ progressToNextLevel }}%</span>
-                                <span v-if="props.user.level < 9">Level {{ props.user.level + 1 }}</span>
+                                <span>Level {{ user.level }}</span>
+                                <span v-if="user.level < 9">{{ levelProgress.percentage }}%</span>
+                                <span v-if="user.level < 9">Level {{ user.level + 1 }}</span>
                                 <span v-else>Max Level</span>
                             </div>
                         </div>
