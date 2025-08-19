@@ -19,7 +19,13 @@ defineProps<Props>();
 <template>
     <DropdownMenuLabel class="p-0 font-normal">
         <div class="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-            <UserInfo :user="user" :show-email="true" :show-xp="true" :clickable="false" />
+            <UserInfo
+                :user="user"
+                :show-email="true"
+                :show-xp="true"
+                :show-description="true"
+                :clickable="false"
+            />
         </div>
     </DropdownMenuLabel>
     <DropdownMenuSeparator />

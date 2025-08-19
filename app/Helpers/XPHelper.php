@@ -67,7 +67,10 @@ class XPHelper
         $level = self::calculateLevel($totalXP);
         $levelProgress = self::getLevelProgress($totalXP, $level);
 
-        return array_merge($user->toArray(), [
+        $userData = $user->toArray();
+        $userData['avatar'] = $user->avatar;
+
+        return array_merge($userData, [
             'total_xp' => $totalXP,
             'level' => $level,
             'skills' => $xpData['skills'],

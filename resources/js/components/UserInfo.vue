@@ -12,12 +12,14 @@ interface Props {
     user: User;
     showEmail?: boolean;
     showXP?: boolean;
+    showDescription?: boolean;
     clickable?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
     showEmail: false,
     showXP: true,
+    showDescription: true,
     clickable: true,
 });
 
@@ -26,6 +28,7 @@ const { getUserXP } = useXP();
 
 const showAvatar = computed(() => props.user.avatar && props.user.avatar !== '');
 const userXPData = computed(() => getUserXP.value(props.user));
+
 </script>
 
 <template>
@@ -66,6 +69,11 @@ const userXPData = computed(() => getUserXP.value(props.user));
                 <span v-if="showEmail" class="truncate text-xs text-muted-foreground">{{ user.email }}</span>
                 <span v-if="showXP && userXPData.totalXP" class="text-xs text-muted-foreground">
                     {{ userXPData.formattedXP }} XP
+                </span>
+            </div>
+            <div v-if="showDescription && user.description" class="mt-1">
+                <span class="text-xs text-muted-foreground italic truncate block">
+                    "{{ user.description }}"
                 </span>
             </div>
         </div>
