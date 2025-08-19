@@ -44,31 +44,10 @@ class User extends Authenticatable
     }
     public function getAvatarAttribute(): ?string
     {
-        if ($this->oauth_provider !== 'github') {
+        if ($this->oauth_provider !== 'github' || !$this->oauth_provider_id) {
             return null;
         }
-
-        if ($this->github_username) {
-            return "https://github.com/{$this->github_username}.png";
-        }
-
-        if ($this->oauth_provider_id) {
-            $cacheKey = "github_avatar_{$this->oauth_provider_id}";
-
-            return Cache::remember($cacheKey, 1800, function () {
-                try {
-                    $response = Http::timeout(5)->get("https://api.github.com/user/{$this->oauth_provider_id}");
-                    if ($response->successful()) {
-                        return $response->json('avatar_url');
-                    }
-                } catch (\Exception $e) {
-                    Log::warning("Failed to fetch GitHub avatar for user {$this->id}: " . $e->getMessage());
-                }
-                return null;
-            });
-        }
-
-        return null;
+        return "https://avatars.githubusercontent.com/u/{$this->oauth_provider_id}?v=4";
     }
 
     //Users - Repos
