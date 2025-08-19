@@ -29,12 +29,6 @@ const { getUserXP } = useXP();
 const showAvatar = computed(() => props.user.avatar && props.user.avatar !== '');
 const userXPData = computed(() => getUserXP.value(props.user));
 
-const truncatedDescription = computed(() => {
-    if (!props.user.description) return '';
-    return props.user.description.length > 80
-        ? props.user.description.substring(0, 80) + '...'
-        : props.user.description;
-});
 </script>
 
 <template>
@@ -78,8 +72,8 @@ const truncatedDescription = computed(() => {
                 </span>
             </div>
             <div v-if="showDescription && user.description" class="mt-1">
-                <span class="text-xs text-muted-foreground italic">
-                    "{{ truncatedDescription }}"
+                <span class="text-xs text-muted-foreground italic truncate block">
+                    "{{ user.description }}"
                 </span>
             </div>
         </div>

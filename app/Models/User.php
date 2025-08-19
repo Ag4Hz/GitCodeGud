@@ -42,25 +42,33 @@ class User extends Authenticatable
             'xp' => 'integer',
         ];
     }
-
     public function getAvatarAttribute(): ?string
     {
-        if ($this->oauth_provider !== 'github' || !$this->oauth_provider_id) {
+        if ($this->oauth_provider !== 'github') {
             return null;
         }
-        $cacheKey = "github_avatar_{$this->oauth_provider_id}";
 
-        return Cache::remember($cacheKey, 1800, function () {
-            try {
-                $response = Http::timeout(5)->get("https://api.github.com/user/{$this->oauth_provider_id}");
-                if ($response->successful()) {
-                    return $response->json('avatar_url');
+        if ($this->github_username) {
+            return "https://github.com/{$this->github_username}.png";
+        }
+
+        if ($this->oauth_provider_id) {
+            $cacheKey = "github_avatar_{$this->oauth_provider_id}";
+
+            return Cache::remember($cacheKey, 1800, function () {
+                try {
+                    $response = Http::timeout(5)->get("https://api.github.com/user/{$this->oauth_provider_id}");
+                    if ($response->successful()) {
+                        return $response->json('avatar_url');
+                    }
+                } catch (\Exception $e) {
+                    Log::warning("Failed to fetch GitHub avatar for user {$this->id}: " . $e->getMessage());
                 }
-            } catch (\Exception $e) {
-                Log::warning("Failed to fetch GitHub avatar for user {$this->id}: " . $e->getMessage());
-            }
-            return null;
-        });
+                return null;
+            });
+        }
+
+        return null;
     }
 
     //Users - Repos
