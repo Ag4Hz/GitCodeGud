@@ -4,14 +4,12 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
 
 class User extends Authenticatable
 {
@@ -42,12 +40,18 @@ class User extends Authenticatable
             'xp' => 'integer',
         ];
     }
-    public function getAvatarAttribute(): ?string
+
+    protected function avatar(): Attribute
     {
-        if ($this->oauth_provider !== 'github' || !$this->oauth_provider_id) {
-            return null;
-        }
-        return "https://avatars.githubusercontent.com/u/{$this->oauth_provider_id}?v=4";
+        return Attribute::make(
+            get: function () {
+                if ($this->oauth_provider !== 'github' || !$this->oauth_provider_id) {
+                    return null;
+                }
+
+                return "https://avatars.githubusercontent.com/u/{$this->oauth_provider_id}?v=4";
+            },
+        );
     }
 
     //Users - Repos
