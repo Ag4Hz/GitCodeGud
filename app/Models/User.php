@@ -9,17 +9,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
         'name',
         'email',
@@ -30,23 +27,12 @@ class User extends Authenticatable
         'oauth_provider_refresh_token'
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
         'oauth_provider_token',
         'oauth_provider_refresh_token'
     ];
-
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
@@ -55,31 +41,57 @@ class User extends Authenticatable
             'xp' => 'integer',
         ];
     }
+
+    public function getAvatarAttribute(): ?string
+    {
+        if ($this->oauth_provider !== 'github' || !$this->oauth_provider_id) {
+            return null;
+        }
+        $cacheKey = "github_avatar_{$this->oauth_provider_id}";
+
+        return Cache::remember($cacheKey, 1800, function () {
+            try {
+                $response = Http::timeout(5)->get("https://api.github.com/user/{$this->oauth_provider_id}");
+                if ($response->successful()) {
+                    return $response->json('avatar_url');
+                }
+            } catch (\Exception $e) {
+                Log::warning("Failed to fetch GitHub avatar for user {$this->id}: " . $e->getMessage());
+            }
+            return null;
+        });
+    }
+
     //Users - Repos
     public function repos(): HasMany
     {
         return $this -> hasMany(Repo::class);
     }
+
     //Users - Reviews
     public function reviewsAsReviewer(): HasMany
     {
         return $this->hasMany(Review::class, 'user_id');
     }
+
     public function reviewsAsReviewee(): HasMany
     {
         return $this->hasMany(Review::class, 'reviewee_id');
     }
+
     //Users Submissions
     public function submissions(): HasMany
     {
         return $this -> hasMany(Submission::class);
     }
+
     //Users - User_Badges
     public function badges(): BelongsToMany
     {
         return $this -> belongsToMany(Badge::class)
-                     ->withTimestamps();
+            ->withTimestamps();
     }
+
     //Users - User_Skills
     public function skills(): BelongsToMany
     {
@@ -87,6 +99,7 @@ class User extends Authenticatable
             -> withPivot('xp','level')
             -> withTimestamps();
     }
+
     //Users - Followers
     public function followers(): BelongsToMany
     {
