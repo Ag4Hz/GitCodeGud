@@ -33,6 +33,16 @@ export interface User {
     email_verified_at: string | null;
     created_at: string;
     updated_at: string;
-}
 
+    total_xp?: number;
+    level?: number;
+    skills?: UserSkill[];
+}
+export interface UserSkill {
+    id: number;
+    skill_id: number;
+    skill_name: string;
+    xp: number;
+    level: number;
+}
 export type BreadcrumbItemType = BreadcrumbItem;
