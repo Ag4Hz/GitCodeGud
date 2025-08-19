@@ -48,12 +48,6 @@ const mainNavItems: NavItem[] = [
     },
 ];
 
-const rightNavItems: NavItem[] = [
-    {
-        title: 'Leaderboard',
-        href: '/leaderboard',
-    },
-];
 </script>
 
 <template>
@@ -88,6 +82,7 @@ const rightNavItems: NavItem[] = [
                                 </nav>
                                 <div class="flex flex-col space-y-4">
                                     <!-- Mobile right nav items section - currently empty -->
+
                                 </div>
                             </div>
                         </SheetContent>
