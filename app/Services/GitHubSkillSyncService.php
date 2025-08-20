@@ -5,99 +5,80 @@ namespace App\Services;
 use App\Models\User;
 use App\Models\Skill;
 use App\Models\SkillUser;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 class GitHubSkillSyncService
 {
+    public function __construct(
+        private GitHubApiService $githubApi
+    ) {}
+
     public function syncUserSkillsFromGitHub(User $user): bool
     {
         try {
-            $repositories = $this->getUserRepositories($user);
+            $this->githubApi = new GitHubApiService($user);
+            if (!$this->githubApi->hasValidToken()) {
+                return false;
+            }
+
+            $repositories = $this->githubApi->getUserRepositories();
             if (empty($repositories)) {
                 return false;
             }
 
-            $languageStats = $this->getLanguageStatsFromRepos($user, $repositories);
-            $this->updateUserSkills($user, $languageStats);
+            $languageStats = $this->getLanguageStatsFromRepos($repositories);
 
+            if (empty($languageStats)) {
+                return false;
+            }
+
+            $this->updateUserSkills($user, $languageStats);
             return true;
         } catch (\Exception $e) {
             return false;
         }
     }
-    private function getUserRepositories(User $user): array
+
+    private function getLanguageStatsFromRepos(array $repositories): array
     {
-        $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $user->oauth_provider_token,
-            'Accept' => 'application/vnd.github.v3+json',
-            'User-Agent' => 'GitCodeGud-App'
-        ])->get('https://api.github.com/user/repos', [
-            'type' => 'owner',
-            'sort' => 'updated',
-            'per_page' => 100
-        ]);
-
-        if ($response->failed()) {
-            throw new \Exception('Failed to fetch GitHub repositories: ' . $response->status());
-        }
-
-        return $response->json();
-    }
-    private function getLanguageStatsFromRepos(User $user, array $repositories): array
-    {
-        $totalLanguageBytes = [];
-
-        foreach ($repositories as $repo) {
-            if ($repo['fork'] || $repo['archived']) {
-                continue;
-            }
-
-            $languages = $this->getRepositoryLanguages($user, $repo['full_name']);
-
-            foreach ($languages as $language => $bytes) {
-                $totalLanguageBytes[$language] = ($totalLanguageBytes[$language] ?? 0) + $bytes;
-            }
-        }
-
-        return $totalLanguageBytes;
+        return collect($repositories)
+            ->reject(fn($repo) => $repo['fork'] || $repo['archived'])
+            ->map(fn($repo) => [
+                'repo' => $repo['full_name'],
+                'languages' => $this->githubApi->getRepositoryLanguages($repo['full_name'])
+            ])
+            ->reject(fn($repoData) => empty($repoData['languages']))
+            ->tap(function ($repoCollection) {
+                $repoCollection->each(function ($repo) {
+                });
+            })
+            ->flatMap(fn($repoData) => $repoData['languages'])
+            ->groupBy(fn($bytes, $language) => $language)
+            ->map(fn($bytesCollection) => $bytesCollection->sum())
+            ->toArray();
     }
 
-    private function getRepositoryLanguages(User $user, string $repoFullName): array
-    {
-        $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $user->oauth_provider_token,
-            'Accept' => 'application/vnd.github.v3+json',
-            'User-Agent' => 'GitCodeGud-App'
-        ])->get("https://api.github.com/repos/{$repoFullName}/languages");
-
-        if ($response->failed()) {
-            return [];
-        }
-
-        return $response->json();
-    }
-    
     private function updateUserSkills(User $user, array $languageStats): void
     {
-        foreach ($languageStats as $language => $bytes) {
-            $skillType = $this->getSkillType($language);
+        collect($languageStats)
+            ->each(function ($bytes, $language) use ($user) {
+                $skillType = $this->getSkillType($language);
 
-            $skill = Skill::firstOrCreate([
-                'skill_name' => $language
-            ], [
-                'type' => $skillType
-            ]);
+                $skill = Skill::firstOrCreate([
+                    'skill_name' => $language
+                ], [
+                    'type' => $skillType
+                ]);
 
-            SkillUser::firstOrCreate([
-                'user_id' => $user->id,
-                'skill_id' => $skill->id,
-            ], [
-                'xp' => 1,
-                'level' => 1,
-            ]);
-        }
+                SkillUser::firstOrCreate([
+                    'user_id' => $user->id,
+                    'skill_id' => $skill->id,
+                ], [
+                    'xp' => 1,
+                    'level' => 1,
+                ]);
+            });
     }
+
     private function getSkillType(string $language): string
     {
         $language = trim($language);
@@ -109,7 +90,9 @@ class GitHubSkillSyncService
                 'Zig','Crystal','Fortran','COBOL','Ada','Pascal','Delphi','Assembly','OCaml','ReasonML','Clojure','Common Lisp','Scheme',
                 'Prolog','Visual Basic','VBA','VB.NET','Hack','Solidity','VHDL','Verilog','OpenCL','CUDA','GLSL','ShaderLab','GDScript',
                 'Q#','Tcl','Smalltalk','APL','Forth','Racket','Elm','PureScript','CoffeeScript','Awk','Sed','Gnuplot','Roff','Pony',
-                'Idris','Agda','Mercury','FoxPro','XQuery','RPG','ABAP','Inform','Pawn','Nemerle','LiveScript'
+                'Idris','Agda','Mercury','FoxPro','XQuery','RPG','ABAP','Inform','Pawn','Nemerle','LiveScript','HTML','CSS','SCSS',
+                'SASS','Less','Stylus','PostCSS','Pug','Jade','Haml','Slim','Handlebars','Mustache','Twig','Liquid','Smarty',
+                'Velocity','FreeMarker','Thymeleaf','JSP','ASP','ASPX','Razor','EJS','ERB','JSX','TSX','Svelte','Astro','MDX','MJML','AMP'
             ],
 
             'framework' => [
@@ -141,13 +124,7 @@ class GitHubSkillSyncService
                 'GraphQL','Apollo','Prisma','Hasura'
             ],
         ];
-
-        foreach ($categories as $type => $list) {
-            if (in_array($language, $list, true)) {
-                return $type;
-            }
-        }
-
-        return 'other';
+        return collect($categories)
+            ->search(fn($languages) => in_array($language, $languages, true)) ?: 'other';
     }
 }
