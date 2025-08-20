@@ -46,6 +46,7 @@ class XPHelper
         $skills = $user->skills->map(function ($skill) {
             return [
                 'skill_name' => $skill->skill_name,
+                'type' => $skill->type ?? 'other',
                 'xp' => $skill->pivot->xp,
                 'level' => $skill->pivot->level,
             ];

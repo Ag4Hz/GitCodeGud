@@ -11,7 +11,15 @@ class Skill extends Model
     Use HasFactory;
     protected $fillable = [
         'skill_name',
+        'type',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'type' => 'string',
+        ];
+    }
 
     public function users(): BelongsToMany
     {
