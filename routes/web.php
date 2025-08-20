@@ -29,8 +29,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/bounties/{bounty}/edit', [BountyController::class, 'edit'])->name('bounties.edit');;
 });
 
-Route::get('/leaderboard', [LeaderboardController::class, 'index'])
-    ->name('leaderboard');
+Route::middleware('auth')->group(function () {
+    Route::get('/leaderboard', [LeaderboardController::class, 'index'])
+        ->name('leaderboard');
+});
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
