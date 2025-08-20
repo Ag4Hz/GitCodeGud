@@ -1,29 +1,11 @@
 <?php
 
 namespace App\Helpers;
+use App\Models\User;
 
 class XPHelper
 {
     private static array $xpThresholds = [0, 1000, 5000, 15000, 30000, 60000, 120000, 250000, 400000, 500000];
-
-    public static function getUserXPData(): array
-    {
-        return [
-            'total_xp' => 19000,
-            'skills' => [
-                [
-                    'skill_name' => 'PHP',
-                    'xp' => 800,
-                    'level' => 2,
-                ],
-                [
-                    'skill_name' => 'JavaScript',
-                    'xp' => 1200,
-                    'level' => 2,
-                ],
-            ],
-        ];
-    }
 
     public static function calculateLevel(int $xp): int
     {
@@ -60,10 +42,20 @@ class XPHelper
         ];
     }
 
-    public static function getUserWithXP($user): array
+    public static function getUserWithXP(User $user): array
     {
-        $xpData = self::getUserXPData();
-        $totalXP = $xpData['total_xp'];
+        $skillsCollection = $user->skills->map(function ($skill) {
+            return [
+                'skill_name' => $skill->skill_name,
+                'type' => $skill->type ,
+                'xp' => $skill->pivot->xp,
+                'level' => $skill->pivot->level,
+            ];
+        });
+
+        $totalXP = $skillsCollection->sum('xp');
+        $skills = $skillsCollection->toArray();
+
         $level = self::calculateLevel($totalXP);
         $levelProgress = self::getLevelProgress($totalXP, $level);
 
@@ -73,7 +65,7 @@ class XPHelper
         return array_merge($userData, [
             'total_xp' => $totalXP,
             'level' => $level,
-            'skills' => $xpData['skills'],
+            'skills' => $skills,
             'current_level_xp' => $levelProgress['current_level_xp'],
             'next_level_xp' => $levelProgress['next_level_xp'],
             'progress_percentage' => $levelProgress['progress_percentage'],

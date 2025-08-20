@@ -14,6 +14,8 @@ return new class extends Migration
         Schema::create('skills', function (Blueprint $table) {
             $table->id();
             $table->string('skill_name')->unique();
+            $table->enum('type', ['language', 'framework', 'tool', 'database', 'other'])
+                ->default('other');
             $table->timestamps();
         });
     }

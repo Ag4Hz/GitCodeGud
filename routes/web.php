@@ -16,5 +16,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
 });
 
+Route::middleware('auth')->group(function () {
+    Route::post('/profile/sync-github-skills', [ProfileController::class, 'syncGitHubSkills'])
+        ->name('profile.sync-github-skills');
+});
+
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

@@ -11,12 +11,19 @@ class Skill extends Model
     Use HasFactory;
     protected $fillable = [
         'skill_name',
+        'type',
     ];
 
-    //Many-to-many relationship with User through user_skills pivot table.
+    protected function casts(): array
+    {
+        return [
+            'type' => 'string',
+        ];
+    }
+
     public function users(): BelongsToMany
     {
-        return $this -> belongsToMany(User::class)
+        return $this -> belongsToMany(User::class,'user_skills')
             ->withPivot('xp','level')
             ->withTimestamps();
     }
