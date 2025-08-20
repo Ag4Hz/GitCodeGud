@@ -13,12 +13,9 @@ use Inertia\Response;
 
 class ProfileController extends Controller
 {
-    protected GitHubSkillSyncService $gitHubSkillSync;
-
-    public function __construct(GitHubSkillSyncService $gitHubSkillSync)
-    {
-        $this->gitHubSkillSync = $gitHubSkillSync;
-    }
+    public function __construct(
+        protected GitHubSkillSyncService $gitHubSkillSync
+    ) {}
 
     public function show(Request $request): Response
     {
@@ -38,10 +35,9 @@ class ProfileController extends Controller
 
         $success = $this->gitHubSkillSync->syncUserSkillsFromGitHub($user);
 
-        if ($success) {
-            return redirect()->route('profile.show')->with('success', 'Skills successfully synced from GitHub!');
-        } else {
+        if (!$success) {
             return redirect()->back()->with('error', 'Failed to sync skills from GitHub. Please try again.');
         }
+        return redirect()->route('profile.show')->with('success', 'Skills successfully synced from GitHub!');
     }
 }

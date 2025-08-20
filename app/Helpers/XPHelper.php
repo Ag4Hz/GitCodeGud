@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Helpers;
+use App\Models\User;
 
 class XPHelper
 {
@@ -41,18 +42,19 @@ class XPHelper
         ];
     }
 
-    public static function getUserWithXP($user): array
+    public static function getUserWithXP(User $user): array
     {
-        $skills = $user->skills->map(function ($skill) {
+        $skillsCollection = $user->skills->map(function ($skill) {
             return [
                 'skill_name' => $skill->skill_name,
-                'type' => $skill->type ?? 'other',
+                'type' => $skill->type ,
                 'xp' => $skill->pivot->xp,
                 'level' => $skill->pivot->level,
             ];
-        })->toArray();
+        });
 
-        $totalXP = collect($skills)->sum('xp');
+        $totalXP = $skillsCollection->sum('xp');
+        $skills = $skillsCollection->toArray();
 
         $level = self::calculateLevel($totalXP);
         $levelProgress = self::getLevelProgress($totalXP, $level);
