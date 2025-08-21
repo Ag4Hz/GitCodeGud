@@ -21,3 +21,4 @@ const breadcrumbs: BreadcrumbItem[] = [{ title: 'Dashboard', href: '/dashboard' 
         </div>
     </AppLayout>
 </template>
+
