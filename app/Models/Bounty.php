@@ -16,6 +16,7 @@ class Bounty extends Model
     protected $fillable = [
         'issue_id',
         'status',
+        'title',
         'description',
         'reward_xp'
     ];
