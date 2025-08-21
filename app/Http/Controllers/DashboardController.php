@@ -24,6 +24,7 @@ class DashboardController extends Controller
                 'id'       => $user->id,
                 'nickname' => $user->nickname,
                 'avatar'   => $user->avatar,
+                'name'     => $user->name,
             ]);
     }
 }
