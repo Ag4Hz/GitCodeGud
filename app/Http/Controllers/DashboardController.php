@@ -10,12 +10,23 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
-        $users = User::select(['id', 'name', 'nickname'])
-            ->orderBy('nickname')
-            ->paginate(10);
+        $search = (string) $request->input('q', '');
 
-        return Inertia::render('Profile', [
-            'users' => $users,
+        $users = User::query()
+            ->select(['id', 'name', 'nickname'])
+            ->when($search !== '', function ($q) use ($search) {
+                $q->where(function ($qq) use ($search) {
+                    $qq->Where('nickname', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy('nickname')
+            ->limit(20)
+            ->get();
+
+        return Inertia::render('Dashboard', [
+            'users'   => $users,
+            'filters' => ['q' => $search],
         ]);
     }
+
 }
