@@ -14,7 +14,7 @@ const props = defineProps({
 
 const search = ref(props.filters?.search ?? '');
 
-const users = ref<{ id: number; nickname: string }[]>([]);
+const users = ref<{ id: number; nickname: string; avatar: string }[]>([]);
 
 watch(search, async (val) => {
     const res = await fetch(`/users/search?search=${encodeURIComponent(val)}`);
@@ -46,21 +46,22 @@ const breadcrumbs: BreadcrumbItem[] = [{ title: 'Dashboard', href: '/dashboard' 
                         <ComboboxInput
                             :value="search"
                             @input="(e: InputEvent) => (search = (e.target as HTMLInputElement).value)"
-                            class="w-full rounded-md border px-12 py-2  focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-green-600"
+                            class="w-full rounded-md border px-12 py-2 focus:border-green-600 focus:ring-2 focus:ring-green-600 focus:outline-none"
                         />
                     </div>
 
                     <ComboboxOptions
-                        class="absolute z-50 mt-2 max-h-72 w-full overflow-y-auto rounded-xl border border-gray-200  p-2 text-sm shadow-xl ring-1 ring-black/5 dark:border-white/10 dark:bg-white/10 dark:text-gray-200"
+                        class="absolute z-50 mt-2 max-h-72 w-full overflow-y-auto rounded-xl border border-gray-200 p-2 text-sm shadow-xl ring-1 ring-black/5 dark:border-white/10 dark:bg-white/10 dark:text-gray-200"
                     >
                         <ComboboxOption v-for="user in users" :key="user.id" as="template" v-slot="{ active }">
                             <li
                                 :class="[
-                                    'cursor-default rounded-lg px-3 py-2 transition select-none',
+                                    'flex cursor-default items-center space-x-3 rounded-lg px-3 py-2 transition select-none',
                                     active ? 'bg-green-600 text-white' : 'text-gray-900 dark:text-gray-100',
                                 ]"
                             >
-                                {{ user.nickname }}
+                                <img v-if="user.avatar" :src="user.avatar" alt="avatar" class="h-5 w-5 rounded-full object-cover" />
+                                <span>{{ user.nickname }}</span>
                             </li>
                         </ComboboxOption>
                     </ComboboxOptions>

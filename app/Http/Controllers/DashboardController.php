@@ -23,6 +23,7 @@ class DashboardController extends Controller
             ->through(fn ($user) => [
                 'id'       => $user->id,
                 'nickname' => $user->nickname,
+                'avatar'   => $user->avatar,
             ]);
     }
 }
