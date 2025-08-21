@@ -14,7 +14,7 @@ const props = defineProps({
 
 const search = ref(props.filters?.search ?? '');
 
-const users = ref<{ id: number; nickname: string; avatar: string }[]>([]);
+const users = ref<{ id: number; nickname: string; avatar: string; name: string }[]>([]);
 
 watch(search, async (val) => {
     const res = await fetch(`/users/search?search=${encodeURIComponent(val)}`);
@@ -60,8 +60,12 @@ const breadcrumbs: BreadcrumbItem[] = [{ title: 'Dashboard', href: '/dashboard' 
                                     active ? 'bg-green-600 text-white' : 'text-gray-900 dark:text-gray-100',
                                 ]"
                             >
-                                <img v-if="user.avatar" :src="user.avatar" alt="avatar" class="h-5 w-5 rounded-full object-cover" />
-                                <span>{{ user.nickname }}</span>
+                                <img v-if="user.avatar" :src="user.avatar" alt="avatar" class="h-8 w-8 rounded-full object-cover" />
+
+                                <div class="flex flex-col">
+                                    <span class="font-medium">{{ user.nickname }}</span>
+                                    <span class="text-sm text-gray-500 dark:text-gray-300">{{ user.name }}</span>
+                                </div>
                             </li>
                         </ComboboxOption>
                     </ComboboxOptions>
