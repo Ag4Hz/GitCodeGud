@@ -29,8 +29,8 @@ class BountyPolicy
         if (!$githubApi->hasValidToken()) {
             return false;
         }
-
-        $repoInfo = $this->parseGitHubUrl($repoUrl);
+        
+        $repoInfo = GitHubApiService::parseGitHubUrl($repoUrl);
         if (!$repoInfo) {
             return false;
         }
@@ -66,29 +66,4 @@ class BountyPolicy
         return $this->delete($user, $bounty);
     }
 
-    /**
-     * Parse GitHub repository URL to extract owner and repository name.
-     */
-    private function parseGitHubUrl(string $url): ?array
-    {
-        $url = trim($url);
-        if (!str_starts_with($url, 'http')) {
-            $url = 'https://' . $url;
-        }
-
-        $patterns = [
-            '/^https?:\/\/github\.com\/([^\/\s]+)\/([^\/\s]+)(?:\.git)?(?:\/.*)?$/i',
-            '/github\.com\/([^\/\s]+)\/([^\/\s]+)(?:\.git)?(?:\/.*)?$/i',
-        ];
-
-        foreach ($patterns as $pattern) {
-            if (preg_match($pattern, $url, $matches)) {
-                return [
-                    'owner' => trim($matches[1]),
-                    'name' => trim(rtrim($matches[2], '.git')),
-                ];
-            }
-        }
-        return null;
-    }
 }
