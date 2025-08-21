@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 class LeaderboardController extends Controller
@@ -20,6 +21,7 @@ class LeaderboardController extends Controller
             ->paginate($perPage)
             ->through(function ($u, $i) use ($start) {
                 $u->rank = $start + $i + 1;
+                $u->initial = Str::upper(Str::substr($u->name ?? 'U', 0, 1));
                 return $u;
             });
 

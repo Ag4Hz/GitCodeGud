@@ -14,14 +14,6 @@ use Illuminate\Notifications\Notifiable;
 class User extends Authenticatable
 {
     use HasFactory, Notifiable;
-
-    protected $appends = ['initial'];
-
-    public function getInitialAttribute(): string
-    {
-        return strtoupper(substr($this->name ?? 'U', 0, 1));
-    }
-
     /**
      * The attributes that are mass assignable.
      *
