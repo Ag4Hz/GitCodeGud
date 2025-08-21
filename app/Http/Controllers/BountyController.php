@@ -3,12 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\BountyStoreRequest;
+use App\Http\Requests\BountyUpdateRequest;
 use App\Models\Bounty;
 use App\Models\Issue;
 use App\Models\Repo;
 use App\Services\GitHubApiService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class BountyController extends Controller
 {
@@ -66,7 +70,6 @@ class BountyController extends Controller
                 ]
             );
 
-            // Try to create bounty using firstOrCreate - ez fog hibát dobni ha már létezik
             try {
                 $bounty = Bounty::firstOrCreate(
                     [
@@ -76,27 +79,93 @@ class BountyController extends Controller
                         'title' => $validated['title'],
                         'description' => $validated['description'] ?? '',
                         'reward_xp' => $validated['reward_xp'],
-                        'status' => 'open',
                         'languages' => $repoLanguages,
                     ]
                 );
-                
+
                 if (!$bounty->wasRecentlyCreated) {
-                    return back()->withErrors(['issue_url' => 'A bounty already exists for this GitHub issue.']);
+                    return back()->withErrors([
+                        'issue_url' => 'A bounty already exists for this GitHub issue.'
+                    ]);
                 }
 
+                DB::commit();
+
+                return redirect()
+                    ->route('profile.show')
+                    ->with('success', 'Bounty created successfully!');
+
             } catch (\Exception $e) {
-                throw $e;
+                DB::rollBack();
+                return back()->withErrors([
+                    'issue_url' => 'A bounty already exists for this GitHub issue.'
+                ]);
             }
-
-            DB::commit();
-
-            return redirect()->route('profile.show')
-                ->with('success', 'Bounty created successfully!');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withInput()->withErrors(['general' => 'Failed to create bounty: ' . $e->getMessage()]);
+            return back()->withErrors([
+                'general' => 'An error occurred while creating the bounty. Please try again.'
+            ]);
+        }
+    }
+
+    /**
+     * Show the bounty details.
+     */
+    public function show(Bounty $bounty): Response
+    {
+        $bounty->load(['issue.repo', 'submissions.user']);
+        return Inertia::render('bounties/Show', [
+            'bounty' => $bounty,
+        ]);
+    }
+
+    /**
+     * Show the form for editing the specified bounty.
+     */
+    public function edit(Bounty $bounty): Response
+    {
+        $this->authorize('update', $bounty);
+        $bounty->load(['issue.repo']);
+        return Inertia::render('bounties/Edit', [
+            'bounty' => $bounty,
+        ]);
+    }
+
+    /**
+     * Update the specified bounty in storage.
+     */
+    public function update(BountyUpdateRequest $request, Bounty $bounty): RedirectResponse
+    {
+        try {
+            if (!Gate::allows('update', $bounty)) {
+                return back()->withErrors([
+                    'general' => 'You are not authorized to edit this bounty. Only the repository owner can edit bounties.'
+                ]);
+            }
+
+            DB::beginTransaction();
+            $validated = $request->validated();
+
+            $bounty->update([
+                'title' => $validated['title'],
+                'description' => $validated['description'],
+                'reward_xp' => $validated['reward_xp'],
+            ]);
+
+            DB::commit();
+
+            return redirect()
+                ->route('profile.show')
+                ->with('success', 'Bounty updated successfully!');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return back()->withErrors([
+                'general' => 'An error occurred while updating the bounty. Please try again.'
+            ]);
         }
     }
 }
