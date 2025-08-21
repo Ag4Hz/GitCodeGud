@@ -4,41 +4,32 @@ import { computed } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar, DollarSign, ExternalLink, Target } from 'lucide-vue-next';
-
-interface Bounty {
-    id: number;
-    title: string;
-    description: string;
-    reward_xp: number;
-    status: 'open' | 'closed';
-    created_at: string;
-    updated_at: string;
-    issue: {
-        url: string;
-        repo: {
-            url: string;
-        };
-    };
-    submissions_count?: number;
-}
+import { BountyStatus, type BountyPagination } from '@/types/bounty';
 
 interface Props {
-    bounties: {
-        data: Bounty[];
-        total: number;
-        current_page: number;
-        last_page: number;
-    };
+    bounties: BountyPagination;
 }
 
 const props = withDefaults(defineProps<Props>(), {
     bounties: () => ({ data: [], total: 0, current_page: 1, last_page: 1 }),
 });
 
-const getStatusColor = (status: string) => {
-    return status === 'open'
-        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-        : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
+const getStatusColor = (status: BountyStatus) => {
+    switch (status) {
+        case BountyStatus.OPEN:
+            return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+        case BountyStatus.CLOSED:
+            return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
+    }
+};
+
+const getStatusDisplayText = (status: BountyStatus): string => {
+    switch (status) {
+        case BountyStatus.OPEN:
+            return 'OPEN';
+        case BountyStatus.CLOSED:
+            return 'CLOSED';
+    }
 };
 
 const formatDate = (dateString: string) => {
@@ -54,12 +45,19 @@ const totalRewardXP = computed(() => {
 });
 
 const openBounties = computed(() => {
-    return props.bounties.data.filter(bounty => bounty.status === 'open');
+    return props.bounties.data.filter(bounty => bounty.status === BountyStatus.OPEN);
 });
 
 const closedBounties = computed(() => {
-    return props.bounties.data.filter(bounty => bounty.status === 'closed');
+    return props.bounties.data.filter(bounty => bounty.status === BountyStatus.CLOSED);
 });
+
+const bountyStats = computed(() => ({
+    total: props.bounties.total,
+    open: openBounties.value.length,
+    closed: closedBounties.value.length,
+    totalRewardXP: totalRewardXP.value,
+}));
 </script>
 
 <template>
@@ -83,28 +81,28 @@ const closedBounties = computed(() => {
                         <Target class="h-4 w-4 text-blue-600" />
                         <span class="text-sm font-medium">Total Bounties</span>
                     </div>
-                    <p class="text-2xl font-bold">{{ bounties.total }}</p>
+                    <p class="text-2xl font-bold">{{ bountyStats.total }}</p>
                 </div>
                 <div class="p-4 border rounded-lg bg-card">
                     <div class="flex items-center gap-2 mb-2">
                         <div class="h-4 w-4 rounded-full bg-green-600"></div>
                         <span class="text-sm font-medium">Open</span>
                     </div>
-                    <p class="text-2xl font-bold text-green-600">{{ openBounties.length }}</p>
+                    <p class="text-2xl font-bold text-green-600">{{ bountyStats.open }}</p>
                 </div>
                 <div class="p-4 border rounded-lg bg-card">
                     <div class="flex items-center gap-2 mb-2">
                         <div class="h-4 w-4 rounded-full bg-gray-600"></div>
                         <span class="text-sm font-medium">Closed</span>
                     </div>
-                    <p class="text-2xl font-bold text-gray-600">{{ closedBounties.length }}</p>
+                    <p class="text-2xl font-bold text-gray-600">{{ bountyStats.closed }}</p>
                 </div>
                 <div class="p-4 border rounded-lg bg-card">
                     <div class="flex items-center gap-2 mb-2">
                         <DollarSign class="h-4 w-4 text-yellow-600" />
                         <span class="text-sm font-medium">Total Reward XP</span>
                     </div>
-                    <p class="text-2xl font-bold text-yellow-600">{{ totalRewardXP }}</p>
+                    <p class="text-2xl font-bold text-yellow-600">{{ bountyStats.totalRewardXP }}</p>
                 </div>
             </div>
 
@@ -120,7 +118,7 @@ const closedBounties = computed(() => {
                         <div class="flex items-center gap-3 flex-wrap">
                             <h3 class="font-medium text-lg">{{ bounty.title }}</h3>
                             <Badge :class="getStatusColor(bounty.status)" class="text-xs">
-                                {{ bounty.status.toUpperCase() }}
+                                {{ getStatusDisplayText(bounty.status) }}
                             </Badge>
                         </div>
 

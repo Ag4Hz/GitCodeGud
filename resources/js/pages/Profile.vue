@@ -12,7 +12,8 @@ import { useInitials } from '@/composables/useInitials';
 import { useXP } from '@/composables/useXP';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem, type User } from '@/types';
-import { Trophy, Zap, Star, Target, Code, Database, Settings, Plus } from 'lucide-vue-next';
+import { type BountyPagination } from '@/types/bounty';
+import { Trophy, Zap, Star, Target, Code, Database, Settings, Plus, AlertCircle, Github } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 
 interface UserWithXP extends Omit<User, 'skills'> {
@@ -29,32 +30,9 @@ interface UserWithXP extends Omit<User, 'skills'> {
     }>;
 }
 
-interface Bounty {
-    id: number;
-    title: string;
-    description: string;
-    reward_xp: number;
-    status: 'open' | 'closed';
-    created_at: string;
-    updated_at: string;
-    languages?: string[];
-    issue: {
-        url: string;
-        repo: {
-            url: string;
-        };
-    };
-    submissions_count?: number;
-}
-
 interface Props {
     user: UserWithXP;
-    bounties?: {
-        data: Bounty[];
-        total: number;
-        current_page: number;
-        last_page: number;
-    };
+    bounties?: BountyPagination;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -81,6 +59,27 @@ const bountyForm = useForm({
     reward_xp: 50,
     repo_url: '',
     issue_url: '',
+});
+
+const showDuplicateBountyWarning = computed(() => {
+    return bountyForm.errors.issue_url?.includes('A bounty already exists for this GitHub issue');
+});
+
+// Repository ownership warning
+const showRepoWarning = computed(() => {
+    return bountyForm.errors.repo_url?.includes('only create bounties for repositories you own') ||
+        bountyForm.errors.repo_url?.includes('Could not verify repository access');
+});
+
+// Issue status warning
+const showIssueStatusWarning = computed(() => {
+    return bountyForm.errors.issue_url?.includes('Only open GitHub issues');
+});
+
+// GitHub API access warning
+const showApiWarning = computed(() => {
+    return bountyForm.errors.issue_url?.includes('GitHub API access is required') ||
+        bountyForm.errors.issue_url?.includes('Could not verify issue status');
 });
 
 const levelProgress = computed(() => {
@@ -155,6 +154,9 @@ const submitBounty = () => {
             showCreateForm.value = false;
             bountyForm.reset();
         },
+        onError: (errors) => {
+            console.log('Validation errors:', errors);
+        }
     });
 };
 
@@ -304,8 +306,58 @@ const switchTab = (tab: string) => {
                                 </div>
                             </CardHeader>
 
-                            <!-- Create Bounty Form -->
                             <CardContent v-if="showCreateForm">
+                                <div v-if="showDuplicateBountyWarning" class="mb-4 flex items-start gap-3 rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-800 dark:bg-yellow-950">
+                                    <AlertCircle class="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" />
+                                    <div>
+                                        <h4 class="font-medium text-yellow-800 dark:text-yellow-200 mb-1">Bounty Already Exists</h4>
+                                        <p class="text-sm text-yellow-700 dark:text-yellow-300">
+                                            A bounty already exists for this GitHub issue. Each issue can only have one bounty.
+                                            Please select a different issue or check your existing bounties.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Repository ownership warning -->
+                                <div v-if="showRepoWarning" class="mb-4 flex items-start gap-3 rounded-lg border border-orange-200 bg-orange-50 p-4 dark:border-orange-800 dark:bg-orange-950">
+                                    <AlertCircle class="h-5 w-5 text-orange-600 dark:text-orange-400 mt-0.5 flex-shrink-0" />
+                                    <div>
+                                        <h4 class="font-medium text-orange-800 dark:text-orange-200 mb-1">Repository Access Required</h4>
+                                        <p class="text-sm text-orange-700 dark:text-orange-300">
+                                            You can only create bounties for repositories you own or have push access to.
+                                            Make sure you're the owner or a collaborator of this repository.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Issue status warning -->
+                                <div v-if="showIssueStatusWarning" class="mb-4 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950">
+                                    <AlertCircle class="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
+                                    <div>
+                                        <h4 class="font-medium text-red-800 dark:text-red-200 mb-1">Issue is Closed</h4>
+                                        <p class="text-sm text-red-700 dark:text-red-300">
+                                            Only open GitHub issues can be used for bounties. This issue appears to be closed.
+                                            Please reopen the issue on GitHub or select a different open issue.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- GitHub API warning -->
+                                <div v-if="showApiWarning" class="mb-4 flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950">
+                                    <Github class="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                                    <div>
+                                        <h4 class="font-medium text-blue-800 dark:text-blue-200 mb-1">GitHub Access Issue</h4>
+                                        <p class="text-sm text-blue-700 dark:text-blue-300">
+                                            Unable to verify the issue status. Please ensure:
+                                        </p>
+                                        <ul class="text-sm text-blue-700 dark:text-blue-300 mt-1 ml-4 list-disc">
+                                            <li>You're connected to GitHub</li>
+                                            <li>The issue exists and you have access to it</li>
+                                            <li>The repository is public or you have access to it</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
                                 <form @submit.prevent="submitBounty" class="space-y-6">
                                     <!-- Title -->
                                     <div class="space-y-2">
@@ -315,6 +367,9 @@ const switchTab = (tab: string) => {
                                             v-model="bountyForm.title"
                                             placeholder="e.g., Fix responsive layout bug on mobile devices"
                                             required
+                                            :class="[
+                                                bountyForm.errors.title && 'border-red-500 focus-visible:ring-red-500'
+                                            ]"
                                         />
                                         <InputError :message="bountyForm.errors.title" />
                                     </div>
@@ -327,7 +382,10 @@ const switchTab = (tab: string) => {
                                             v-model="bountyForm.description"
                                             placeholder="Describe the task in detail. Include acceptance criteria, expected behavior, and any relevant context..."
                                             rows="4"
-                                            class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                            :class="[
+                                                'flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+                                                bountyForm.errors.description && 'border-red-500 focus-visible:ring-red-500'
+                                            ]"
                                         ></textarea>
                                         <p class="text-sm text-muted-foreground">
                                             {{ bountyForm.description.length }}/2000 characters
@@ -346,6 +404,9 @@ const switchTab = (tab: string) => {
                                                 type="url"
                                                 placeholder="https://github.com/username/repository"
                                                 required
+                                                :class="[
+                                                    bountyForm.errors.repo_url && 'border-red-500 focus-visible:ring-red-500'
+                                                ]"
                                             />
                                             <p class="text-sm text-muted-foreground">
                                                 Languages will be detected automatically from the repository
@@ -362,6 +423,9 @@ const switchTab = (tab: string) => {
                                                 type="url"
                                                 placeholder="https://github.com/username/repository/issues/123"
                                                 required
+                                                :class="[
+                                                    bountyForm.errors.issue_url && 'border-red-500 focus-visible:ring-red-500'
+                                                ]"
                                             />
                                             <InputError :message="bountyForm.errors.issue_url" />
                                         </div>
@@ -379,6 +443,9 @@ const switchTab = (tab: string) => {
                                                 max="1000"
                                                 required
                                                 class="w-32"
+                                                :class="[
+                                                    bountyForm.errors.reward_xp && 'border-red-500 focus-visible:ring-red-500'
+                                                ]"
                                             />
                                             <span class="text-sm text-muted-foreground">
                                                 XP (1-1000)
