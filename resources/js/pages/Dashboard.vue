@@ -6,12 +6,26 @@ import type { BreadcrumbItem } from '@/types';
 import { Combobox, ComboboxInput, ComboboxOption, ComboboxOptions } from '@headlessui/vue';
 import { MagnifyingGlassIcon } from '@heroicons/vue/24/solid';
 import { Head } from '@inertiajs/vue3';
+import { ref, watch } from 'vue';
 
-defineProps({
-    users: {
-        type: Object,
-        required: true,
-    },
+const props = defineProps({
+    filters: Object,
+});
+
+const search = ref(props.filters?.search ?? '');
+
+const users = ref<{ id: number; nickname: string }[]>([]);
+
+watch(search, async (val) => {
+    const res = await fetch(`/users/search?search=${encodeURIComponent(val)}`);
+
+    if (!res.ok) {
+        console.error('Error:', res.status);
+        return;
+    }
+
+    const data = await res.json();
+    users.value = data.data;
 });
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Dashboard', href: '/dashboard' }];
@@ -22,7 +36,7 @@ const breadcrumbs: BreadcrumbItem[] = [{ title: 'Dashboard', href: '/dashboard' 
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div>
-            <div class="relative mx-auto w-full max-w-md mt-10 mb-10">
+            <div class="relative mx-auto mt-10 mb-96 w-full max-w-md">
                 <Combobox>
                     <div class="relative">
                         <MagnifyingGlassIcon
@@ -30,22 +44,23 @@ const breadcrumbs: BreadcrumbItem[] = [{ title: 'Dashboard', href: '/dashboard' 
                             aria-hidden="true"
                         />
                         <ComboboxInput
-                            class="h-12 w-full rounded-xl border border-gray-200 bg-white pr-4 pl-11 text-base text-gray-900 ring-2 ring-transparent transition outline-none placeholder:text-gray-400 focus:border-green-500 focus:ring-green-200 sm:text-sm dark:border-white/10 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500"
-                            placeholder="Search..."
+                            :value="search"
+                            @input="(e: InputEvent) => (search = (e.target as HTMLInputElement).value)"
+                            class="w-full rounded-md border px-12 py-2  focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-green-600"
                         />
                     </div>
 
                     <ComboboxOptions
-                        class="absolute z-50 mt-2 max-h-72 w-full overflow-y-auto rounded-xl border border-gray-200 bg-white p-2 text-sm shadow-xl ring-1 ring-black/5 dark:border-white/10 dark:bg-gray-900 dark:text-gray-200"
+                        class="absolute z-50 mt-2 max-h-72 w-full overflow-y-auto rounded-xl border border-gray-200  p-2 text-sm shadow-xl ring-1 ring-black/5 dark:border-white/10 dark:bg-white/10 dark:text-gray-200"
                     >
-                        <ComboboxOption v-for="user in users.data" :key="user.id" as="template" v-slot="{ active }">
+                        <ComboboxOption v-for="user in users" :key="user.id" as="template" v-slot="{ active }">
                             <li
                                 :class="[
                                     'cursor-default rounded-lg px-3 py-2 transition select-none',
                                     active ? 'bg-green-600 text-white' : 'text-gray-900 dark:text-gray-100',
                                 ]"
                             >
-                                {{ user.name }}
+                                {{ user.nickname }}
                             </li>
                         </ComboboxOption>
                     </ComboboxOptions>
