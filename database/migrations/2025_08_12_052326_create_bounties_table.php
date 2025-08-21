@@ -17,6 +17,7 @@ return new class extends Migration
             $table->enum('status', ['open','closed'])->default('open');
             $table->string('title');
             $table->text('description')->nullable();
+            $table->json('languages')->nullable();
             $table->unsignedInteger('reward_xp')->default(0);
             $table->timestamps();
         });
