@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Bounty;
+use App\Models\Issue;
 use App\Services\GitHubApiService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
@@ -33,7 +35,7 @@ class BountyStoreRequest extends FormRequest
             $this->validateGitHubUrls($validator);
         });
     }
-    
+
     private function validateGitHubUrls(Validator $validator): void
     {
         $repoUrl = $this->input('repo_url');
@@ -61,7 +63,15 @@ class BountyStoreRequest extends FormRequest
             return;
         }
 
-        // 5. Check GitHub issue status via API
+        // 5. Check if bounty already exists for this issue URL
+        $existingIssue = Issue::where('url', $issueUrl)->first();
+        if ($existingIssue) {
+            $existingBounty = Bounty::where('issue_id', $existingIssue->id)->exists();
+            if ($existingBounty) {
+                $validator->errors()->add('issue_url', 'A bounty already exists for this GitHub issue. Each issue can only have one bounty.');
+                return;
+            }
+        }
         $user = $this->user();
         $githubApi = new GitHubApiService($user);
 
