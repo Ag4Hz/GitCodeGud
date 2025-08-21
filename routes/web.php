@@ -14,8 +14,10 @@ Route::get('/', function () {
 })->name('home');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])
-        ->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    Route::get('/users/search', [DashboardController::class, 'searchUsers'])
+        ->name('users.search');
 });
 
     Route::get('/users/search', [DashboardController::class, 'searchUsers'])
