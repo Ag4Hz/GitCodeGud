@@ -18,11 +18,12 @@ const props = defineProps<{
             v-for="(link, index) in props.links"
             :key="index"
             :href="link?.url ?? '#'"
-            class="rounded border px-3 py-1 text-sm"
+            class="rounded border px-3 py-1 text-sm transition-colors"
             :class="[
-                link.active ? 'bg-blue-600 text-white' : 'bg-white text-gray-700',
+                'border-gray-300 dark:border-white/10',
+                link.active ? 'bg-green-700 text-white' : 'bg-white text-gray-700 dark:bg-white/5 dark:text-gray-200',
+                link.active ? '' : 'hover:bg-gray-100 dark:hover:bg-white/10',
                 link.url ? '' : 'pointer-events-none opacity-50',
-                'hover:bg-gray-100',
             ]"
         >
             <span v-html="link.label"></span>
