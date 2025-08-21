@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BountyController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -19,6 +20,12 @@ Route::middleware('auth')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/profile/sync-github-skills', [ProfileController::class, 'syncGitHubSkills'])
         ->name('profile.sync-github-skills');
+});
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::post('/bounties', [BountyController::class, 'store'])->name('bounties.store');
+    Route::get('/bounties/{bounty}', [BountyController::class, 'show'])->name('bounties.show');
+    Route::get('/bounties/{bounty}/edit', [BountyController::class, 'edit'])->name('bounties.edit');;
 });
 
 require __DIR__.'/settings.php';

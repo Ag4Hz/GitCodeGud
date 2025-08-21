@@ -16,14 +16,17 @@ class Bounty extends Model
     protected $fillable = [
         'issue_id',
         'status',
+        'title',
         'description',
-        'reward_xp'
+        'reward_xp',
+        'languages',
     ];
     protected function casts(): array
     {
         return [
             'reward_xp' => 'integer',
             'status' => 'string',
+            'languages' => 'array',
         ];
     }
 

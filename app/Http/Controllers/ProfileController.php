@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\XPHelper;
+use App\Http\Resources\BountyResource;
+use App\Models\Bounty;
 use App\Models\User;
 use App\Services\GitHubSkillSyncService;
 use Illuminate\Http\Request;
@@ -19,8 +21,19 @@ class ProfileController extends Controller
 
     public function show(Request $request): Response
     {
+        /** @var User $user */
+        $user = $request->user();
+
+        $bounties = Bounty::with(['issue.repo', 'submissions'])
+            ->whereHas('issue.repo', function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
         return Inertia::render('Profile', [
-            'user' => XPHelper::getUserWithXP($request->user()),
+            'user' => XPHelper::getUserWithXP($user),
+            'bounties' => BountyResource::collection($bounties),
         ]);
     }
 
@@ -38,6 +51,7 @@ class ProfileController extends Controller
         if (!$success) {
             return redirect()->back()->with('error', 'Failed to sync skills from GitHub. Please try again.');
         }
+
         return redirect()->route('profile.show')->with('success', 'Skills successfully synced from GitHub!');
     }
 }
