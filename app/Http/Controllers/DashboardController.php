@@ -27,4 +27,5 @@ class DashboardController extends Controller
                 'name'     => $user->name,
             ]);
     }
+
 }
