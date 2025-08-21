@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\XPHelper;
+use App\Http\Resources\BountyResource;
 use App\Models\Bounty;
 use App\Models\User;
 use App\Services\GitHubSkillSyncService;
@@ -22,20 +23,17 @@ class ProfileController extends Controller
     {
         /** @var User $user */
         $user = $request->user();
+
         $bounties = Bounty::with(['issue.repo', 'submissions'])
             ->whereHas('issue.repo', function ($query) use ($user) {
                 $query->where('user_id', $user->id);
             })
             ->orderBy('created_at', 'desc')
             ->paginate(10);
-        $bounties->getCollection()->transform(function ($bounty) {
-            $bounty->submissions_count = $bounty->submissions->count();
-            return $bounty;
-        });
 
         return Inertia::render('Profile', [
             'user' => XPHelper::getUserWithXP($user),
-            'bounties' => $bounties,
+            'bounties' => BountyResource::collection($bounties),
         ]);
     }
 
@@ -47,11 +45,13 @@ class ProfileController extends Controller
         if (!$user || !$user->oauth_provider_token) {
             return redirect()->back()->with('error', 'GitHub token not available. Please reconnect your GitHub account.');
         }
+
         $success = $this->gitHubSkillSync->syncUserSkillsFromGitHub($user);
 
         if (!$success) {
             return redirect()->back()->with('error', 'Failed to sync skills from GitHub. Please try again.');
         }
+
         return redirect()->route('profile.show')->with('success', 'Skills successfully synced from GitHub!');
     }
 }
