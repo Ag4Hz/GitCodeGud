@@ -20,10 +20,6 @@ Route::middleware('auth')->group(function () {
         ->name('users.search');
 });
 
-    Route::get('/users/search', [DashboardController::class, 'searchUsers'])
-        ->name('users.search');
-});
-
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::get('/profile/{user}', [ProfileController::class, 'show'])->whereNumber('user');
