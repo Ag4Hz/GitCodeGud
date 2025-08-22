@@ -5,7 +5,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 import { Combobox, ComboboxInput, ComboboxOption, ComboboxOptions } from '@headlessui/vue';
 import { MagnifyingGlassIcon } from '@heroicons/vue/24/solid';
-import { Head } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
 
 const props = defineProps({
@@ -15,7 +15,11 @@ const props = defineProps({
 const search = ref(props.filters?.search ?? '');
 
 const users = ref<{ id: number; nickname: string; avatar: string; name: string }[]>([]);
+const selectedUser = ref<{ id: number } | null>(null);
 
+watch(selectedUser, (u) => {
+    if (u) router.visit(`/profile/${u.id}`);
+});
 watch(search, async (val) => {
     const res = await fetch(`/users/search?search=${encodeURIComponent(val)}`);
 
@@ -33,11 +37,10 @@ const breadcrumbs: BreadcrumbItem[] = [{ title: 'Dashboard', href: '/dashboard' 
 
 <template>
     <Head title="Dashboard" />
-
     <AppLayout :breadcrumbs="breadcrumbs">
         <div>
             <div class="relative mx-auto mt-10 mb-96 w-full max-w-md">
-                <Combobox>
+                <Combobox v-model="selectedUser" nullable>
                     <div class="relative">
                         <MagnifyingGlassIcon
                             class="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-gray-400 dark:text-gray-500"
@@ -55,13 +58,14 @@ const breadcrumbs: BreadcrumbItem[] = [{ title: 'Dashboard', href: '/dashboard' 
                         class="absolute z-50 mt-2 max-h-72 w-full overflow-y-auto rounded-xl border border-gray-200 p-2 text-sm shadow-xl ring-1 ring-black/5 dark:border-white/10 dark:bg-white/10 dark:text-gray-200"
                     >
                         <template v-if="users.length > 0">
-                            <ComboboxOption v-for="user in users" :key="user.id" as="template" v-slot="{ active }">
+                            <ComboboxOption v-for="user in users" :key="user.id" :value="user" as="template" v-slot="{ active }">
                                 <li
                                     :class="[
-                                    'flex cursor-default items-center space-x-3 rounded-lg px-3 py-2 transition select-none',
-                                    active ? 'bg-green-600 text-white' : 'text-gray-900 dark:text-gray-100',
-                                ]"
+                                        'flex cursor-pointer items-center space-x-3 rounded-lg px-3 py-2 transition select-none',
+                                        active ? 'bg-green-600 text-white' : 'text-gray-900 dark:text-gray-100',
+                                    ]"
                                 >
+                                    >
                                     <img v-if="user.avatar" :src="user.avatar" alt="avatar" class="h-8 w-8 rounded-full object-cover" />
 
                                     <div class="flex flex-col">
@@ -72,11 +76,8 @@ const breadcrumbs: BreadcrumbItem[] = [{ title: 'Dashboard', href: '/dashboard' 
                             </ComboboxOption>
                         </template>
                         <template v-else>
-                            <div class="px-3 py-2 text-gray-500 dark:text-gray-300">
-                                No buddies found
-                            </div>
+                            <div class="px-3 py-2 text-gray-500 dark:text-gray-300">No buddies found</div>
                         </template>
-
                     </ComboboxOptions>
                 </Combobox>
             </div>
