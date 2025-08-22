@@ -54,21 +54,29 @@ const breadcrumbs: BreadcrumbItem[] = [{ title: 'Dashboard', href: '/dashboard' 
                     <ComboboxOptions
                         class="absolute z-50 mt-2 max-h-72 w-full overflow-y-auto rounded-xl border border-gray-200 p-2 text-sm shadow-xl ring-1 ring-black/5 dark:border-white/10 dark:bg-white/10 dark:text-gray-200"
                     >
-                        <ComboboxOption v-for="user in users" :key="user.id" as="template" v-slot="{ active }">
-                            <li
-                                :class="[
+                        <template v-if="users.length > 0">
+                            <ComboboxOption v-for="user in users" :key="user.id" as="template" v-slot="{ active }">
+                                <li
+                                    :class="[
                                     'flex cursor-default items-center space-x-3 rounded-lg px-3 py-2 transition select-none',
                                     active ? 'bg-green-600 text-white' : 'text-gray-900 dark:text-gray-100',
                                 ]"
-                            >
-                                <img v-if="user.avatar" :src="user.avatar" alt="avatar" class="h-8 w-8 rounded-full object-cover" />
+                                >
+                                    <img v-if="user.avatar" :src="user.avatar" alt="avatar" class="h-8 w-8 rounded-full object-cover" />
 
-                                <div class="flex flex-col">
-                                    <span class="font-medium">{{ user.nickname }}</span>
-                                    <span class="text-sm text-gray-500 dark:text-gray-300">{{ user.name }}</span>
-                                </div>
-                            </li>
-                        </ComboboxOption>
+                                    <div class="flex flex-col">
+                                        <span class="font-medium">{{ user.nickname }}</span>
+                                        <span class="text-sm text-gray-500 dark:text-gray-300">{{ user.name }}</span>
+                                    </div>
+                                </li>
+                            </ComboboxOption>
+                        </template>
+                        <template v-else>
+                            <div class="px-3 py-2 text-gray-500 dark:text-gray-300">
+                                No buddies found
+                            </div>
+                        </template>
+
                     </ComboboxOptions>
                 </Combobox>
             </div>
