@@ -288,7 +288,7 @@ const switchTab = (tab: string) => {
                     <!-- Bounty Management Tab Content -->
                     <div v-if="activeTab === 'bounties'" class="space-y-6">
                         <!-- Create Bounty Section -->
-                        <Card>
+                        <Card v-if="isOwner" >
                             <CardHeader>
                                 <div class="flex items-center justify-between">
                                     <div>
