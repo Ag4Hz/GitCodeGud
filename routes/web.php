@@ -27,7 +27,8 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/bounties', [BountyController::class, 'store'])->name('bounties.store');
     Route::get('/bounties/{bounty}', [BountyController::class, 'show'])->name('bounties.show');
-    Route::get('/bounties/{bounty}/edit', [BountyController::class, 'edit'])->name('bounties.edit');;
+    Route::get('/bounties/{bounty}/edit', [BountyController::class, 'edit'])->name('bounties.edit');
+    Route::patch('/bounties/{bounty}', [BountyController::class, 'update'])->name('bounties.update');
 });
 
 Route::middleware('auth')->group(function () {

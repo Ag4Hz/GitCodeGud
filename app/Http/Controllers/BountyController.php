@@ -3,12 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\BountyStoreRequest;
+use App\Http\Requests\BountyUpdateRequest;
 use App\Models\Bounty;
 use App\Models\Issue;
 use App\Models\Repo;
 use App\Services\GitHubApiService;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class BountyController extends Controller
 {
@@ -17,9 +22,9 @@ class BountyController extends Controller
      */
     public function store(BountyStoreRequest $request): RedirectResponse
     {
-        try {
-            DB::beginTransaction();
+        DB::beginTransaction();
 
+        try {
             $validated = $request->validated();
             $user = $request->user();
 
@@ -27,6 +32,7 @@ class BountyController extends Controller
             $issueInfo = GitHubApiService::parseGitHubIssueUrl($validated['issue_url']);
 
             if (!$user->can('createForRepository', [Bounty::class, $validated['repo_url']])) {
+                DB::rollBack();
                 return back()->withErrors([
                     'repo_url' => 'You can only create bounties for repositories you own or have push access to.'
                 ]);
@@ -66,37 +72,83 @@ class BountyController extends Controller
                 ]
             );
 
-            // Try to create bounty using firstOrCreate - ez fog hibát dobni ha már létezik
-            try {
-                $bounty = Bounty::firstOrCreate(
-                    [
-                        'issue_id' => $issue->id,
-                    ],
-                    [
-                        'title' => $validated['title'],
-                        'description' => $validated['description'] ?? '',
-                        'reward_xp' => $validated['reward_xp'],
-                        'status' => 'open',
-                        'languages' => $repoLanguages,
-                    ]
-                );
-                
-                if (!$bounty->wasRecentlyCreated) {
-                    return back()->withErrors(['issue_url' => 'A bounty already exists for this GitHub issue.']);
-                }
+            // Create bounty - check if already exists
+            $bounty = Bounty::firstOrCreate(
+                [
+                    'issue_id' => $issue->id,
+                ],
+                [
+                    'title' => $validated['title'],
+                    'description' => $validated['description'] ?? '',
+                    'reward_xp' => $validated['reward_xp'],
+                    'languages' => $repoLanguages,
+                ]
+            );
 
-            } catch (\Exception $e) {
-                throw $e;
+            if (!$bounty->wasRecentlyCreated) {
+                DB::rollBack();
+                return back()->withErrors([
+                    'issue_url' => 'A bounty already exists for this GitHub issue.'
+                ]);
             }
 
             DB::commit();
 
-            return redirect()->route('profile.show')
+            return redirect()
+                ->route('profile.show')
                 ->with('success', 'Bounty created successfully!');
 
-        } catch (\Exception $e) {
+        } catch (QueryException $e) {
             DB::rollBack();
-            return back()->withInput()->withErrors(['general' => 'Failed to create bounty: ' . $e->getMessage()]);
+            return back()->withErrors([
+                'issue_url' => 'A bounty already exists for this GitHub issue.'
+            ]);
         }
+    }
+
+    /**
+     * Show the bounty details.
+     */
+    public function show(Bounty $bounty): Response
+    {
+        return Inertia::render('bounties/Show', [
+            'bounty' => $bounty->load(['issue.repo', 'submissions.user']),
+        ]);
+    }
+
+    /**
+     * Show the form for editing the specified bounty.
+     */
+    public function edit(Bounty $bounty): Response
+    {
+        $this->authorize('update', $bounty);
+
+        return Inertia::render('bounties/Edit', [
+            'bounty' => $bounty->load(['issue.repo']),
+        ]);
+    }
+
+    /**
+     * Update the specified bounty in storage.
+     */
+    public function update(BountyUpdateRequest $request, Bounty $bounty): RedirectResponse
+    {
+        if (!Gate::allows('update', $bounty)) {
+            return back()->withErrors([
+                'general' => 'You are not authorized to edit this bounty. Only the repository owner can edit bounties.'
+            ]);
+        }
+
+        $validated = $request->validated();
+
+        $bounty->update([
+            'title' => $validated['title'],
+            'description' => $validated['description'],
+            'reward_xp' => $validated['reward_xp'],
+        ]);
+
+        return redirect()
+            ->route('profile.show')
+            ->with('success', 'Bounty updated successfully!');
     }
 }
