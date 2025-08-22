@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\BountyController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\LeaderboardController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -26,6 +27,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/bounties', [BountyController::class, 'store'])->name('bounties.store');
     Route::get('/bounties/{bounty}', [BountyController::class, 'show'])->name('bounties.show');
     Route::get('/bounties/{bounty}/edit', [BountyController::class, 'edit'])->name('bounties.edit');;
+});
+
+Route::middleware('auth')->group(function () {
+    Route::get('/leaderboard', [LeaderboardController::class, 'index'])
+        ->name('leaderboard');
 });
 
 require __DIR__.'/settings.php';

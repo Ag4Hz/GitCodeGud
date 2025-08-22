@@ -42,7 +42,12 @@ const mainNavItems: NavItem[] = [
         href: '/dashboard',
         icon: LayoutGrid,
     },
+    {
+        title: 'Leaderboard',
+        href: '/leaderboard',
+    },
 ];
+
 </script>
 
 <template>
@@ -77,6 +82,7 @@ const mainNavItems: NavItem[] = [
                                 </nav>
                                 <div class="flex flex-col space-y-4">
                                     <!-- Mobile right nav items section - currently empty -->
+
                                 </div>
                             </div>
                         </SheetContent>
