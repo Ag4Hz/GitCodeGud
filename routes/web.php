@@ -3,9 +3,9 @@
 use App\Http\Controllers\BountyController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Http\Request;
-use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\DashboardController;
 use App\Models\User;
+use App\Http\Controllers\LeaderboardController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
