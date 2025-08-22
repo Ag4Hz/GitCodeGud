@@ -19,23 +19,25 @@ class ProfileController extends Controller
         protected GitHubSkillSyncService $gitHubSkillSync
     ) {}
 
-    public function show(Request $request): Response
+    public function show(Request $request, ?User $user = null): Response
     {
-        /** @var User $user */
-        $user = $request->user();
+        $viewer  = $request->user();
+        $profile = $user ?? $viewer;
 
         $bounties = Bounty::with(['issue.repo', 'submissions'])
-            ->whereHas('issue.repo', function ($query) use ($user) {
-                $query->where('user_id', $user->id);
+            ->whereHas('issue.repo', function ($query) use ($profile) {
+                $query->where('user_id', $profile->id);
             })
-            ->orderBy('created_at', 'desc')
+            ->orderByDesc('created_at')
             ->paginate(10);
 
         return Inertia::render('Profile', [
-            'user' => XPHelper::getUserWithXP($user),
-            'bounties' => BountyResource::collection($bounties),
+            'user'      => XPHelper::getUserWithXP($profile),
+            'bounties'  => BountyResource::collection($bounties),
+            'isOwner'   => $viewer->id === $profile->id,
         ]);
     }
+
 
     public function syncGitHubSkills(Request $request): RedirectResponse
     {
