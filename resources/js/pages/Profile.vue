@@ -33,11 +33,15 @@ interface UserWithXP extends Omit<User, 'skills'> {
 interface Props {
     user: UserWithXP;
     bounties?: BountyPagination;
+    isOwner?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
     bounties: () => ({ data: [], total: 0, current_page: 1, last_page: 1 }),
 });
+
+const isOwner = computed(() => props.isOwner);
+
 
 const { getInitials } = useInitials();
 const { formatXP } = useXP();
@@ -46,12 +50,12 @@ const syncing = ref(false);
 const showCreateForm = ref(false);
 const activeTab = ref('bounties');
 
-const breadcrumbItems: BreadcrumbItem[] = [
-    {
-        title: 'My Profile',
-        href: '/profile',
-    },
-];
+const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
+      {
+        title: isOwner.value ? 'My Profile' : `${props.user.name}'s Profile`,
+        href: isOwner.value ? '/profile' : `/profile/${props.user.id}`,
+      },
+]);
 
 const bountyForm = useForm({
     title: '',
@@ -176,8 +180,7 @@ const switchTab = (tab: string) => {
 
 <template>
     <AppLayout :breadcrumbs="breadcrumbItems">
-        <Head title="My Profile" />
-
+        <Head :title="isOwner ? 'My Profile' : `${user.name}'s Profile`" />
         <div class="px-4 py-6">
             <div class="mx-auto max-w-4xl space-y-6">
                 <!-- Profile Header -->
@@ -285,7 +288,7 @@ const switchTab = (tab: string) => {
                     <!-- Bounty Management Tab Content -->
                     <div v-if="activeTab === 'bounties'" class="space-y-6">
                         <!-- Create Bounty Section -->
-                        <Card>
+                        <Card v-if="isOwner" >
                             <CardHeader>
                                 <div class="flex items-center justify-between">
                                     <div>

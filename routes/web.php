@@ -16,6 +16,7 @@ Route::get('dashboard', function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+    Route::get('/profile/{user}', [ProfileController::class, 'show'])->whereNumber('user');
 });
 
 Route::middleware('auth')->group(function () {
