@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import InputError from '@/components/InputError.vue';
 import { Calendar, DollarSign, ExternalLink, Target, Edit2, Save, X, CheckCircle, Loader2 } from 'lucide-vue-next';
 import { BountyStatus, type BountyPagination, type Bounty } from '@/types/bounty';
+import { usePluralization } from '@/composables/usePluralization';
 
 interface Props {
     bounties: BountyPagination;
@@ -19,6 +20,8 @@ const props = withDefaults(defineProps<Props>(), {
     bounties: () => ({ data: [], total: 0, current_page: 1, last_page: 1 }),
     canEditBounties: true,
 });
+
+const { formatCount } = usePluralization();
 
 const editingBounty = ref<number | null>(null);
 const optimisticUpdates = ref<{[key: number]: boolean}>({});
@@ -105,11 +108,9 @@ const saveEdit = (bounty: Bounty) => {
         onSuccess: () => {
             editingBounty.value = null;
             editForm.reset();
-
-            setTimeout(() => {
-                delete optimisticUpdates.value[bounty.id];
-                delete successMessages.value[bounty.id];
-            }, 3000);
+            // Clean up temporary state immediately
+            delete optimisticUpdates.value[bounty.id];
+            delete successMessages.value[bounty.id];
         },
         onError: () => {
             delete optimisticUpdates.value[bounty.id];
@@ -196,8 +197,8 @@ const hasChanges = (bounty: Bounty) => {
                                 <div class="space-y-1">
                                     <Label for="edit-title">Title *</Label>
                                     <Input id="edit-title" v-model="editForm.title" type="text" required maxlength="255"
-                                        :class="editForm.errors.title && 'border-red-500'"
-                                        :disabled="editForm.processing"
+                                           :class="editForm.errors.title && 'border-red-500'"
+                                           :disabled="editForm.processing"
                                     />
                                     <p class="text-xs text-muted-foreground">{{ editForm.title.length }}/255</p>
                                     <InputError :message="editForm.errors.title" />
@@ -207,10 +208,10 @@ const hasChanges = (bounty: Bounty) => {
                                 <div class="space-y-1">
                                     <Label for="edit-description">Description *</Label>
                                     <textarea id="edit-description" v-model="editForm.description" required maxlength="2000" rows="4"
-                                        placeholder="Detailed description of what needs to be done..."
-                                        class="flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 resize-y"
-                                        :class="editForm.errors.description && 'border-red-500 focus-visible:ring-red-500'"
-                                        :disabled="editForm.processing"
+                                              placeholder="Detailed description of what needs to be done..."
+                                              class="flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 resize-y"
+                                              :class="editForm.errors.description && 'border-red-500 focus-visible:ring-red-500'"
+                                              :disabled="editForm.processing"
                                     />
                                     <p class="text-xs text-muted-foreground">{{ editForm.description.length }}/2000</p>
                                     <InputError :message="editForm.errors.description" />
@@ -221,8 +222,8 @@ const hasChanges = (bounty: Bounty) => {
                                     <Label for="edit-reward">Reward (XP) *</Label>
                                     <div class="flex items-center gap-2">
                                         <Input id="edit-reward" v-model.number="editForm.reward_xp" type="number" min="1" max="1000" required class="w-32"
-                                            :class="editForm.errors.reward_xp && 'border-red-500'"
-                                            :disabled="editForm.processing"
+                                               :class="editForm.errors.reward_xp && 'border-red-500'"
+                                               :disabled="editForm.processing"
                                         />
                                         <span class="text-sm text-muted-foreground">XP (1-1000)</span>
                                     </div>
@@ -261,7 +262,7 @@ const hasChanges = (bounty: Bounty) => {
                                 <!-- Repository and Issue Links -->
                                 <div class="flex items-center gap-4 text-sm">
                                     <a :href="bounty.issue.repo.url" target="_blank" rel="noopener noreferrer"
-                                        class="text-blue-600 hover:underline flex items-center gap-1">
+                                       class="text-blue-600 hover:underline flex items-center gap-1">
                                         <ExternalLink class="h-3 w-3" />
                                         Repository
                                     </a>
@@ -291,7 +292,7 @@ const hasChanges = (bounty: Bounty) => {
                                     </span>
                                     <span v-if="bounty.submissions_count && bounty.submissions_count > 0" class="flex items-center gap-1">
                                         <Target class="h-3 w-3" />
-                                        {{ bounty.submissions_count }} submission{{ bounty.submissions_count !== 1 ? 's' : '' }}
+                                        {{ formatCount(bounty.submissions_count, 'submission') }}
                                     </span>
                                 </div>
                             </div>
@@ -335,7 +336,7 @@ const hasChanges = (bounty: Bounty) => {
                             Page {{ bounties.current_page }} of {{ bounties.last_page }}
                         </span>
                         <Link v-if="bounties.current_page < bounties.last_page" :href="route('profile.show', { page: bounties.current_page + 1 })"
-                            class="px-3 py-2 text-sm border rounded hover:bg-accent">
+                              class="px-3 py-2 text-sm border rounded hover:bg-accent">
                             Next
                         </Link>
                     </div>
