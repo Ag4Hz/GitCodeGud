@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import InputError from '@/components/InputError.vue';
-import { Calendar, DollarSign, ExternalLink, Target, Edit2, Save, X, CheckCircle, Loader2 } from 'lucide-vue-next';
+import { Calendar, DollarSign, ExternalLink, Target, Edit2, Save, X, CheckCircle, Loader2, EyeOff, RotateCcw, Eye, Archive } from 'lucide-vue-next';
 import { BountyStatus, type BountyPagination, type Bounty } from '@/types/bounty';
 import { usePluralization } from '@/composables/usePluralization';
 
@@ -26,6 +26,19 @@ const { formatCount } = usePluralization();
 const editingBounty = ref<number | null>(null);
 const optimisticUpdates = ref<{[key: number]: boolean}>({});
 const successMessages = ref<{[key: number]: string}>({});
+const showDeletedBounties = ref(false);
+
+const activeBounties = computed(() => {
+    return props.bounties.data.filter(bounty => !bounty.deleted_at);
+});
+
+const deletedBounties = computed(() => {
+    return props.bounties.data.filter(bounty => bounty.deleted_at);
+});
+
+const currentBounties = computed(() => {
+    return showDeletedBounties.value ? deletedBounties.value : activeBounties.value;
+});
 
 const getStatusColor = (status: BountyStatus) => {
     switch (status) {
@@ -54,21 +67,22 @@ const formatDate = (dateString: string) => {
 };
 
 const totalRewardXP = computed(() => {
-    return props.bounties.data.reduce((sum, bounty) => sum + bounty.reward_xp, 0);
+    return activeBounties.value.reduce((sum, bounty) => sum + bounty.reward_xp, 0);
 });
 
 const openBounties = computed(() => {
-    return props.bounties.data.filter(bounty => bounty.status === BountyStatus.OPEN);
+    return activeBounties.value.filter(bounty => bounty.status === BountyStatus.OPEN);
 });
 
 const closedBounties = computed(() => {
-    return props.bounties.data.filter(bounty => bounty.status === BountyStatus.CLOSED);
+    return activeBounties.value.filter(bounty => bounty.status === BountyStatus.CLOSED);
 });
 
 const bountyStats = computed(() => ({
-    total: props.bounties.total,
+    total: activeBounties.value.length,
     open: openBounties.value.length,
     closed: closedBounties.value.length,
+    archived: deletedBounties.value.length,
     totalRewardXP: totalRewardXP.value,
 }));
 
@@ -79,6 +93,10 @@ const editForm = useForm({
     reward_xp: 50,
 });
 
+const deleteForm = useForm({});
+const restoreForm = useForm({});
+
+// Edit functionality
 const startEdit = (bounty: Bounty) => {
     editingBounty.value = bounty.id;
     editForm.reset();
@@ -124,6 +142,34 @@ const hasChanges = (bounty: Bounty) => {
         editForm.description !== bounty.description ||
         editForm.reward_xp !== bounty.reward_xp;
 };
+
+const softDeleteBounty = (bounty: Bounty) => {
+    if (confirm('Are you sure you want to archive this bounty? It will be hidden from public listings but can be restored later.')) {
+        deleteForm.delete(route('bounties.destroy', bounty.id), {
+            preserveScroll: false,
+            onSuccess: () => {},
+            onError: (errors) => {
+                console.error('Delete request failed:', errors);
+                if (errors.general) {
+                    alert(errors.general);
+                }
+            }
+        });
+    }
+};
+
+const restoreBounty = (bounty: Bounty) => {
+    restoreForm.patch(route('bounties.restore', bounty.id), {
+        preserveScroll: false,
+        onSuccess: () => {},
+        onError: (errors) => {
+            console.error('Restore request failed:', errors);
+            if (errors.general) {
+                alert(errors.general);
+            }
+        }
+    });
+};
 </script>
 
 <template>
@@ -135,17 +181,17 @@ const hasChanges = (bounty: Bounty) => {
                     My Bounties
                 </CardTitle>
                 <CardDescription>
-                    View and edit your bounty campaigns directly
+                    View and manage your bounty campaigns
                 </CardDescription>
             </div>
         </CardHeader>
         <CardContent>
             <!-- Stats Overview -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
                 <div class="p-4 border rounded-lg bg-card">
                     <div class="flex items-center gap-2 mb-2">
                         <Target class="h-4 w-4 text-blue-600" />
-                        <span class="text-sm font-medium">Total Bounties</span>
+                        <span class="text-sm font-medium">Active</span>
                     </div>
                     <p class="text-2xl font-bold">{{ bountyStats.total }}</p>
                 </div>
@@ -165,6 +211,13 @@ const hasChanges = (bounty: Bounty) => {
                 </div>
                 <div class="p-4 border rounded-lg bg-card">
                     <div class="flex items-center gap-2 mb-2">
+                        <Archive class="h-4 w-4 text-orange-600" />
+                        <span class="text-sm font-medium">Archived</span>
+                    </div>
+                    <p class="text-2xl font-bold text-orange-600">{{ bountyStats.archived }}</p>
+                </div>
+                <div class="p-4 border rounded-lg bg-card">
+                    <div class="flex items-center gap-2 mb-2">
                         <DollarSign class="h-4 w-4 text-yellow-600" />
                         <span class="text-sm font-medium">Total Reward XP</span>
                     </div>
@@ -172,13 +225,38 @@ const hasChanges = (bounty: Bounty) => {
                 </div>
             </div>
 
+            <!-- Toggle View -->
+            <div class="flex gap-2 mb-6">
+                <Button
+                    @click="showDeletedBounties = false"
+                    :variant="!showDeletedBounties ? 'default' : 'outline'"
+                    size="sm"
+                    class="flex items-center gap-2"
+                >
+                    <Eye class="h-4 w-4" />
+                    Active Bounties ({{ bountyStats.total }})
+                </Button>
+                <Button
+                    @click="showDeletedBounties = true"
+                    :variant="showDeletedBounties ? 'default' : 'outline'"
+                    size="sm"
+                    class="flex items-center gap-2"
+                >
+                    <Archive class="h-4 w-4" />
+                    Archived Bounties ({{ bountyStats.archived }})
+                </Button>
+            </div>
+
             <!-- Bounties List -->
-            <div v-if="bounties.data.length > 0" class="space-y-4">
+            <div v-if="currentBounties.length > 0" class="space-y-4">
                 <div
-                    v-for="bounty in bounties.data"
+                    v-for="bounty in currentBounties"
                     :key="bounty.id"
                     class="border rounded-lg p-4 transition-colors"
-                    :class="editingBounty === bounty.id ? 'bg-accent/30 border-primary' : 'hover:bg-accent/50'"
+                    :class="[
+                        editingBounty === bounty.id ? 'bg-accent/30 border-primary' : 'hover:bg-accent/50',
+                        bounty.deleted_at ? 'bg-gray-50 dark:bg-gray-800/50 border-gray-300' : ''
+                    ]"
                 >
                     <!-- Success Message -->
                     <div v-if="successMessages[bounty.id]" class="mb-4 p-3 rounded-lg bg-green-50 border border-green-200 dark:bg-green-950 dark:border-green-800">
@@ -192,7 +270,7 @@ const hasChanges = (bounty: Bounty) => {
                         <!-- Bounty Content -->
                         <div class="flex-1 min-w-0 space-y-3">
                             <!-- Edit Mode -->
-                            <div v-if="editingBounty === bounty.id" class="space-y-4">
+                            <div v-if="editingBounty === bounty.id && !bounty.deleted_at" class="space-y-4">
                                 <!-- Title Edit -->
                                 <div class="space-y-1">
                                     <Label for="edit-title">Title *</Label>
@@ -248,14 +326,19 @@ const hasChanges = (bounty: Bounty) => {
                             <div v-else>
                                 <!-- Title and Status -->
                                 <div class="flex items-center gap-3 flex-wrap">
-                                    <h3 class="font-medium text-lg">{{ bounty.title }}</h3>
-                                    <Badge :class="getStatusColor(bounty.status)" class="text-xs">
+                                    <h3 class="font-medium text-lg" :class="{ 'text-gray-500': bounty.deleted_at }">
+                                        {{ bounty.title }}
+                                    </h3>
+                                    <Badge v-if="bounty.deleted_at" variant="secondary" class="text-xs">
+                                        Archived
+                                    </Badge>
+                                    <Badge v-else :class="getStatusColor(bounty.status)" class="text-xs">
                                         {{ getStatusDisplayText(bounty.status) }}
                                     </Badge>
                                 </div>
 
                                 <!-- Description -->
-                                <p v-if="bounty.description" class="text-muted-foreground line-clamp-2">
+                                <p v-if="bounty.description" class="text-muted-foreground line-clamp-2" :class="{ 'text-gray-400': bounty.deleted_at }">
                                     {{ bounty.description }}
                                 </p>
 
@@ -280,13 +363,14 @@ const hasChanges = (bounty: Bounty) => {
                                     </span>
                                     <span class="flex items-center gap-1">
                                         <Calendar class="h-3 w-3" />
-                                        Created {{ formatDate(bounty.created_at) }}
+                                        {{ bounty.deleted_at ? 'Archived' : 'Created' }}:
+                                        {{ formatDate(bounty.deleted_at || bounty.created_at) }}
                                     </span>
                                     <span v-if="optimisticUpdates[bounty.id]" class="flex items-center gap-1 text-green-600">
                                         <CheckCircle class="h-3 w-3" />
                                         Just updated
                                     </span>
-                                    <span v-else-if="bounty.updated_at !== bounty.created_at" class="flex items-center gap-1">
+                                    <span v-else-if="bounty.updated_at !== bounty.created_at && !bounty.deleted_at" class="flex items-center gap-1">
                                         <Calendar class="h-3 w-3" />
                                         Updated {{ formatDate(bounty.updated_at) }}
                                     </span>
@@ -300,42 +384,71 @@ const hasChanges = (bounty: Bounty) => {
 
                         <!-- Action Buttons -->
                         <div v-if="props.canEditBounties" class="flex gap-2 flex-shrink-0">
-                            <!-- Edit Mode Buttons -->
-                            <div v-if="editingBounty === bounty.id" class="flex gap-2">
-                                <Button @click="saveEdit(bounty)" :disabled="editForm.processing || !hasChanges(bounty)" size="sm" class="min-w-[80px]">
-                                    <span v-if="editForm.processing" class="flex items-center gap-1">
-                                        <Loader2 class="h-3 w-3 animate-spin" />
-                                        Saving
-                                    </span>
-                                    <span v-else class="flex items-center gap-1">
-                                        <Save class="h-3 w-3" />
-                                        Save
-                                    </span>
+                            <!-- Archived Bounty Actions -->
+                            <template v-if="bounty.deleted_at">
+                                <Button
+                                    @click="restoreBounty(bounty)"
+                                    :disabled="restoreForm.processing"
+                                    variant="outline"
+                                    size="sm"
+                                    class="flex items-center gap-1"
+                                >
+                                    <RotateCcw class="h-3 w-3" />
+                                    Restore
                                 </Button>
-                                <Button @click="cancelEdit" variant="outline" size="sm" :disabled="editForm.processing">
-                                    <X class="h-3 w-3" />
-                                    Cancel
-                                </Button>
-                            </div>
-                            <!-- View Mode Button -->
-                            <Button v-else @click="startEdit(bounty)" variant="outline" size="sm" class="flex items-center gap-1">
-                                <Edit2 class="h-3 w-3" />
-                                Edit
-                            </Button>
+                            </template>
+
+                            <!-- Active Bounty Actions -->
+                            <template v-else>
+                                <!-- Edit Mode Buttons -->
+                                <div v-if="editingBounty === bounty.id" class="flex gap-2">
+                                    <Button @click="saveEdit(bounty)" :disabled="editForm.processing || !hasChanges(bounty)" size="sm" class="min-w-[80px]">
+                                        <span v-if="editForm.processing" class="flex items-center gap-1">
+                                            <Loader2 class="h-3 w-3 animate-spin" />
+                                            Saving
+                                        </span>
+                                        <span v-else class="flex items-center gap-1">
+                                            <Save class="h-3 w-3" />
+                                            Save
+                                        </span>
+                                    </Button>
+                                    <Button @click="cancelEdit" variant="outline" size="sm" :disabled="editForm.processing">
+                                        <X class="h-3 w-3" />
+                                        Cancel
+                                    </Button>
+                                </div>
+                                <!-- View Mode Buttons -->
+                                <div v-else class="flex gap-2">
+                                    <Button @click="startEdit(bounty)" variant="outline" size="sm" class="flex items-center gap-1">
+                                        <Edit2 class="h-3 w-3" />
+                                        Edit
+                                    </Button>
+                                    <Button
+                                        @click="softDeleteBounty(bounty)"
+                                        :disabled="deleteForm.processing"
+                                        variant="outline"
+                                        size="sm"
+                                        class="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                    >
+                                        <EyeOff class="h-3 w-3" />
+                                        Archive
+                                    </Button>
+                                </div>
+                            </template>
                         </div>
                     </div>
                 </div>
 
                 <!-- Pagination -->
-                <div v-if="bounties.last_page > 1" class="flex justify-center mt-6">
+                <div v-if="props.bounties.last_page > 1" class="flex justify-center mt-6">
                     <div class="flex items-center gap-2">
-                        <Link v-if="bounties.current_page > 1" :href="route('profile.show', { page: bounties.current_page - 1 })" class="px-3 py-2 text-sm border rounded hover:bg-accent">
+                        <Link v-if="props.bounties.current_page > 1" :href="route('profile.show', { page: props.bounties.current_page - 1 })" class="px-3 py-2 text-sm border rounded hover:bg-accent">
                             Previous
                         </Link>
                         <span class="text-sm text-muted-foreground px-3">
-                            Page {{ bounties.current_page }} of {{ bounties.last_page }}
+                            Page {{ props.bounties.current_page }} of {{ props.bounties.last_page }}
                         </span>
-                        <Link v-if="bounties.current_page < bounties.last_page" :href="route('profile.show', { page: bounties.current_page + 1 })"
+                        <Link v-if="props.bounties.current_page < props.bounties.last_page" :href="route('profile.show', { page: props.bounties.current_page + 1 })"
                               class="px-3 py-2 text-sm border rounded hover:bg-accent">
                             Next
                         </Link>
@@ -345,10 +458,13 @@ const hasChanges = (bounty: Bounty) => {
 
             <!-- Empty State -->
             <div v-else class="text-center py-12">
-                <Target class="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                <h3 class="text-lg font-semibold mb-2">No bounties yet</h3>
+                <Archive v-if="showDeletedBounties" class="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                <Target v-else class="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                <h3 class="text-lg font-semibold mb-2">
+                    {{ showDeletedBounties ? 'No archived bounties' : 'No active bounties yet' }}
+                </h3>
                 <p class="text-muted-foreground">
-                    Create your first bounty above to start incentivizing contributions to your projects.
+                    {{ showDeletedBounties ? 'Your archived bounties will appear here.' : 'Create your first bounty above to start incentivizing contributions to your projects.' }}
                 </p>
             </div>
         </CardContent>
