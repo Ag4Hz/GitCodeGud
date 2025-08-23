@@ -9,6 +9,7 @@ use App\Models\Issue;
 use App\Models\Repo;
 use App\Services\GitHubApiService;
 use Illuminate\Database\QueryException;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -17,6 +18,8 @@ use Inertia\Response;
 
 class BountyController extends Controller
 {
+    use AuthorizesRequests;
+
     /**
      * Store a newly created bounty in storage.
      */
@@ -72,43 +75,61 @@ class BountyController extends Controller
                 ]
             );
 
-            // Create bounty - check if already exists
-            $bounty = Bounty::firstOrCreate(
-                [
-                    'issue_id' => $issue->id,
-                ],
-                [
-                    'title' => $validated['title'],
-                    'description' => $validated['description'] ?? '',
-                    'reward_xp' => $validated['reward_xp'],
-                    'languages' => $repoLanguages,
-                ]
-            );
+            $existingActiveBounty = Bounty::where('issue_id', $issue->id)
+                ->whereNull('deleted_at')
+                ->first();
 
-            if (!$bounty->wasRecentlyCreated) {
+            if ($existingActiveBounty) {
                 DB::rollBack();
                 return back()->withErrors([
                     'issue_url' => 'A bounty already exists for this GitHub issue.'
                 ]);
             }
 
-            DB::commit();
+            $deletedBounty = Bounty::where('issue_id', $issue->id)
+                ->whereNotNull('deleted_at')
+                ->first();
 
-            return redirect()
-                ->route('profile.show')
+            if ($deletedBounty) {
+                $deletedBounty->restore();
+                $deletedBounty->update([
+                    'title' => $validated['title'],
+                    'description' => $validated['description'] ?? '',
+                    'reward_xp' => $validated['reward_xp'],
+                    'languages' => $repoLanguages,
+                    'status' => 'open',
+                ]);
+
+                DB::commit();
+                return redirect()->route('profile.show')
+                    ->with('success', 'Bounty restored and updated successfully!');
+            }
+            Bounty::create([
+                'issue_id' => $issue->id,
+                'title' => $validated['title'],
+                'description' => $validated['description'] ?? '',
+                'reward_xp' => $validated['reward_xp'],
+                'languages' => $repoLanguages,
+                'status' => 'open',
+            ]);
+
+            DB::commit();
+            return redirect()->route('profile.show')
                 ->with('success', 'Bounty created successfully!');
 
         } catch (QueryException $e) {
             DB::rollBack();
             return back()->withErrors([
-                'issue_url' => 'A bounty already exists for this GitHub issue.'
+                'general' => 'An error occurred while creating the bounty. Please try again.'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withErrors([
+                'general' => 'An error occurred while creating the bounty. Please try again.'
             ]);
         }
     }
 
-    /**
-     * Show the bounty details.
-     */
     public function show(Bounty $bounty): Response
     {
         return Inertia::render('bounties/Show', [
@@ -139,16 +160,84 @@ class BountyController extends Controller
             ]);
         }
 
-        $validated = $request->validated();
-
-        $bounty->update([
-            'title' => $validated['title'],
-            'description' => $validated['description'],
-            'reward_xp' => $validated['reward_xp'],
-        ]);
-
-        return redirect()
-            ->route('profile.show')
+        $bounty->update($request->validated());
+        return redirect()->route('profile.show')
             ->with('success', 'Bounty updated successfully!');
+    }
+
+    /**
+     * Soft delete the specified bounty.
+     */
+    public function destroy(string $id): RedirectResponse
+    {
+        try {
+            $bounty = Bounty::findOrFail($id);
+
+            if ($bounty->deleted_at) {
+                return back()->withErrors([
+                    'general' => 'This bounty is already archived.'
+                ]);
+            }
+
+            if (!Gate::allows('delete', $bounty)) {
+                return back()->withErrors([
+                    'general' => 'You are not authorized to delete this bounty. Only the repository owner can delete bounties.'
+                ]);
+            }
+
+            $bounty->delete();
+
+            return redirect()->route('profile.show')
+                ->with('success', 'Bounty archived successfully! You can restore it from your archived bounties.');
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return back()->withErrors(['general' => 'Bounty not found.']);
+        } catch (\Exception $e) {
+            return back()->withErrors([
+                'general' => 'Error occurred while archiving bounty: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Restore a soft deleted bounty.
+     */
+    public function restore(string $id): RedirectResponse
+    {
+        try {
+            $bounty = Bounty::withTrashed()->findOrFail($id);
+
+            if (!Gate::allows('restore', $bounty)) {
+                return back()->withErrors([
+                    'general' => 'You are not authorized to restore this bounty. Only the repository owner can restore bounties.'
+                ]);
+            }
+
+            $bounty->restore();
+
+            return redirect()->route('profile.show')
+                ->with('success', 'Bounty restored successfully!');
+
+        } catch (\Exception $e) {
+            return back()->withErrors([
+                'general' => 'Bounty not found or could not be restored.'
+            ]);
+        }
+    }
+
+    /**
+     * Get public bounties for search/popular lists (excludes soft deleted).
+     */
+    public function index()
+    {
+        $bounties = Bounty::with(['issue.repo'])
+            ->active()
+            ->where('status', 'open')
+            ->latest()
+            ->paginate(12);
+
+        return Inertia::render('bounties/Index', [
+            'bounties' => $bounties,
+        ]);
     }
 }

@@ -47,26 +47,11 @@ class Bounty extends Model
     {
         return $query->whereNull('deleted_at');
     }
-
-    public function scopeDeleted($query)
-    {
-        return $query->onlyTrashed();
-    }
-
     /**
      * Check if bounty is soft deleted
      */
     public function isDeleted(): bool
     {
         return !is_null($this->deleted_at);
-    }
-
-    public function getStatusColorAttribute(): string
-    {
-        return match($this->status) {
-            'open' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-            'closed' => 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200',
-            default => 'bg-gray-100 text-gray-800',
-        };
     }
 }
