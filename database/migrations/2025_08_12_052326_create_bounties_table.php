@@ -20,6 +20,7 @@ return new class extends Migration
             $table->json('languages')->nullable();
             $table->unsignedInteger('reward_xp')->default(0);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
