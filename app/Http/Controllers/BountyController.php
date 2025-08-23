@@ -9,7 +9,6 @@ use App\Models\Issue;
 use App\Models\Repo;
 use App\Services\GitHubApiService;
 use Illuminate\Database\QueryException;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -18,8 +17,6 @@ use Inertia\Response;
 
 class BountyController extends Controller
 {
-    use AuthorizesRequests;
-
     /**
      * Store a newly created bounty in storage.
      */
@@ -101,10 +98,13 @@ class BountyController extends Controller
                 ]);
 
                 DB::commit();
-                return redirect()->route('profile.show')
+
+                return redirect()
+                    ->route('profile.show')
                     ->with('success', 'Bounty restored and updated successfully!');
             }
-            Bounty::create([
+
+            $bounty = Bounty::create([
                 'issue_id' => $issue->id,
                 'title' => $validated['title'],
                 'description' => $validated['description'] ?? '',
@@ -114,7 +114,9 @@ class BountyController extends Controller
             ]);
 
             DB::commit();
-            return redirect()->route('profile.show')
+
+            return redirect()
+                ->route('profile.show')
                 ->with('success', 'Bounty created successfully!');
 
         } catch (QueryException $e) {
@@ -130,6 +132,9 @@ class BountyController extends Controller
         }
     }
 
+    /**
+     * Show the bounty details.
+     */
     public function show(Bounty $bounty): Response
     {
         return Inertia::render('bounties/Show', [
@@ -160,8 +165,16 @@ class BountyController extends Controller
             ]);
         }
 
-        $bounty->update($request->validated());
-        return redirect()->route('profile.show')
+        $validated = $request->validated();
+
+        $bounty->update([
+            'title' => $validated['title'],
+            'description' => $validated['description'],
+            'reward_xp' => $validated['reward_xp'],
+        ]);
+
+        return redirect()
+            ->route('profile.show')
             ->with('success', 'Bounty updated successfully!');
     }
 
@@ -187,7 +200,8 @@ class BountyController extends Controller
 
             $bounty->delete();
 
-            return redirect()->route('profile.show')
+            return redirect()
+                ->route('profile.show')
                 ->with('success', 'Bounty archived successfully! You can restore it from your archived bounties.');
 
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
@@ -215,7 +229,8 @@ class BountyController extends Controller
 
             $bounty->restore();
 
-            return redirect()->route('profile.show')
+            return redirect()
+                ->route('profile.show')
                 ->with('success', 'Bounty restored successfully!');
 
         } catch (\Exception $e) {
