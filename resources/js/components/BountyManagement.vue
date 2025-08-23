@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Link, useForm } from '@inertiajs/vue3';
+import { Link, useForm, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -129,6 +129,8 @@ const saveEdit = (bounty: Bounty) => {
             // Clean up temporary state immediately
             delete optimisticUpdates.value[bounty.id];
             delete successMessages.value[bounty.id];
+
+            router.reload({ only: ['bounties'] });
         },
         onError: () => {
             delete optimisticUpdates.value[bounty.id];
@@ -146,8 +148,10 @@ const hasChanges = (bounty: Bounty) => {
 const softDeleteBounty = (bounty: Bounty) => {
     if (confirm('Are you sure you want to archive this bounty? It will be hidden from public listings but can be restored later.')) {
         deleteForm.delete(route('bounties.destroy', bounty.id), {
-            preserveScroll: false,
-            onSuccess: () => {},
+            preserveScroll: true,
+            onSuccess: () => {
+                router.reload({ only: ['bounties'] });
+            },
             onError: (errors) => {
                 console.error('Delete request failed:', errors);
                 if (errors.general) {
@@ -160,8 +164,10 @@ const softDeleteBounty = (bounty: Bounty) => {
 
 const restoreBounty = (bounty: Bounty) => {
     restoreForm.patch(route('bounties.restore', bounty.id), {
-        preserveScroll: false,
-        onSuccess: () => {},
+        preserveScroll: true,
+        onSuccess: () => {
+            router.reload({ only: ['bounties'] });
+        },
         onError: (errors) => {
             console.error('Restore request failed:', errors);
             if (errors.general) {
