@@ -145,51 +145,6 @@ class GitHubApiService
         return $this->handleResponse($response, "Failed to fetch repository: {$repoFullName}");
     }
 
-    public function getUserProfile(): array
-    {
-        $response = $this->createClient()->get('/user');
-        return $this->handleResponse($response, 'Failed to fetch GitHub user profile');
-    }
-
-    public function getRepositoryCommits(string $repoFullName, array $params = []): array
-    {
-        $defaultParams = [
-            'author' => $this->user->oauth_provider_id ?? $this->user->email,
-            'per_page' => 100
-        ];
-
-        $response = $this->createClient()
-            ->get("/repos/{$repoFullName}/commits", array_merge($defaultParams, $params));
-        return $this->handleSimpleResponse($response);
-    }
-
-    public function getRepositoryTopics(string $repoFullName): array
-    {
-        $response = $this->createClient()
-            ->withHeaders(['Accept' => 'application/vnd.github.mercy-preview+json'])
-            ->get("/repos/{$repoFullName}/topics");
-
-        $data = $this->handleSimpleResponse($response);
-        return $data['names'] ?? [];
-    }
-
-    public function getRepositoryReadme(string $repoFullName): ?string
-    {
-        $response = $this->createClient()->get("/repos/{$repoFullName}/readme");
-        $data = $this->handleSimpleResponse($response);
-
-        if (isset($data['content']) && isset($data['encoding']) && $data['encoding'] === 'base64') {
-            return base64_decode($data['content']);
-        }
-        return null;
-    }
-
-    public function getRepositoryStats(string $repoFullName): array
-    {
-        $response = $this->createClient()->get("/repos/{$repoFullName}/stats/contributors");
-        return $this->handleSimpleResponse($response);
-    }
-
     public function isIssueOpen(string $repoFullName, int $issueNumber): bool
     {
         $response = $this->createClient()->get("/repos/{$repoFullName}/issues/{$issueNumber}");
