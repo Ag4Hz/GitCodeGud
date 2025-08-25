@@ -12,6 +12,7 @@ export interface Bounty {
     status: BountyStatus;
     created_at: string;
     updated_at: string;
+    deleted_at: string | null;
     languages?: string[];
     issue: {
         url: string;

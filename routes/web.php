@@ -17,18 +17,17 @@ Route::get('dashboard', function () {
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::get('/profile/{user}', [ProfileController::class, 'show'])->whereNumber('user');
-});
 
-Route::middleware('auth')->group(function () {
     Route::post('/profile/sync-github-skills', [ProfileController::class, 'syncGitHubSkills'])
         ->name('profile.sync-github-skills');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::post('/bounties', [BountyController::class, 'store'])->name('bounties.store');
-    Route::get('/bounties/{bounty}', [BountyController::class, 'show'])->name('bounties.show');
-    Route::get('/bounties/{bounty}/edit', [BountyController::class, 'edit'])->name('bounties.edit');
-    Route::patch('/bounties/{bounty}', [BountyController::class, 'update'])->name('bounties.update');
+
+    Route::resource('bounties', BountyController::class)->except(['create']);
+    Route::patch('/bounties/{id}/restore', [BountyController::class, 'restore'])
+        ->where('id', '[0-9]+')
+        ->name('bounties.restore');
 });
 
 Route::middleware('auth')->group(function () {

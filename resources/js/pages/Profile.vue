@@ -482,7 +482,7 @@ const switchTab = (tab: string) => {
                         </Card>
 
                         <!-- Bounty List -->
-                        <BountyManagement :bounties="bounties" />
+                        <BountyManagement :bounties="bounties" :canEditBounties="isOwner" />
                     </div>
 
                     <!-- Skills Tab Content -->

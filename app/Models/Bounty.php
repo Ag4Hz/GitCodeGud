@@ -7,11 +7,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Bounty extends Model
 {
     /** @use HasFactory<BountyFactory> */
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'issue_id',
@@ -21,12 +22,14 @@ class Bounty extends Model
         'reward_xp',
         'languages',
     ];
+
     protected function casts(): array
     {
         return [
             'reward_xp' => 'integer',
             'status' => 'string',
             'languages' => 'array',
+            'deleted_at' => 'datetime',
         ];
     }
 
@@ -35,10 +38,12 @@ class Bounty extends Model
         return $this->hasMany(Submission::class);
     }
 
-    public function issue(): belongsTo
+    public function issue(): BelongsTo
     {
         return $this->belongsTo(Issue::class);
     }
-
-
+    public function scopeActive($query)
+    {
+        return $query->whereNull('deleted_at');
+    }
 }

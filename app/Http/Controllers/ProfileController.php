@@ -19,25 +19,21 @@ class ProfileController extends Controller
         protected GitHubSkillSyncService $gitHubSkillSync
     ) {}
 
-    public function show(Request $request, ?User $user = null): Response
+    public function show(Request $request, User $user = null): Response
     {
-        $viewer  = $request->user();
-        $profile = $user ?? $viewer;
+        if (!$user) {
+            $user = $request->user();
+        }
 
-        $bounties = Bounty::with(['issue.repo', 'submissions'])
-            ->whereHas('issue.repo', function ($query) use ($profile) {
-                $query->where('user_id', $profile->id);
-            })
-            ->orderByDesc('created_at')
-            ->paginate(10);
+        $isOwner = $request->user() && $request->user()->id === $user->id;
+        $bounties = $this->getUserBountiesWithDeleted($user);
 
         return Inertia::render('Profile', [
-            'user'      => XPHelper::getUserWithXP($profile),
-            'bounties'  => BountyResource::collection($bounties),
-            'isOwner'   => $viewer->id === $profile->id,
+            'user' => XPHelper::getUserWithXP($user),
+            'bounties' => BountyResource::collection($bounties),
+            'isOwner' => $isOwner,
         ]);
     }
-
 
     public function syncGitHubSkills(Request $request): RedirectResponse
     {
@@ -55,5 +51,19 @@ class ProfileController extends Controller
         }
 
         return redirect()->route('profile.show')->with('success', 'Skills successfully synced from GitHub!');
+    }
+
+    /**
+     * Get user's bounties including soft deleted ones for "My Bounties" view.
+     */
+    private function getUserBountiesWithDeleted(User $user)
+    {
+        return Bounty::with(['issue.repo', 'submissions'])
+            ->whereHas('issue.repo', function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })
+            ->withTrashed()
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
     }
 }
