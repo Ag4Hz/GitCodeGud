@@ -9,7 +9,7 @@ import UserSearch from '@/components/UserSearch.vue';
 type User = { id: number; nickname: string; avatar: string; name: string };
 
 type DashboardProps = AppPageProps<{
-    filters: { search?: string };
+    filters?: { search?: string };
     results?: { data?: User[] };
 }>;
 
@@ -23,7 +23,7 @@ const breadcrumbs: BreadcrumbItem[] = [{ title: 'Dashboard', href: '/dashboard' 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="relative mx-auto mt-10 mb-96 w-full max-w-md">
             <UserSearch
-                :filters="props.filters"
+                :filters="props.filters ?? {}"
                 :results="props.results ?? { data: [] }"
                 placeholder="Looking for a buddy?"
             />
