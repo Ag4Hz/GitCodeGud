@@ -8,7 +8,6 @@ use App\Models\Bounty;
 use App\Models\Issue;
 use App\Models\Repo;
 use App\Services\GitHubApiService;
-use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -22,89 +21,23 @@ class BountyController extends Controller
      */
     public function store(BountyStoreRequest $request): RedirectResponse
     {
-        DB::beginTransaction();
+        $validated = $request->validated();
+        $user = $request->user();
 
-        try {
-            $validated = $request->validated();
-            $user = $request->user();
+        $repoInfo = GitHubApiService::parseGitHubUrl($validated['repo_url']);
 
-            $repoInfo = GitHubApiService::parseGitHubUrl($validated['repo_url']);
-            $issueInfo = GitHubApiService::parseGitHubIssueUrl($validated['issue_url']);
+        if (!$user->can('createForRepository', [Bounty::class, $validated['repo_url']])) {
+            return back()->withErrors([
+                'repo_url' => 'You can only create bounties for repositories you own or have push access to.'
+            ]);
+        }
 
-            if (!$user->can('createForRepository', [Bounty::class, $validated['repo_url']])) {
-                DB::rollBack();
-                return back()->withErrors([
-                    'repo_url' => 'You can only create bounties for repositories you own or have push access to.'
-                ]);
-            }
+        return DB::transaction(function () use ($validated, $user, $repoInfo) {
+            $repo = $this->findOrCreateRepo($validated['repo_url'], $user, $repoInfo);
+            $issue = $this->findOrCreateIssue($validated['issue_url'], $repo->id, $validated['description']);
+            $repoLanguages = $this->getRepositoryLanguages($user, $repoInfo['full_name']);
 
-            // Find or create repository using Eloquent
-            $repo = Repo::updateOrCreate(
-                ['url' => $validated['repo_url']],
-                [
-                    'user_id' => $user->id,
-                    'description' => "Repository for {$repoInfo['full_name']}",
-                    'git_id' => $repoInfo['full_name'],
-                ]
-            );
-
-            // Get repository languages
-            $githubApi = new GitHubApiService($user);
-            $repoLanguages = [];
-
-            if ($githubApi->hasValidToken()) {
-                try {
-                    $languageStats = $githubApi->getRepositoryLanguages($repoInfo['full_name']);
-                    $repoLanguages = collect($languageStats)->sortDesc()->keys()->toArray();
-                } catch (\Exception $e) {
-                    $repoLanguages = [];
-                }
-            }
-
-            // Find or create issue using Eloquent
-            $issue = Issue::firstOrCreate(
-                [
-                    'url' => $validated['issue_url'],
-                    'repo_id' => $repo->id,
-                ],
-                [
-                    'description' => $validated['description'] ?? '',
-                ]
-            );
-
-            $existingActiveBounty = Bounty::where('issue_id', $issue->id)
-                ->whereNull('deleted_at')
-                ->first();
-
-            if ($existingActiveBounty) {
-                DB::rollBack();
-                return back()->withErrors([
-                    'issue_url' => 'A bounty already exists for this GitHub issue.'
-                ]);
-            }
-
-            $deletedBounty = Bounty::where('issue_id', $issue->id)
-                ->whereNotNull('deleted_at')
-                ->first();
-
-            if ($deletedBounty) {
-                $deletedBounty->restore();
-                $deletedBounty->update([
-                    'title' => $validated['title'],
-                    'description' => $validated['description'] ?? '',
-                    'reward_xp' => $validated['reward_xp'],
-                    'languages' => $repoLanguages,
-                    'status' => 'open',
-                ]);
-
-                DB::commit();
-
-                return redirect()
-                    ->route('profile.show')
-                    ->with('success', 'Bounty restored and updated successfully!');
-            }
-
-            $bounty = Bounty::create([
+            Bounty::create([
                 'issue_id' => $issue->id,
                 'title' => $validated['title'],
                 'description' => $validated['description'] ?? '',
@@ -113,23 +46,10 @@ class BountyController extends Controller
                 'status' => 'open',
             ]);
 
-            DB::commit();
-
             return redirect()
                 ->route('profile.show')
                 ->with('success', 'Bounty created successfully!');
-
-        } catch (QueryException $e) {
-            DB::rollBack();
-            return back()->withErrors([
-                'general' => 'An error occurred while creating the bounty. Please try again.'
-            ]);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->withErrors([
-                'general' => 'An error occurred while creating the bounty. Please try again.'
-            ]);
-        }
+        });
     }
 
     /**
@@ -183,34 +103,25 @@ class BountyController extends Controller
      */
     public function destroy(string $id): RedirectResponse
     {
-        try {
-            $bounty = Bounty::findOrFail($id);
+        $bounty = Bounty::findOrFail($id);
 
-            if ($bounty->deleted_at) {
-                return back()->withErrors([
-                    'general' => 'This bounty is already archived.'
-                ]);
-            }
-
-            if (!Gate::allows('delete', $bounty)) {
-                return back()->withErrors([
-                    'general' => 'You are not authorized to delete this bounty. Only the repository owner can delete bounties.'
-                ]);
-            }
-
-            $bounty->delete();
-
-            return redirect()
-                ->route('profile.show')
-                ->with('success', 'Bounty archived successfully! You can restore it from your archived bounties.');
-
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return back()->withErrors(['general' => 'Bounty not found.']);
-        } catch (\Exception $e) {
+        if ($bounty->deleted_at) {
             return back()->withErrors([
-                'general' => 'Error occurred while archiving bounty: ' . $e->getMessage()
+                'general' => 'This bounty is already archived.'
             ]);
         }
+
+        if (!Gate::allows('delete', $bounty)) {
+            return back()->withErrors([
+                'general' => 'You are not authorized to delete this bounty. Only the repository owner can delete bounties.'
+            ]);
+        }
+
+        $bounty->delete();
+
+        return redirect()
+            ->route('profile.show')
+            ->with('success', 'Bounty archived successfully! You can restore it from your archived bounties.');
     }
 
     /**
@@ -218,26 +129,19 @@ class BountyController extends Controller
      */
     public function restore(string $id): RedirectResponse
     {
-        try {
-            $bounty = Bounty::withTrashed()->findOrFail($id);
+        $bounty = Bounty::withTrashed()->findOrFail($id);
 
-            if (!Gate::allows('restore', $bounty)) {
-                return back()->withErrors([
-                    'general' => 'You are not authorized to restore this bounty. Only the repository owner can restore bounties.'
-                ]);
-            }
-
-            $bounty->restore();
-
-            return redirect()
-                ->route('profile.show')
-                ->with('success', 'Bounty restored successfully!');
-
-        } catch (\Exception $e) {
+        if (!Gate::allows('restore', $bounty)) {
             return back()->withErrors([
-                'general' => 'Bounty not found or could not be restored.'
+                'general' => 'You are not authorized to restore this bounty. Only the repository owner can restore bounties.'
             ]);
         }
+
+        $bounty->restore();
+
+        return redirect()
+            ->route('profile.show')
+            ->with('success', 'Bounty restored successfully!');
     }
 
     /**
@@ -254,5 +158,46 @@ class BountyController extends Controller
         return Inertia::render('bounties/Index', [
             'bounties' => $bounties,
         ]);
+    }
+
+    /**
+     * Find or create repository.
+     */
+    private function findOrCreateRepo(string $repoUrl, $user, array $repoInfo): Repo
+    {
+        return Repo::updateOrCreate(
+            ['url' => $repoUrl],
+            [
+                'user_id' => $user->id,
+                'description' => "Repository for {$repoInfo['full_name']}",
+                'git_id' => $repoInfo['full_name'],
+            ]
+        );
+    }
+
+    /**
+     * Find or create issue.
+     */
+    private function findOrCreateIssue(string $issueUrl, int $repoId, ?string $description): Issue
+    {
+        return Issue::firstOrCreate(
+            ['url' => $issueUrl, 'repo_id' => $repoId],
+            ['description' => $description ?? '']
+        );
+    }
+
+    /**
+     * Get repository programming languages from GitHub API.
+     */
+    private function getRepositoryLanguages($user, string $repoFullName): array
+    {
+        $githubApi = new GitHubApiService($user);
+
+        if (!$githubApi->hasValidToken()) {
+            return [];
+        }
+
+        $languageStats = $githubApi->getRepositoryLanguages($repoFullName);
+        return collect($languageStats)->sortDesc()->keys()->toArray();
     }
 }
