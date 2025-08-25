@@ -28,7 +28,6 @@ watch(
             data: { search: search.value || null },
             reset: ['results'],
         });
-        console.log(props.results);
     },
 );
 </script>
