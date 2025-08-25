@@ -15,11 +15,12 @@ Route::get('/', function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
 });
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
-    Route::get('/profile/{user}', [ProfileController::class, 'show'])->whereNumber('user');
+    Route::get('/users/{user}', [ProfileController::class, 'show'])->name('users.show');
 });
 
 Route::middleware('auth')->group(function () {

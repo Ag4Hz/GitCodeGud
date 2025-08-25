@@ -18,7 +18,7 @@ const selectedUser = ref<User | null>(null);
 const users = computed<User[]>(() => props.results?.data ?? []);
 
 watch(selectedUser, (u) => {
-    if (u) router.visit(`/profile/${u.id}`);
+    if (u) router.visit(`/users/${u.id}`);
 });
 
 watch(
