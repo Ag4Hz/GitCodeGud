@@ -76,12 +76,7 @@ class BountyController extends Controller
      */
     public function update(BountyUpdateRequest $request, Bounty $bounty): RedirectResponse
     {
-        if (!Gate::allows('update', $bounty)) {
-            return back()->withErrors([
-                'general' => 'You are not authorized to edit this bounty. Only the repository owner can edit bounties.'
-            ]);
-        }
-
+        $this->authorize('update', $bounty);
         $validated = $request->validated();
 
         $bounty->update([
@@ -101,13 +96,7 @@ class BountyController extends Controller
     public function destroy(string $id): RedirectResponse
     {
         $bounty = Bounty::findOrFail($id);
-
-        if (!Gate::allows('delete', $bounty)) {
-            return back()->withErrors([
-                'general' => 'You are not authorized to delete this bounty. Only the repository owner can delete bounties.'
-            ]);
-        }
-
+        $this->authorize('delete', $bounty);
         $bounty->delete();
 
         return redirect()
