@@ -23,12 +23,14 @@ class BountyController extends Controller
     {
         $validated = $request->validated();
         $user = $request->user();
-
         $repoInfo = GitHubApiService::parseGitHubUrl($validated['repo_url']);
 
         return DB::transaction(function () use ($validated, $user, $repoInfo) {
             $repo = $this->findOrCreateRepo($validated['repo_url'], $user, $repoInfo);
-            $issue = $this->findOrCreateIssue($validated['issue_url'], $repo->id, $validated['description']);
+            $issue = Issue::firstOrCreate(
+                ['url' => $validated['issue_url'], 'repo_id' => $repo->id],
+                ['description' => $validated['description'] ?? '']
+            );
             $repoLanguages = $this->getRepositoryLanguages($user, $repoInfo['full_name']);
 
             Bounty::create([
@@ -119,13 +121,7 @@ class BountyController extends Controller
     public function restore(string $id): RedirectResponse
     {
         $bounty = Bounty::withTrashed()->findOrFail($id);
-
-        if (!Gate::allows('restore', $bounty)) {
-            return back()->withErrors([
-                'general' => 'You are not authorized to restore this bounty. Only the repository owner can restore bounties.'
-            ]);
-        }
-
+        $this->authorize('restore', $bounty);
         $bounty->restore();
 
         return redirect()
