@@ -46,4 +46,25 @@ class Bounty extends Model
     {
         return $query->whereNull('deleted_at');
     }
+    public static function getAvailableLanguages(): array
+    {
+        try {
+            $languages = Bounty::active()
+                ->where('status', 'open')
+                ->whereNotNull('languages')
+                ->get()
+                ->pluck('languages')
+                ->flatten()
+                ->unique()
+                ->filter()
+                ->sort()
+                ->values()
+                ->toArray();
+
+            return $languages;
+
+        } catch (\Exception $e) {
+            return [];
+        }
+    }
 }

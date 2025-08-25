@@ -148,10 +148,9 @@ class BountyController extends Controller
         }
 
         $bounties = $query->paginate(12)
-            ->withQueryString(); // Preserve query parameters in pagination links
+            ->withQueryString();
 
-        // Get available languages for filter dropdown
-        $availableLanguages = $this->getAvailableLanguages();
+        $availableLanguages = Bounty::getAvailableLanguages();
 
         return Inertia::render('bounties/Index', [
             'bounties' => $bounties,
@@ -162,27 +161,6 @@ class BountyController extends Controller
             ],
         ]);
     }
-
-    /**
-     * Get all unique languages from active bounties for the filter dropdown.
-     */
-    private function getAvailableLanguages(): array
-    {
-        $languages = Bounty::active()
-            ->where('status', 'open')
-            ->whereNotNull('languages')
-            ->get()
-            ->pluck('languages')
-            ->flatten()
-            ->unique()
-            ->filter()
-            ->sort()
-            ->values()
-            ->toArray();
-
-        return $languages;
-    }
-
     /**
      * Find or create repository.
      */
