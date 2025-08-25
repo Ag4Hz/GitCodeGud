@@ -42,16 +42,8 @@ class Bounty extends Model
     {
         return $this->belongsTo(Issue::class);
     }
-
     public function scopeActive($query)
     {
         return $query->whereNull('deleted_at');
-    }
-    /**
-     * Check if bounty is soft deleted
-     */
-    public function isDeleted(): bool
-    {
-        return !is_null($this->deleted_at);
     }
 }
