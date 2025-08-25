@@ -2,32 +2,35 @@
 import { Combobox, ComboboxInput, ComboboxOption, ComboboxOptions } from '@headlessui/vue';
 import { MagnifyingGlassIcon } from '@heroicons/vue/24/solid';
 import { router } from '@inertiajs/vue3';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
+
+type User = { id: number; nickname: string; avatar: string; name: string };
 
 const props = defineProps<{
     filters?: { search?: string };
+    results?: { data?: User[] };
     placeholder?: string;
 }>();
 
 const search = ref(props.filters?.search ?? '');
-
-const users = ref<{ id: number; nickname: string; avatar: string; name: string }[]>([]);
 const selectedUser = ref<{ id: number } | null>(null);
+
+const users = computed<User[]>(() => props.results?.data ?? []);
 
 watch(selectedUser, (u) => {
     if (u) router.visit(`/profile/${u.id}`);
 });
-watch(search, async (val) => {
-    const res = await fetch(`/users/search?search=${encodeURIComponent(val)}`);
 
-    if (!res.ok) {
-        console.error('Error:', res.status);
-        return;
-    }
-
-    const data = await res.json();
-    users.value = data.data;
-});
+watch(
+    search,
+    () => {
+        router.reload({
+            data: { search: search.value || null },
+            reset: ['results'],
+        });
+        console.log(props.results);
+    },
+);
 </script>
 
 <template>

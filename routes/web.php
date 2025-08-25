@@ -15,9 +15,6 @@ Route::get('/', function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-
-    Route::get('/users/search', [DashboardController::class, 'searchUsers'])
-        ->name('users.search');
 });
 
 Route::middleware('auth')->group(function () {
