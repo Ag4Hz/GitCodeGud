@@ -13,8 +13,8 @@ const props = defineProps<{
 }>();
 
 const search = ref(props.filters?.search ?? '');
-const selectedUser = ref<{ id: number } | null>(null);
 
+const selectedUser = ref<User | null>(null);
 const users = computed<User[]>(() => props.results?.data ?? []);
 
 watch(selectedUser, (u) => {
