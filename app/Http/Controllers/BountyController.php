@@ -9,6 +9,7 @@ use App\Models\Issue;
 use App\Models\Repo;
 use App\Services\GitHubApiService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
@@ -121,17 +122,65 @@ class BountyController extends Controller
     /**
      * Get public bounties for search/popular lists (excludes soft deleted).
      */
-    public function index()
+    public function index(Request $request)
     {
-        $bounties = Bounty::with(['issue.repo'])
+        $query = Bounty::with(['issue.repo'])
             ->active()
             ->where('status', 'open')
-            ->latest()
-            ->paginate(12);
+            ->latest();
+
+        // Search functionality
+        if ($request->filled('search')) {
+            $searchTerm = $request->get('search');
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('title', 'like', "%{$searchTerm}%")
+                    ->orWhere('description', 'like', "%{$searchTerm}%")
+                    ->orWhereHas('issue.repo', function ($repo) use ($searchTerm) {
+                        $repo->where('git_id', 'like', "%{$searchTerm}%");
+                    });
+            });
+        }
+
+        // Language filtering
+        if ($request->filled('language')) {
+            $language = $request->get('language');
+            $query->whereJsonContains('languages', $language);
+        }
+
+        $bounties = $query->paginate(12)
+            ->withQueryString(); // Preserve query parameters in pagination links
+
+        // Get available languages for filter dropdown
+        $availableLanguages = $this->getAvailableLanguages();
 
         return Inertia::render('bounties/Index', [
             'bounties' => $bounties,
+            'availableLanguages' => $availableLanguages,
+            'filters' => [
+                'search' => $request->get('search', ''),
+                'language' => $request->get('language', ''),
+            ],
         ]);
+    }
+
+    /**
+     * Get all unique languages from active bounties for the filter dropdown.
+     */
+    private function getAvailableLanguages(): array
+    {
+        $languages = Bounty::active()
+            ->where('status', 'open')
+            ->whereNotNull('languages')
+            ->get()
+            ->pluck('languages')
+            ->flatten()
+            ->unique()
+            ->filter()
+            ->sort()
+            ->values()
+            ->toArray();
+
+        return $languages;
     }
 
     /**
