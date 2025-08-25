@@ -15,7 +15,7 @@ class BountyPolicy
 
     public function view(User $user, Bounty $bounty): bool
     {
-        if ($bounty->isDeleted()) {
+        if ($bounty->trashed()) {
             return $this->isOwner($user, $bounty);
         }
         return true;
@@ -52,7 +52,7 @@ class BountyPolicy
 
     public function update(User $user, Bounty $bounty): bool
     {
-        if ($bounty->isDeleted()) {
+        if ($bounty->trashed()) {
             return false;
         }
         return $this->isOwner($user, $bounty);
@@ -60,7 +60,7 @@ class BountyPolicy
 
     public function delete(User $user, Bounty $bounty): bool
     {
-        if ($bounty->isDeleted()) {
+        if ($bounty->trashed()) {
             return false;
         }
         return $this->isOwner($user, $bounty);
@@ -68,7 +68,7 @@ class BountyPolicy
 
     public function restore(User $user, Bounty $bounty): bool
     {
-        if (!$bounty->isDeleted()) {
+        if (!$bounty->trashed()) {
             return false;
         }
         return $this->isOwner($user, $bounty);
@@ -78,18 +78,9 @@ class BountyPolicy
      */
     public function submit(User $user, Bounty $bounty): bool
     {
-        if ($bounty->isDeleted()) {
+        if ($bounty->trashed() || $bounty->status === 'closed' || $this->isOwner($user, $bounty)) {
             return false;
         }
-
-        if ($bounty->status === 'closed') {
-            return false;
-        }
-
-        if ($this->isOwner($user, $bounty)) {
-            return false;
-        }
-
         return auth()->check();
     }
 
