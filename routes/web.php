@@ -31,6 +31,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/bounties/{bounty}', [BountyController::class, 'update'])->name('bounties.update');
 });
 
+Route::middleware(['auth', 'verified', 'admin'])->group(function () {
+    Route::get('/admin', function () {
+        return Inertia::render('Admin');
+    })->name('admin');
+});
+
 Route::middleware('auth')->group(function () {
     Route::get('/leaderboard', [LeaderboardController::class, 'index'])
         ->name('leaderboard');
