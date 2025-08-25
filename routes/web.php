@@ -35,6 +35,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('bounties.restore');
 });
 
+Route::middleware(['auth', 'verified', 'admin'])->group(function () {
+    Route::get('/admin', function () {
+        return Inertia::render('Admin');
+    })->name('admin');
+});
+
 Route::middleware('auth')->group(function () {
     Route::get('/leaderboard', [LeaderboardController::class, 'index'])
         ->name('leaderboard');
