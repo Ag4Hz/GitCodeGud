@@ -12,7 +12,13 @@ class BountyStoreRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return auth()->check();
+        if (!auth()->check()) {
+            return false;
+        }
+        $user = $this->user();
+        $repoUrl = $this->input('repo_url');
+
+        return $user->can('createForRepository', [Bounty::class, $repoUrl]);
     }
 
     public function rules(): array

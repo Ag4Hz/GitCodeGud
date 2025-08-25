@@ -26,12 +26,6 @@ class BountyController extends Controller
 
         $repoInfo = GitHubApiService::parseGitHubUrl($validated['repo_url']);
 
-        if (!$user->can('createForRepository', [Bounty::class, $validated['repo_url']])) {
-            return back()->withErrors([
-                'repo_url' => 'You can only create bounties for repositories you own or have push access to.'
-            ]);
-        }
-
         return DB::transaction(function () use ($validated, $user, $repoInfo) {
             $repo = $this->findOrCreateRepo($validated['repo_url'], $user, $repoInfo);
             $issue = $this->findOrCreateIssue($validated['issue_url'], $repo->id, $validated['description']);
@@ -46,10 +40,11 @@ class BountyController extends Controller
                 'status' => 'open',
             ]);
 
-            return redirect()
-                ->route('profile.show')
-                ->with('success', 'Bounty created successfully!');
         });
+
+        return redirect()
+            ->route('profile.show')
+            ->with('success', 'Bounty created successfully!');
     }
 
     /**
@@ -104,12 +99,6 @@ class BountyController extends Controller
     public function destroy(string $id): RedirectResponse
     {
         $bounty = Bounty::findOrFail($id);
-
-        if ($bounty->deleted_at) {
-            return back()->withErrors([
-                'general' => 'This bounty is already archived.'
-            ]);
-        }
 
         if (!Gate::allows('delete', $bounty)) {
             return back()->withErrors([
