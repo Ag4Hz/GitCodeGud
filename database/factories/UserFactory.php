@@ -31,6 +31,7 @@ class UserFactory extends Factory
             'oauth_provider' => fake()->randomElement(['github']),
             'xp' => fake()->numberBetween(0, 500000),
             'remember_token' => Str::random(10),
+            'role' => 'user',
         ];
     }
     /**
