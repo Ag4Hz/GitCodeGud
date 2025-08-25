@@ -48,6 +48,13 @@ const mainNavItems: NavItem[] = [
     },
 ];
 
+if (auth.value.user.role === 'admin') {
+    mainNavItems.push({
+        title: 'Admin',
+        href: '/admin',
+    });
+}
+
 </script>
 
 <template>
