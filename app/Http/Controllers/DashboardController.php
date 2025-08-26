@@ -18,22 +18,21 @@ class DashboardController extends Controller
             ->latest();
 
         // Search functionality
-        if ($request->filled('search')) {
+        $query->when($request->filled('search'), function ($q) use ($request) {
             $searchTerm = strtolower($request->get('search'));
-            $query->where(function ($q) use ($searchTerm) {
-                $q->whereRaw('LOWER(title) LIKE ?', ["%{$searchTerm}%"])
+            return $q->where(function ($query) use ($searchTerm) {
+                $query->whereRaw('LOWER(title) LIKE ?', ["%{$searchTerm}%"])
                     ->orWhereRaw('LOWER(description) LIKE ?', ["%{$searchTerm}%"])
                     ->orWhereHas('issue.repo', function ($repo) use ($searchTerm) {
                         $repo->whereRaw('LOWER(git_id) LIKE ?', ["%{$searchTerm}%"]);
                     });
             });
-        }
+        });
 
         // Language filtering
-        if ($request->filled('language')) {
-            $language = $request->get('language');
-            $query->whereJsonContains('languages', $language);
-        }
+        $query->when($request->filled('language'), function ($q) use ($request) {
+            return $q->whereJsonContains('languages', $request->get('language'));
+        });
 
         $bounties = $query->paginate(12)->withQueryString();
         $availableLanguages = Bounty::getAvailableLanguages();
