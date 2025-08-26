@@ -23,9 +23,8 @@ const breadcrumbs: BreadcrumbItem[] = [{ title: 'Dashboard', href: '/dashboard' 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="relative mx-auto mt-10 mb-96 w-full max-w-md">
             <UserSearch
-                :filters="props.filters ?? {}"
-                :results="props.results ?? { data: [] }"
-                placeholder="Looking for a buddy?"
+                :filters="props.filters"
+                :results="props.results"
             />
         </div>
 
