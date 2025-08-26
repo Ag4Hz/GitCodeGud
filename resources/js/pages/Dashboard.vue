@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Search, Target, Loader2, ChevronDown } from 'lucide-vue-next';
+import { Calendar, DollarSign, Search, Target, Loader2, ChevronDown } from 'lucide-vue-next';
 import { type BreadcrumbItem } from '@/types';
 import { BountyStatus, type BountyPagination, type Bounty } from '@/types/bounty';
 import { Head } from '@inertiajs/vue3';
@@ -93,6 +93,14 @@ const clearFilters = () => {
     router.visit(route('dashboard'), {
         preserveState: true,
         preserveScroll: true,
+    });
+};
+
+const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
     });
 };
 
@@ -256,6 +264,45 @@ const hasActiveFilters = computed(() => {
                                 </Badge>
                             </div>
                         </CardHeader>
+                        <CardContent class="space-y-4">
+                            <!-- Short Description (max 20 chars) -->
+                            <p v-if="bounty.description" class="text-sm text-muted-foreground">
+                                {{ bounty.description.length > 20 ? bounty.description.substring(0, 20) + '...' : bounty.description }}
+                            </p>
+
+                            <!-- Languages (max 3) -->
+                            <div v-if="bounty.languages && bounty.languages.length > 0" class="flex flex-wrap gap-1">
+                                <Badge
+                                    v-for="language in bounty.languages.slice(0, 3)"
+                                    :key="language"
+                                    variant="outline"
+                                    class="text-xs"
+                                >
+                                    {{ language }}
+                                </Badge>
+                                <Badge
+                                    v-if="bounty.languages.length > 3"
+                                    variant="outline"
+                                    class="text-xs"
+                                >
+                                    +{{ bounty.languages.length - 3 }}
+                                </Badge>
+                            </div>
+
+                            <!-- Only Reward XP -->
+                            <div class="flex items-center justify-between text-sm">
+                                <div class="flex items-center gap-1 text-yellow-600 font-medium">
+                                    <DollarSign class="h-4 w-4" />
+                                    {{ bounty.reward_xp }} XP
+                                </div>
+
+                                <!-- Created Date -->
+                                <span class="flex items-center gap-1 text-xs text-muted-foreground">
+                                    <Calendar class="h-3 w-3" />
+                                    {{ formatDate(bounty.created_at) }}
+                                </span>
+                            </div>
+                        </CardContent>
                     </Card>
                 </div>
 
