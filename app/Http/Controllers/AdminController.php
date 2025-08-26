@@ -11,74 +11,51 @@ class AdminController extends Controller
 {
     public function index()
     {
-        // Get XP statistics
-        $xpStats = [
-            'total_users' => $this->getTotalUsers(),
-            'users_with_xp' => $this->getUsersWithXP(),
-            'total_xp_distributed' => $this->getTotalXPDistributed(),
-            'average_xp' => $this->getAverageXP(),
-            'highest_xp' => $this->getHighestXP(),
-            'level_distribution' => $this->getLevelDistribution(),
-        ];
+        $xpStats = $this->getXPStatistics();
 
         return Inertia::render('Admin', [
             'xpStats' => $xpStats,
         ]);
     }
 
-    private function getTotalUsers()
+    private function getXPStatistics()
     {
-        return User::count();
-    }
-
-    private function getUsersWithXP()
-    {
-        return DB::table('user_skills')
-            ->distinct('user_id')
-            ->count('user_id');
-    }
-
-    private function getTotalXPDistributed()
-    {
-        return DB::table('user_skills')->sum('xp') ?? 0;
-    }
-
-    private function getAverageXP()
-    {
-        $userXPs = DB::table('user_skills')
-            ->select('user_id', DB::raw('SUM(xp) as total_xp'))
-            ->groupBy('user_id')
-            ->pluck('total_xp');
-
-        return $userXPs->count() > 0 ? round($userXPs->avg(), 2) : 0;
-    }
-
-    private function getHighestXP()
-    {
-        return DB::table('user_skills')
-            ->select(DB::raw('SUM(xp) as total_xp'))
-            ->groupBy('user_id')
-            ->orderBy('total_xp', 'desc')
-            ->value('total_xp') ?? 0;
-    }
-
-    private function getLevelDistribution()
-    {
-        $userXPs = DB::table('user_skills')
+        // Single query to get all user XP data
+        $userXpData = DB::table('user_skills')
             ->select('user_id', DB::raw('SUM(xp) as total_xp'))
             ->groupBy('user_id')
             ->get();
 
+        $totalUsers = User::count();
+        $usersWithXp = $userXpData->count();
+        $totalXpDistributed = $userXpData->sum('total_xp');
+        $averageXp = $usersWithXp > 0 ? round($userXpData->avg('total_xp'), 2) : 0;
+        $highestXp = $usersWithXp > 0 ? $userXpData->max('total_xp') : 0;
+
+        // Calculate level distribution
+        $levelDistribution = $this->calculateLevelDistribution($userXpData);
+
+        return [
+            'total_users' => $totalUsers,
+            'users_with_xp' => $usersWithXp,
+            'total_xp_distributed' => $totalXpDistributed,
+            'average_xp' => $averageXp,
+            'highest_xp' => $highestXp,
+            'level_distribution' => $levelDistribution,
+        ];
+    }
+
+    private function calculateLevelDistribution($userXpData)
+    {
         $distribution = [];
 
-        foreach ($userXPs as $userXP) {
-            if ($userXP->total_xp > 0) {
-                $level = XPHelper::calculateLevel($userXP->total_xp);
+        foreach ($userXpData as $userXp) {
+            if ($userXp->total_xp > 0) {
+                $level = XPHelper::calculateLevel($userXp->total_xp);
                 $distribution[$level] = ($distribution[$level] ?? 0) + 1;
             }
         }
 
-        // If no users have XP, add a default level 1 entry
         if (empty($distribution)) {
             $distribution[1] = 0;
         }
