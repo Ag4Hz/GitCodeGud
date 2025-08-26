@@ -76,4 +76,24 @@ class XPHelper
             'progress_percentage' => $levelProgress['progress_percentage'],
         ]);
     }
+
+    public static function getXPConfigs(): array
+    {
+        return Cache::get('xp_configuration', [
+            'base_xp' => 100,
+            'bonus_multiplier' => 1.5,
+        ]);
+    }
+
+    public static function getLevelThresholds(): array
+    {
+        $thresholds = self::getXPThresholds();
+        $levelThresholds = [];
+
+        for ($i = 0; $i < count($thresholds); $i++) {
+            $levelThresholds[$i + 1] = $thresholds[$i];
+        }
+
+        return $levelThresholds;
+    }
 }
