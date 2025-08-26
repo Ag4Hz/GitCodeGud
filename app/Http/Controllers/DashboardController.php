@@ -9,13 +9,10 @@ use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    public function __construct(
-        private BountySearchService $bountySearchService
-    ) {}
-
     public function index(Request $request): Response
     {
-        $bountySearchData = $this->bountySearchService->getBountyData($request);
+        $bountySearchService = new BountySearchService();
+        $bountySearchData = $bountySearchService->getBountyData($request);
 
         return Inertia::render('Dashboard', $bountySearchData);
     }
