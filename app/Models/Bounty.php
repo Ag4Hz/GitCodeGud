@@ -48,7 +48,6 @@ class Bounty extends Model
     }
     public static function getAvailableLanguages(): array
     {
-        try {
             $languages = Bounty::active()
                 ->where('status', 'open')
                 ->whereNotNull('languages')
@@ -62,9 +61,5 @@ class Bounty extends Model
                 ->toArray();
 
             return $languages;
-
-        } catch (\Exception $e) {
-            return [];
-        }
     }
 }
