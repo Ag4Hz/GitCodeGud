@@ -122,6 +122,19 @@ const navigateToBounty = (bounty: Bounty) => {
     router.visit(route('bounties.show', { bounty: bounty.id }));
 };
 
+const navigateToPage = (page: number) => {
+    const params = new URLSearchParams(window.location.search);
+    params.set('page', page.toString());
+
+    const queryString = params.toString();
+    const url = `${route('dashboard')}?${queryString}`;
+
+    router.visit(url, {
+        preserveState: true,
+        preserveScroll: true,
+    });
+};
+
 const hasActiveFilters = computed(() => {
     return searchQuery.value.trim() !== '' || selectedLanguage.value !== '';
 });
@@ -262,6 +275,31 @@ const hasActiveFilters = computed(() => {
                     <Button v-if="hasActiveFilters" @click="clearFilters" variant="outline">
                         Clear all filters
                     </Button>
+                </div>
+
+                <!-- Pagination -->
+                <div v-if="bounties && bounties.last_page > 1" class="flex justify-center mt-8">
+                    <div class="flex items-center gap-2">
+                        <Button
+                            v-if="bounties.current_page > 1"
+                            variant="outline"
+                            size="sm"
+                            @click="navigateToPage(bounties.current_page - 1)"
+                        >
+                            Previous
+                        </Button>
+                        <span class="text-sm text-muted-foreground px-3">
+                            Page {{ bounties.current_page }} of {{ bounties.last_page }}
+                        </span>
+                        <Button
+                            v-if="bounties.current_page < bounties.last_page"
+                            variant="outline"
+                            size="sm"
+                            @click="navigateToPage(bounties.current_page + 1)"
+                        >
+                            Next
+                        </Button>
+                    </div>
                 </div>
             </div>
 
