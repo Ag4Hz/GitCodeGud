@@ -9,6 +9,7 @@ use App\Models\Issue;
 use App\Models\Repo;
 use App\Services\GitHubApiService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
@@ -121,19 +122,39 @@ class BountyController extends Controller
     /**
      * Get public bounties for search/popular lists (excludes soft deleted).
      */
-    public function index()
+    public function index(Request $request)
     {
         $bounties = Bounty::with(['issue.repo'])
             ->active()
             ->where('status', 'open')
             ->latest()
-            ->paginate(12);
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $searchTerm = strtolower($request->get('search'));
+                return $q->where(function ($query) use ($searchTerm) {
+                    $query->whereRaw('LOWER(title) LIKE ?', ["%{$searchTerm}%"])
+                        ->orWhereRaw('LOWER(description) LIKE ?', ["%{$searchTerm}%"])
+                        ->orWhereHas('issue.repo', function ($repo) use ($searchTerm) {
+                            $repo->whereRaw('LOWER(git_id) LIKE ?', ["%{$searchTerm}%"]);
+                        });
+                });
+            })
+            ->when($request->filled('language'), function ($q) use ($request) {
+                return $q->whereJsonContains('languages', $request->get('language'));
+            })
+            ->paginate(12)
+            ->withQueryString();
+
+        $availableLanguages = Bounty::getAvailableLanguages();
 
         return Inertia::render('bounties/Index', [
             'bounties' => $bounties,
+            'availableLanguages' => $availableLanguages,
+            'filters' => [
+                'search' => $request->get('search', ''),
+                'language' => $request->get('language', ''),
+            ],
         ]);
     }
-
     /**
      * Find or create repository.
      */
