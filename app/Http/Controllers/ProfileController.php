@@ -16,7 +16,7 @@ class ProfileController extends Controller
         private UserBountyService $userBountyService
     ) {}
 
-    public function show(Request $request, User $user = null): Response
+    public function show(Request $request, ?User $user = null): Response
     {
         if (!$user) {
             $user = $request->user();
