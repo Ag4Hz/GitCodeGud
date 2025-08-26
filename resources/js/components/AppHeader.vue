@@ -14,7 +14,7 @@ import { getInitials } from '@/composables/useInitials';
 import { useXP } from '@/composables/useXP';
 import type { BreadcrumbItem, NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
-import { LayoutGrid, Menu, Search } from 'lucide-vue-next';
+import { LayoutGrid, Menu, Search, ShieldCheck } from 'lucide-vue-next';
 import { computed } from 'vue';
 
 interface Props {
@@ -46,15 +46,15 @@ const mainNavItems: NavItem[] = [
         title: 'Leaderboard',
         href: '/leaderboard',
     },
-];
+]
 
 if (auth.value.user.role === 'admin') {
     mainNavItems.push({
         title: 'Admin',
         href: '/admin',
+        icon: ShieldCheck,
     });
 }
-
 </script>
 
 <template>
@@ -89,7 +89,6 @@ if (auth.value.user.role === 'admin') {
                                 </nav>
                                 <div class="flex flex-col space-y-4">
                                     <!-- Mobile right nav items section - currently empty -->
-
                                 </div>
                             </div>
                         </SheetContent>
@@ -142,7 +141,9 @@ if (auth.value.user.role === 'admin') {
                                 <div class="relative">
                                     <Avatar class="size-8 overflow-hidden rounded-full">
                                         <AvatarImage v-if="auth.user.avatar" :src="auth.user.avatar" :alt="auth.user.name" />
-                                        <AvatarFallback class="rounded-lg bg-neutral-200 font-semibold text-black dark:bg-neutral-700 dark:text-white">
+                                        <AvatarFallback
+                                            class="rounded-lg bg-neutral-200 font-semibold text-black dark:bg-neutral-700 dark:text-white"
+                                        >
                                             {{ getInitials(auth.user?.name) }}
                                         </AvatarFallback>
                                     </Avatar>
@@ -150,10 +151,10 @@ if (auth.value.user.role === 'admin') {
                                     <!-- XP Level Badge Overlay with Tooltip -->
                                     <Tooltip>
                                         <TooltipTrigger as-child>
-                                            <div class="absolute -bottom-1 -right-1 flex items-center justify-center">
+                                            <div class="absolute -right-1 -bottom-1 flex items-center justify-center">
                                                 <Badge
                                                     variant="secondary"
-                                                    class="h-4 min-w-4 px-1 text-xs font-bold bg-orange-500 text-white border-2 border-white dark:border-gray-900 shadow-sm cursor-help"
+                                                    class="h-4 min-w-4 cursor-help border-2 border-white bg-orange-500 px-1 text-xs font-bold text-white shadow-sm dark:border-gray-900"
                                                     :aria-label="`Level ${userXPData.level}, ${userXPData.totalXP} experience points`"
                                                 >
                                                     {{ userXPData.level }}
@@ -171,9 +172,7 @@ if (auth.value.user.role === 'admin') {
                             <div class="flex items-center justify-start gap-2 p-2">
                                 <div class="flex flex-col space-y-1 leading-none">
                                     <p class="font-medium">{{ auth.user.name }}</p>
-                                    <p class="text-xs text-muted-foreground">
-                                        Level {{ userXPData.level }} • {{ userXPData.formattedXP }} XP
-                                    </p>
+                                    <p class="text-xs text-muted-foreground">Level {{ userXPData.level }} • {{ userXPData.formattedXP }} XP</p>
                                 </div>
                             </div>
                             <UserMenuContent :user="auth.user" />
