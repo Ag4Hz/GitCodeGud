@@ -3,6 +3,7 @@
 use App\Http\Controllers\BountyController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\GitHubSkillController;
 use App\Http\Controllers\LeaderboardController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -11,15 +12,13 @@ Route::get('/', function () {
     return Inertia::render('Welcome');
 })->name('home');
 
-Route::get('dashboard', function () {
-    return Inertia::render('Dashboard', []);
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::get('/profile/{user}', [ProfileController::class, 'show'])->whereNumber('user');
 
-    Route::post('/profile/sync-github-skills', [ProfileController::class, 'syncGitHubSkills'])
+    Route::post('/profile/sync-github-skills', [GitHubSkillController::class, 'sync'])
         ->name('profile.sync-github-skills');
 });
 
