@@ -122,34 +122,31 @@ class BountyController extends Controller
     /**
      * Get public bounties for search/popular lists (excludes soft deleted).
      */
+    /**
+     * Get public bounties for search/popular lists (excludes soft deleted).
+     */
     public function index(Request $request)
     {
         $query = Bounty::with(['issue.repo'])
             ->active()
             ->where('status', 'open')
             ->latest();
-
-        // Search functionality
-        if ($request->filled('search')) {
-            $searchTerm = $request->get('search');
-            $query->where(function ($q) use ($searchTerm) {
-                $q->where('title', 'like', "%{$searchTerm}%")
-                    ->orWhere('description', 'like', "%{$searchTerm}%")
+        $query->when($request->filled('search'), function ($q) use ($request) {
+            $searchTerm = strtolower($request->get('search'));
+            return $q->where(function ($query) use ($searchTerm) {
+                $query->whereRaw('LOWER(title) LIKE ?', ["%{$searchTerm}%"])
+                    ->orWhereRaw('LOWER(description) LIKE ?', ["%{$searchTerm}%"])
                     ->orWhereHas('issue.repo', function ($repo) use ($searchTerm) {
-                        $repo->where('git_id', 'like', "%{$searchTerm}%");
+                        $repo->whereRaw('LOWER(git_id) LIKE ?', ["%{$searchTerm}%"]);
                     });
             });
-        }
+        });
 
-        // Language filtering
-        if ($request->filled('language')) {
-            $language = $request->get('language');
-            $query->whereJsonContains('languages', $language);
-        }
+        $query->when($request->filled('language'), function ($q) use ($request) {
+            return $q->whereJsonContains('languages', $request->get('language'));
+        });
 
-        $bounties = $query->paginate(12)
-            ->withQueryString();
-
+        $bounties = $query->paginate(12)->withQueryString();
         $availableLanguages = Bounty::getAvailableLanguages();
 
         return Inertia::render('bounties/Index', [
