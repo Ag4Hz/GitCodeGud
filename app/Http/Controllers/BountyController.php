@@ -122,31 +122,28 @@ class BountyController extends Controller
     /**
      * Get public bounties for search/popular lists (excludes soft deleted).
      */
-    /**
-     * Get public bounties for search/popular lists (excludes soft deleted).
-     */
     public function index(Request $request)
     {
-        $query = Bounty::with(['issue.repo'])
+        $bounties = Bounty::with(['issue.repo'])
             ->active()
             ->where('status', 'open')
-            ->latest();
-        $query->when($request->filled('search'), function ($q) use ($request) {
-            $searchTerm = strtolower($request->get('search'));
-            return $q->where(function ($query) use ($searchTerm) {
-                $query->whereRaw('LOWER(title) LIKE ?', ["%{$searchTerm}%"])
-                    ->orWhereRaw('LOWER(description) LIKE ?', ["%{$searchTerm}%"])
-                    ->orWhereHas('issue.repo', function ($repo) use ($searchTerm) {
-                        $repo->whereRaw('LOWER(git_id) LIKE ?', ["%{$searchTerm}%"]);
-                    });
-            });
-        });
+            ->latest()
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $searchTerm = strtolower($request->get('search'));
+                return $q->where(function ($query) use ($searchTerm) {
+                    $query->whereRaw('LOWER(title) LIKE ?', ["%{$searchTerm}%"])
+                        ->orWhereRaw('LOWER(description) LIKE ?', ["%{$searchTerm}%"])
+                        ->orWhereHas('issue.repo', function ($repo) use ($searchTerm) {
+                            $repo->whereRaw('LOWER(git_id) LIKE ?', ["%{$searchTerm}%"]);
+                        });
+                });
+            })
+            ->when($request->filled('language'), function ($q) use ($request) {
+                return $q->whereJsonContains('languages', $request->get('language'));
+            })
+            ->paginate(12)
+            ->withQueryString();
 
-        $query->when($request->filled('language'), function ($q) use ($request) {
-            return $q->whereJsonContains('languages', $request->get('language'));
-        });
-
-        $bounties = $query->paginate(12)->withQueryString();
         $availableLanguages = Bounty::getAvailableLanguages();
 
         return Inertia::render('bounties/Index', [
