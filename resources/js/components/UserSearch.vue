@@ -13,7 +13,7 @@ const props = withDefaults(defineProps<{
 }>(), {
     filters: () => ({ search: '' }),
     results: () => ({ data: [] }),
-    placeholder: 'Looking for a buddy?',    
+    placeholder: 'Looking for a buddy?',
 });
 
 const search = ref(props.filters?.search ?? '');
@@ -25,15 +25,13 @@ watch(selectedUser, (u) => {
     if (u) router.visit(`/users/${u.id}`);
 });
 
-watch(
-    search,
-    () => {
-        router.reload({
-            data: { search: search.value || null },
-            reset: ['results'],
-        });
-    },
-);
+watch(search, () => {
+    router.reload({
+        data: { search_user: search.value || null },
+        reset: ['users'],
+    });
+});
+
 </script>
 
 <template>

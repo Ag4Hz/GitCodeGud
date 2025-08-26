@@ -17,27 +17,18 @@ import UserSearch from '@/components/UserSearch.vue';
 
 type User = { id: number; nickname: string; avatar: string; name: string };
 
-type DashboardProps = AppPageProps<{
-    filters?: { search?: string };
-    results?: { data?: User[] };
+type PageProps = AppPageProps<{
+    bounties: BountyPagination;
+    availableLanguages: string[];
+    filters: { search: string; language: string };
+    userFilters: { search: string };
+    users: { data: User[] };
 }>;
 
-const props = defineProps<DashboardProps>();
-
-const breadcrumbs: BreadcrumbItem[] = [{ title: 'Dashboard', href: '/dashboard' }];
-interface Props {
-    bounties?: BountyPagination;
-    availableLanguages?: string[];
-    filters?: {
-        search: string;
-        language: string;
-    };
-}
-
-const props = withDefaults(defineProps<Props>(), {
-    bounties: () => ({ data: [], total: 0, current_page: 1, last_page: 1 }),
-    availableLanguages: () => [],
-    filters: () => ({ search: '', language: '' }),
+const props = withDefaults(defineProps<PageProps>(), {
+        bounties: () => ({ data: [], total: 0, current_page: 1, last_page: 1 }),
+        availableLanguages: () => [],
+        filters: () => ({ search: '', language: '' }),
 });
 
 const searchQuery = ref(props.filters?.search || '');
@@ -176,8 +167,8 @@ const hasActiveFilters = computed(() => {
             <!-- Existing User Search at the top -->
             <div class="relative mx-auto mt-10 mb-96 w-full max-w-md">
                 <UserSearch
-                    :filters="props.filters"
-                    :results="props.results"
+                    :filters="props.userFilters"
+                    :results="props.users"
                 />
             </div>
 
