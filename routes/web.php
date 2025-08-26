@@ -33,6 +33,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/users/{user}', [ProfileController::class, 'show'])->name('users.show');
 });
 
+Route::middleware('auth')->group(function () {
     Route::post('/profile/sync-github-skills', [ProfileController::class, 'syncGitHubSkills'])
         ->name('profile.sync-github-skills');
 });
