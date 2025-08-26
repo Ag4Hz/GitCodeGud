@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/vue3';
+import { Head, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/Icon.vue';
 import Heading from '@/components/Heading.vue';
+import { Button } from '@/components/ui/button';
 
 interface XPStats {
     total_users: number;
@@ -46,6 +47,14 @@ const props = withDefaults(defineProps<Props>(), {
     })
 });
 
+const editingThresholds = ref(false);
+const editableThresholds = ref<number[]>([]);
+const editingIndex = ref<number | null>(null);
+
+const thresholdForm = useForm({
+    thresholds: [] as number[],
+});
+
 const formatNumber = (num: number) => {
     return new Intl.NumberFormat().format(Math.round(num));
 };
@@ -70,6 +79,46 @@ const sortedSkillWeights = computed(() => {
     return Object.entries(props.xpConfig.skill_weights)
         .sort(([a], [b]) => a.localeCompare(b));
 });
+
+const startEditingThresholds = () => {
+    editingThresholds.value = true;
+    editableThresholds.value = Object.values(props.xpConfig.level_thresholds).map(Number);
+};
+
+const addNewThreshold = () => {
+    const lastThreshold = Math.max(...editableThresholds.value);
+    editableThresholds.value.push(lastThreshold + 1000);
+};
+
+const removeThreshold = (index: number) => {
+    if (editableThresholds.value.length > 1) {
+        editableThresholds.value.splice(index, 1);
+    }
+};
+
+const saveThresholds = () => {
+    thresholdForm.thresholds = [...editableThresholds.value];
+    thresholdForm.post(route('admin.thresholds.update'), {
+        onSuccess: () => {
+            editingThresholds.value = false;
+            editingIndex.value = null;
+        }
+    });
+};
+
+const cancelEditing = () => {
+    editingThresholds.value = false;
+    editingIndex.value = null;
+    editableThresholds.value = [];
+};
+
+const startEditingValue = (index: number) => {
+    editingIndex.value = index;
+};
+
+const finishEditingValue = () => {
+    editingIndex.value = null;
+};
 </script>
 
 <template>
@@ -205,9 +254,10 @@ const sortedSkillWeights = computed(() => {
                                 Level Thresholds
                             </CardTitle>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent class="space-y-4">
                             <div class="max-h-48 overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-muted-foreground/20 hover:scrollbar-thumb-muted-foreground/40">
-                                <div class="space-y-2 pr-2">
+                                <!-- Display Mode -->
+                                <div v-if="!editingThresholds" class="space-y-2 pr-2">
                                     <div
                                         v-for="([level, threshold]) in sortedLevelThresholds"
                                         :key="level"
@@ -223,6 +273,97 @@ const sortedSkillWeights = computed(() => {
                                             {{ formatNumber(Number(threshold)) }} XP
                                         </Badge>
                                     </div>
+                                </div>
+
+                                <!-- Edit Mode -->
+                                <div v-else class="space-y-2 pr-2">
+                                    <div
+                                        v-for="(threshold, index) in editableThresholds"
+                                        :key="index"
+                                        class="flex items-center justify-between gap-2 text-sm"
+                                    >
+                                        <span class="flex items-center gap-2">
+                                            <Badge variant="outline" class="w-8 h-6 p-0 flex items-center justify-center text-xs font-semibold">
+                                                {{ index + 1 }}
+                                            </Badge>
+                                            <span>Level {{ index + 1 }}</span>
+                                        </span>
+                                        <div class="flex items-center gap-1">
+                                            <input
+                                                v-if="editingIndex === index"
+                                                v-model.number="editableThresholds[index]"
+                                                @blur="finishEditingValue"
+                                                @keyup.enter="finishEditingValue"
+                                                class="w-20 h-6 px-1 text-xs text-center border rounded font-mono"
+                                                type="number"
+                                                min="0"
+                                                autofocus
+                                            />
+                                            <Badge
+                                                v-else
+                                                variant="secondary"
+                                                class="font-mono cursor-pointer hover:bg-secondary/80"
+                                                @click="startEditingValue(index)"
+                                            >
+                                                {{ formatNumber(threshold) }} XP
+                                            </Badge>
+                                            <Button
+                                                v-if="editableThresholds.length > 1"
+                                                variant="ghost"
+                                                size="sm"
+                                                class="h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                                                @click="removeThreshold(index)"
+                                            >
+                                                <Icon name="x" class="h-3 w-3" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div v-if="!editingThresholds" class="pt-2 border-t">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    class="w-full"
+                                    @click="startEditingThresholds"
+                                >
+                                    <Icon name="edit" class="h-4 w-4 mr-2" />
+                                    Modify Thresholds
+                                </Button>
+                            </div>
+
+                            <div v-else class="pt-2 border-t space-y-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    class="w-full"
+                                    @click="addNewThreshold"
+                                >
+                                    <Icon name="plus" class="h-4 w-4 mr-2" />
+                                    Add Level
+                                </Button>
+                                <div class="flex gap-2">
+                                    <Button
+                                        variant="default"
+                                        size="sm"
+                                        class="flex-1"
+                                        @click="saveThresholds"
+                                        :disabled="thresholdForm.processing"
+                                    >
+                                        <Icon name="check" class="h-4 w-4 mr-2" />
+                                        Save
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        class="flex-1"
+                                        @click="cancelEditing"
+                                    >
+                                        <Icon name="x" class="h-4 w-4 mr-2" />
+                                        Cancel
+                                    </Button>
                                 </div>
                             </div>
                         </CardContent>

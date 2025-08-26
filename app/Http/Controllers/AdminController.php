@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Helpers\XPHelper;
 use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
@@ -86,5 +88,22 @@ class AdminController extends Controller
 
         ksort($distribution);
         return $distribution;
+    }
+
+    public function updateThresholds(Request $request)
+    {
+        $thresholds = $request->validate([
+            'thresholds' => 'required|array',
+            'thresholds.*' => 'required|integer|min:0'
+        ]);
+
+        // Sort thresholds by value to maintain proper level order
+        $sortedThresholds = array_values($thresholds['thresholds']);
+        sort($sortedThresholds);
+
+        // Cache the new thresholds
+        Cache::put('xp_thresholds', $sortedThresholds, now()->addYear());
+
+        return back()->with('success', 'Level thresholds updated successfully!');
     }
 }
