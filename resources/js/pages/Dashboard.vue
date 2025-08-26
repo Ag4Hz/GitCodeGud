@@ -13,25 +13,29 @@ import { Calendar, DollarSign, Search, Target, Loader2, ChevronDown } from 'luci
 import { type BreadcrumbItem } from '@/types';
 import { BountyStatus, type BountyPagination, type Bounty } from '@/types/bounty';
 import { Head } from '@inertiajs/vue3';
+import type { AppPageProps } from '@/types';
 
-interface Props {
+type User = { id: number; nickname: string; avatar: string; name: string };
+
+type DashboardProps = AppPageProps<{
     bounties?: BountyPagination;
     availableLanguages?: string[];
     filters?: {
-        search: string;
-        language: string;
+        search?: string;
+        language?: string;
     };
-}
+    results?: { data?: User[] };
+}>;
 
-const props = withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<DashboardProps>(), {
     bounties: () => ({ data: [], total: 0, current_page: 1, last_page: 1 }),
     availableLanguages: () => [],
     filters: () => ({ search: '', language: '' }),
 });
 
-const searchQuery = ref(props.filters?.search || '');
-const selectedLanguage = ref(props.filters?.language || '');
-const isSearching = ref(false);
+const searchBountyQuery = ref(props.filters?.search || '');
+const selectedBountyLanguage = ref(props.filters?.language || '');
+const isBountySearching = ref(false);
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -53,19 +57,19 @@ const debounce = <T extends (...args: any[]) => void>(func: T, wait: number): ((
 };
 
 // Debounced search function to avoid too many requests
-const debouncedSearch = debounce(() => {
+const debouncedBountySearch = debounce(() => {
     const params = new URLSearchParams(window.location.search);
 
     params.delete('search');
     params.delete('language');
     params.delete('page');
 
-    if (searchQuery.value.trim()) {
-        params.set('search', searchQuery.value.trim());
+    if (searchBountyQuery.value.trim()) {
+        params.set('search', searchBountyQuery.value.trim());
     }
 
-    if (selectedLanguage.value) {
-        params.set('language', selectedLanguage.value);
+    if (selectedBountyLanguage.value) {
+        params.set('language', selectedBountyLanguage.value);
     }
 
     const queryString = params.toString();
@@ -75,21 +79,21 @@ const debouncedSearch = debounce(() => {
         preserveState: true,
         preserveScroll: true,
         onStart: () => {
-            isSearching.value = true;
+            isBountySearching.value = true;
         },
         onFinish: () => {
-            isSearching.value = false;
+            isBountySearching.value = false;
         },
     });
 }, 300);
 
-watch([searchQuery, selectedLanguage], () => {
-    debouncedSearch();
+watch([searchBountyQuery, selectedBountyLanguage], () => {
+    debouncedBountySearch();
 });
 
-const clearFilters = () => {
-    searchQuery.value = '';
-    selectedLanguage.value = '';
+const clearBountyFilters = () => {
+    searchBountyQuery.value = '';
+    selectedBountyLanguage.value = '';
     router.visit(route('dashboard'), {
         preserveState: true,
         preserveScroll: true,
@@ -130,15 +134,15 @@ const navigateToBounty = (bounty: Bounty) => {
     router.visit(route('bounties.show', { bounty: bounty.id }));
 };
 
-const navigateToPage = (page: number) => {
+const navigateToBountyPage = (page: number) => {
     const params = new URLSearchParams();
 
-    if (searchQuery.value.trim()) {
-        params.set('search', searchQuery.value.trim());
+    if (searchBountyQuery.value.trim()) {
+        params.set('search', searchBountyQuery.value.trim());
     }
 
-    if (selectedLanguage.value) {
-        params.set('language', selectedLanguage.value);
+    if (selectedBountyLanguage.value) {
+        params.set('language', selectedBountyLanguage.value);
     }
 
     params.set('page', page.toString());
@@ -152,8 +156,8 @@ const navigateToPage = (page: number) => {
     });
 };
 
-const hasActiveFilters = computed(() => {
-    return searchQuery.value.trim() !== '' || selectedLanguage.value !== '';
+const hasActiveBountyFilters = computed(() => {
+    return searchBountyQuery.value.trim() !== '' || selectedBountyLanguage.value !== '';
 });
 </script>
 
@@ -162,9 +166,12 @@ const hasActiveFilters = computed(() => {
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div>
-            <!-- Existing User Search at the top -->
+            <!-- User Search at the top -->
             <div class="relative mx-auto mt-10 mb-16 w-full max-w-md">
-                <UserSearch />
+                <UserSearch
+                    :filters="props.filters"
+                    :results="props.results"
+                />
             </div>
 
             <!-- Bounty Search and Grid Section -->
@@ -191,7 +198,7 @@ const hasActiveFilters = computed(() => {
                             <div class="flex-1 relative">
                                 <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <Input
-                                    v-model="searchQuery"
+                                    v-model="searchBountyQuery"
                                     placeholder="Search bounties by title, description, or repository..."
                                     class="pl-10 pr-4"
                                 />
@@ -202,22 +209,22 @@ const hasActiveFilters = computed(() => {
                                 <DropdownMenu>
                                     <DropdownMenuTrigger as-child>
                                         <Button variant="outline" class="w-full justify-between">
-                                            {{ selectedLanguage || 'All Languages' }}
+                                            {{ selectedBountyLanguage || 'All Languages' }}
                                             <ChevronDown class="h-4 w-4 opacity-50" />
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent class="w-48">
                                         <DropdownMenuItem
-                                            @click="selectedLanguage = ''"
-                                            :class="selectedLanguage === '' ? 'bg-accent' : ''"
+                                            @click="selectedBountyLanguage = ''"
+                                            :class="selectedBountyLanguage === '' ? 'bg-accent' : ''"
                                         >
                                             All Languages
                                         </DropdownMenuItem>
                                         <DropdownMenuItem
                                             v-for="language in availableLanguages"
                                             :key="language"
-                                            @click="selectedLanguage = language"
-                                            :class="selectedLanguage === language ? 'bg-accent' : ''"
+                                            @click="selectedBountyLanguage = language"
+                                            :class="selectedBountyLanguage === language ? 'bg-accent' : ''"
                                         >
                                             {{ language }}
                                         </DropdownMenuItem>
@@ -227,8 +234,8 @@ const hasActiveFilters = computed(() => {
 
                             <!-- Clear Filters Button -->
                             <Button
-                                v-if="hasActiveFilters"
-                                @click="clearFilters"
+                                v-if="hasActiveBountyFilters"
+                                @click="clearBountyFilters"
                                 variant="outline"
                                 size="default"
                                 class="sm:w-auto"
@@ -238,19 +245,19 @@ const hasActiveFilters = computed(() => {
                         </div>
 
                         <!-- Active Filters Display -->
-                        <div v-if="hasActiveFilters" class="flex flex-wrap gap-2">
-                            <Badge v-if="searchQuery.trim()" variant="secondary" class="flex items-center gap-1">
-                                Search: "{{ searchQuery.trim() }}"
+                        <div v-if="hasActiveBountyFilters" class="flex flex-wrap gap-2">
+                            <Badge v-if="searchBountyQuery.trim()" variant="secondary" class="flex items-center gap-1">
+                                Search: "{{ searchBountyQuery.trim() }}"
                             </Badge>
-                            <Badge v-if="selectedLanguage" variant="secondary" class="flex items-center gap-1">
-                                Language: {{ selectedLanguage }}
+                            <Badge v-if="selectedBountyLanguage" variant="secondary" class="flex items-center gap-1">
+                                Language: {{ selectedBountyLanguage }}
                             </Badge>
                         </div>
                     </CardContent>
                 </Card>
 
                 <!-- Loading State -->
-                <div v-if="isSearching" class="flex justify-center items-center py-8">
+                <div v-if="isBountySearching" class="flex justify-center items-center py-8">
                     <Loader2 class="h-8 w-8 animate-spin text-muted-foreground" />
                     <span class="ml-2 text-muted-foreground">Searching bounties...</span>
                 </div>
@@ -319,16 +326,16 @@ const hasActiveFilters = computed(() => {
                 <div v-else class="text-center py-12">
                     <Target class="mx-auto h-16 w-16 text-muted-foreground mb-6" />
                     <h3 class="text-xl font-semibold mb-2">
-                        {{ hasActiveFilters ? 'No bounties found' : 'No bounties available' }}
+                        {{ hasActiveBountyFilters ? 'No bounties found' : 'No bounties available' }}
                     </h3>
                     <p class="text-muted-foreground mb-4">
                         {{
-                            hasActiveFilters
+                            hasActiveBountyFilters
                                 ? 'Try adjusting your search terms or filters to find bounties.'
                                 : 'There are no open bounties at the moment. Check back later!'
                         }}
                     </p>
-                    <Button v-if="hasActiveFilters" @click="clearFilters" variant="outline">
+                    <Button v-if="hasActiveBountyFilters" @click="clearBountyFilters" variant="outline">
                         Clear all filters
                     </Button>
                 </div>
@@ -340,7 +347,7 @@ const hasActiveFilters = computed(() => {
                             v-if="bounties.current_page > 1"
                             variant="outline"
                             size="sm"
-                            @click="navigateToPage(bounties.current_page - 1)"
+                            @click="navigateToBountyPage(bounties.current_page - 1)"
                         >
                             Previous
                         </Button>
@@ -351,7 +358,7 @@ const hasActiveFilters = computed(() => {
                             v-if="bounties.current_page < bounties.last_page"
                             variant="outline"
                             size="sm"
-                            @click="navigateToPage(bounties.current_page + 1)"
+                            @click="navigateToBountyPage(bounties.current_page + 1)"
                         >
                             Next
                         </Button>
