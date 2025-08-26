@@ -106,4 +106,21 @@ class AdminController extends Controller
 
         return back()->with('success', 'Level thresholds updated successfully!');
     }
+
+    public function updateSkillWeights(Request $request)
+    {
+        $skillWeights = $request->validate([
+            'skillWeights' => 'required|array',
+            'skillWeights.*.skill_name' => 'required|string|max:255',
+            'skillWeights.*.multiplier' => 'required|numeric|min:0|max:10'
+        ]);
+
+        foreach ($skillWeights['skillWeights'] as $skillData) {
+            DB::table('skills')
+                ->where('skill_name', $skillData['skill_name'])
+                ->update(['multiplier' => $skillData['multiplier']]);
+        }
+
+        return back()->with('success', 'Skill weights updated successfully!');
+    }
 }

@@ -47,12 +47,21 @@ const props = withDefaults(defineProps<Props>(), {
     })
 });
 
+// Threshold editing state
 const editingThresholds = ref(false);
 const editableThresholds = ref<number[]>([]);
 const editingIndex = ref<number | null>(null);
 
+// Skill weights editing state
+const editingSkillWeights = ref(false);
+const editableSkillWeights = ref<SkillWeight[]>([]);
+const editingSkillIndex = ref<number | null>(null);
+
 const thresholdForm = useForm({
     thresholds: [] as number[],
+});
+const skillWeightsForm = useForm({
+    skillWeights: [] as SkillWeight[],
 });
 
 const formatNumber = (num: number) => {
@@ -80,6 +89,7 @@ const sortedSkillWeights = computed(() => {
         .sort(([a], [b]) => a.localeCompare(b));
 });
 
+// Threshold Editing Methods
 const startEditingThresholds = () => {
     editingThresholds.value = true;
     editableThresholds.value = Object.values(props.xpConfig.level_thresholds).map(Number);
@@ -118,6 +128,52 @@ const startEditingValue = (index: number) => {
 
 const finishEditingValue = () => {
     editingIndex.value = null;
+};
+
+// Skill weights functions
+const startEditingSkillWeights = () => {
+    editingSkillWeights.value = true;
+    editableSkillWeights.value = Object.entries(props.xpConfig.skill_weights).map(([skill_name, multiplier]) => ({
+        skill_name,
+        multiplier: Number(multiplier)
+    }));
+};
+
+const addNewSkillWeight = () => {
+    editableSkillWeights.value.push({
+        skill_name: 'new_skill',
+        multiplier: 1.0
+    });
+};
+
+const removeSkillWeight = (index: number) => {
+    if (editableSkillWeights.value.length > 1) {
+        editableSkillWeights.value.splice(index, 1);
+    }
+};
+
+const saveSkillWeights = () => {
+    skillWeightsForm.skillWeights = [...editableSkillWeights.value];
+    skillWeightsForm.post(route('admin.skill-weights.update'), {
+        onSuccess: () => {
+            editingSkillWeights.value = false;
+            editingSkillIndex.value = null;
+        }
+    });
+};
+
+const cancelEditingSkillWeights = () => {
+    editingSkillWeights.value = false;
+    editingSkillIndex.value = null;
+    editableSkillWeights.value = [];
+};
+
+const startEditingSkillValue = (index: number) => {
+    editingSkillIndex.value = index;
+};
+
+const finishEditingSkillValue = () => {
+    editingSkillIndex.value = null;
 };
 </script>
 
@@ -377,24 +433,121 @@ const finishEditingValue = () => {
                                 Skill Weights
                             </CardTitle>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent class="space-y-4">
                             <div class="max-h-48 overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-muted-foreground/20 hover:scrollbar-thumb-muted-foreground/40">
-                                <div v-if="Object.keys(props.xpConfig.skill_weights).length > 0" class="space-y-2 pr-2">
-                                    <div
-                                        v-for="([skill, weight]) in sortedSkillWeights"
-                                        :key="skill"
-                                        class="flex items-center justify-between text-sm"
-                                    >
-                                        <span class="font-medium capitalize">{{ skill }}</span>
-                                        <Badge variant="secondary" class="font-mono">
-                                            {{ weight }}x
-                                        </Badge>
+                                <!-- Display Mode -->
+                                <div v-if="!editingSkillWeights" class="space-y-2 pr-2">
+                                    <div v-if="Object.keys(props.xpConfig.skill_weights).length > 0">
+                                        <div
+                                            v-for="([skill, weight]) in sortedSkillWeights"
+                                            :key="skill"
+                                            class="flex items-center justify-between text-sm"
+                                        >
+                                            <span class="font-medium capitalize">{{ skill }}</span>
+                                            <Badge variant="secondary" class="font-mono">
+                                                {{ weight }}x
+                                            </Badge>
+                                        </div>
+                                    </div>
+                                    <div v-else class="text-center text-muted-foreground py-4">
+                                        <Icon name="code" class="mx-auto h-6 w-6 mb-2 opacity-50" />
+                                        <p class="text-xs">No skills configured</p>
                                     </div>
                                 </div>
 
-                                <div v-else class="text-center text-muted-foreground py-4">
-                                    <Icon name="code" class="mx-auto h-6 w-6 mb-2 opacity-50" />
-                                    <p class="text-xs">No skills configured</p>
+                                <!-- Edit Mode -->
+                                <div v-else class="space-y-2 pr-2">
+                                    <div
+                                        v-for="(skillWeight, index) in editableSkillWeights"
+                                        :key="index"
+                                        class="flex items-center justify-between gap-2 text-sm"
+                                    >
+                                        <div class="flex items-center gap-2 flex-1">
+                                            <input
+                                                v-model="skillWeight.skill_name"
+                                                class="flex-1 h-6 px-1 text-xs border rounded"
+                                                type="text"
+                                                placeholder="Skill name"
+                                            />
+                                        </div>
+                                        <div class="flex items-center gap-1">
+                                            <input
+                                                v-if="editingSkillIndex === index"
+                                                v-model.number="skillWeight.multiplier"
+                                                @blur="finishEditingSkillValue"
+                                                @keyup.enter="finishEditingSkillValue"
+                                                class="w-16 h-6 px-1 text-xs text-center border rounded font-mono"
+                                                type="number"
+                                                min="0"
+                                                max="10"
+                                                step="0.1"
+                                                autofocus
+                                            />
+                                            <Badge
+                                                v-else
+                                                variant="secondary"
+                                                class="font-mono cursor-pointer hover:bg-secondary/80"
+                                                @click="startEditingSkillValue(index)"
+                                            >
+                                                {{ skillWeight.multiplier }}x
+                                            </Badge>
+                                            <Button
+                                                v-if="editableSkillWeights.length > 1"
+                                                variant="ghost"
+                                                size="sm"
+                                                class="h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                                                @click="removeSkillWeight(index)"
+                                            >
+                                                <Icon name="x" class="h-3 w-3" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div v-if="!editingSkillWeights" class="pt-2 border-t">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    class="w-full"
+                                    @click="startEditingSkillWeights"
+                                >
+                                    <Icon name="edit" class="h-4 w-4 mr-2" />
+                                    Modify Skill Weights
+                                </Button>
+                            </div>
+
+                            <div v-else class="pt-2 border-t space-y-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    class="w-full"
+                                    @click="addNewSkillWeight"
+                                >
+                                    <Icon name="plus" class="h-4 w-4 mr-2" />
+                                    Add Skill
+                                </Button>
+                                <div class="flex gap-2">
+                                    <Button
+                                        variant="default"
+                                        size="sm"
+                                        class="flex-1"
+                                        @click="saveSkillWeights"
+                                        :disabled="skillWeightsForm.processing"
+                                    >
+                                        <Icon name="check" class="h-4 w-4 mr-2" />
+                                        Save
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        class="flex-1"
+                                        @click="cancelEditingSkillWeights"
+                                    >
+                                        <Icon name="x" class="h-4 w-4 mr-2" />
+                                        Cancel
+                                    </Button>
                                 </div>
                             </div>
                         </CardContent>
