@@ -47,6 +47,13 @@ const props = withDefaults(defineProps<Props>(), {
     })
 });
 
+// XP Settings editing state
+const editingXPSettings = ref(false);
+const editableBaseXP = ref(0);
+const editableBonusMultiplier = ref(0);
+const editingXPField = ref<'base_xp' | 'bonus_multiplier' | null>(null);
+
+
 // Threshold editing state
 const editingThresholds = ref(false);
 const editableThresholds = ref<number[]>([]);
@@ -57,6 +64,10 @@ const editingSkillWeights = ref(false);
 const editableSkillWeights = ref<SkillWeight[]>([]);
 const editingSkillIndex = ref<number | null>(null);
 
+const xpSettingsForm = useForm({
+    base_xp: 100,
+    bonus_multiplier: 1.5,
+});
 const thresholdForm = useForm({
     thresholds: [] as number[],
 });
@@ -88,6 +99,39 @@ const sortedSkillWeights = computed(() => {
     return Object.entries(props.xpConfig.skill_weights)
         .sort(([a], [b]) => a.localeCompare(b));
 });
+
+// XP Settings functions
+const startEditingXPSettings = () => {
+    editingXPSettings.value = true;
+    editableBaseXP.value = props.xpConfig.base_xp;
+    editableBonusMultiplier.value = props.xpConfig.bonus_multiplier;
+};
+
+const saveXPSettings = () => {
+    xpSettingsForm.base_xp = editableBaseXP.value;
+    xpSettingsForm.bonus_multiplier = editableBonusMultiplier.value;
+    xpSettingsForm.post(route('admin.xp-settings.update'), {
+        onSuccess: () => {
+            editingXPSettings.value = false;
+            editingXPField.value = null;
+        }
+    });
+};
+
+const cancelEditingXPSettings = () => {
+    editingXPSettings.value = false;
+    editingXPField.value = null;
+    editableBaseXP.value = 0;
+    editableBonusMultiplier.value = 0;
+};
+
+const startEditingXPField = (field: 'base_xp' | 'bonus_multiplier') => {
+    editingXPField.value = field;
+};
+
+const finishEditingXPField = () => {
+    editingXPField.value = null;
+};
 
 // Threshold Editing Methods
 const startEditingThresholds = () => {
@@ -287,17 +331,110 @@ const finishEditingSkillValue = () => {
                             </CardTitle>
                         </CardHeader>
                         <CardContent class="space-y-4">
-                            <div class="flex justify-between items-center">
-                                <span class="text-sm font-medium">Base XP</span>
-                                <Badge variant="outline" class="font-mono">
-                                    {{ formatNumber(props.xpConfig.base_xp) }}
-                                </Badge>
+                            <!-- Display Mode -->
+                            <div v-if="!editingXPSettings" class="space-y-4">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm font-medium">Base XP</span>
+                                    <Badge variant="outline" class="font-mono">
+                                        {{ formatNumber(props.xpConfig.base_xp) }}
+                                    </Badge>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm font-medium">Bonus Multiplier</span>
+                                    <Badge variant="outline" class="font-mono">
+                                        {{ props.xpConfig.bonus_multiplier }}x
+                                    </Badge>
+                                </div>
                             </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-sm font-medium">Bonus Multiplier</span>
-                                <Badge variant="outline" class="font-mono">
-                                    {{ props.xpConfig.bonus_multiplier }}x
-                                </Badge>
+
+                            <!-- Edit Mode -->
+                            <div v-else class="space-y-4">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm font-medium">Base XP</span>
+                                    <div class="flex items-center gap-1">
+                                        <input
+                                            v-if="editingXPField === 'base_xp'"
+                                            v-model.number="editableBaseXP"
+                                            @blur="finishEditingXPField"
+                                            @keyup.enter="finishEditingXPField"
+                                            class="w-20 h-6 px-1 text-xs text-center border rounded font-mono"
+                                            type="number"
+                                            min="1"
+                                            max="10000"
+                                            autofocus
+                                        />
+                                        <Badge
+                                            v-else
+                                            variant="outline"
+                                            class="font-mono cursor-pointer hover:bg-secondary/80"
+                                            @click="startEditingXPField('base_xp')"
+                                        >
+                                            {{ formatNumber(editableBaseXP) }}
+                                        </Badge>
+                                    </div>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm font-medium">Bonus Multiplier</span>
+                                    <div class="flex items-center gap-1">
+                                        <input
+                                            v-if="editingXPField === 'bonus_multiplier'"
+                                            v-model.number="editableBonusMultiplier"
+                                            @blur="finishEditingXPField"
+                                            @keyup.enter="finishEditingXPField"
+                                            class="w-20 h-6 px-1 text-xs text-center border rounded font-mono"
+                                            type="number"
+                                            min="0.1"
+                                            max="10"
+                                            step="0.1"
+                                            autofocus
+                                        />
+                                        <Badge
+                                            v-else
+                                            variant="outline"
+                                            class="font-mono cursor-pointer hover:bg-secondary/80"
+                                            @click="startEditingXPField('bonus_multiplier')"
+                                        >
+                                            {{ editableBonusMultiplier }}x
+                                        </Badge>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div v-if="!editingXPSettings" class="pt-2 border-t">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    class="w-full"
+                                    @click="startEditingXPSettings"
+                                >
+                                    <Icon name="edit" class="h-4 w-4 mr-2" />
+                                    Modify XP Settings
+                                </Button>
+                            </div>
+
+                            <div v-else class="pt-2 border-t">
+                                <div class="flex gap-2">
+                                    <Button
+                                        variant="default"
+                                        size="sm"
+                                        class="flex-1"
+                                        @click="saveXPSettings"
+                                        :disabled="xpSettingsForm.processing"
+                                    >
+                                        <Icon name="check" class="h-4 w-4 mr-2" />
+                                        Save
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        class="flex-1"
+                                        @click="cancelEditingXPSettings"
+                                    >
+                                        <Icon name="x" class="h-4 w-4 mr-2" />
+                                        Cancel
+                                    </Button>
+                                </div>
                             </div>
                         </CardContent>
                     </Card>

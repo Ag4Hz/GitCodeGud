@@ -123,4 +123,20 @@ class AdminController extends Controller
 
         return back()->with('success', 'Skill weights updated successfully!');
     }
+
+    public function updateXPSettings(Request $request)
+    {
+        $xpSettings = $request->validate([
+            'base_xp' => 'required|integer|min:1|max:10000',
+            'bonus_multiplier' => 'required|numeric|min:0.1|max:10'
+        ]);
+
+        // Update the XP configuration cache
+        Cache::put('xp_configuration', [
+            'base_xp' => $xpSettings['base_xp'],
+            'bonus_multiplier' => $xpSettings['bonus_multiplier'],
+        ], now()->addYear());
+
+        return back()->with('success', 'XP settings updated successfully!');
+    }
 }
