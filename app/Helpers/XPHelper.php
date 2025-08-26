@@ -1,31 +1,36 @@
 <?php
 
 namespace App\Helpers;
+
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 
 class XPHelper
 {
-    private static array $xpThresholds = [0, 1000, 5000, 15000, 30000, 60000, 120000, 250000, 400000, 500000];
+    private static function getXPThresholds(): array
+    {
+        return Cache::get('xp_thresholds', [0, 1000, 5000, 15000, 30000, 60000, 120000, 250000, 400000, 500000]);
+    }
 
     public static function calculateLevel(int $xp): int
     {
-        return match (true) {
-            $xp < 1000 => 1,
-            $xp < 5000 => 2,
-            $xp < 15000 => 3,
-            $xp < 30000 => 4,
-            $xp < 60000 => 5,
-            $xp < 120000 => 6,
-            $xp < 250000 => 7,
-            $xp < 400000 => 8,
-            default => 9,
-        };
+        $thresholds = self::getXPThresholds();
+
+        for ($level = count($thresholds) - 1; $level >= 1; $level--) {
+            if ($xp >= $thresholds[$level]) {
+                return $level;
+            }
+        }
+
+        return 1;
     }
 
     public static function getLevelProgress(int $totalXP, int $currentLevel): array
     {
-        $currentLevelXP = self::$xpThresholds[$currentLevel - 1] ?? 0;
-        $nextLevelXP = self::$xpThresholds[$currentLevel] ?? 500000;
+        $thresholds = self::getXPThresholds();
+
+        $currentLevelXP = $thresholds[$currentLevel - 1] ?? 0;
+        $nextLevelXP = $thresholds[$currentLevel] ?? $thresholds[count($thresholds) - 1];
 
         $progressXP = $totalXP - $currentLevelXP;
         $totalNeeded = $nextLevelXP - $currentLevelXP;
@@ -47,7 +52,7 @@ class XPHelper
         $skillsCollection = $user->skills->map(function ($skill) {
             return [
                 'skill_name' => $skill->skill_name,
-                'type' => $skill->type ,
+                'type' => $skill->type,
                 'xp' => $skill->pivot->xp,
                 'level' => $skill->pivot->level,
             ];
