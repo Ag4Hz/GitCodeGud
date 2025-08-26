@@ -19,12 +19,12 @@ class DashboardController extends Controller
 
         // Search functionality
         if ($request->filled('search')) {
-            $searchTerm = $request->get('search');
+            $searchTerm = strtolower($request->get('search'));
             $query->where(function ($q) use ($searchTerm) {
-                $q->where('title', 'like', "%{$searchTerm}%")
-                    ->orWhere('description', 'like', "%{$searchTerm}%")
+                $q->whereRaw('LOWER(title) LIKE ?', ["%{$searchTerm}%"])
+                    ->orWhereRaw('LOWER(description) LIKE ?', ["%{$searchTerm}%"])
                     ->orWhereHas('issue.repo', function ($repo) use ($searchTerm) {
-                        $repo->where('git_id', 'like', "%{$searchTerm}%");
+                        $repo->whereRaw('LOWER(git_id) LIKE ?', ["%{$searchTerm}%"]);
                     });
             });
         }
