@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import Heading from '@/components/Heading.vue';
+import Icon from '@/components/Icon.vue';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, useForm } from '@inertiajs/vue3';
-import AppLayout from '@/layouts/AppLayout.vue';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import Icon from '@/components/Icon.vue';
-import Heading from '@/components/Heading.vue';
-import { Button } from '@/components/ui/button';
+import { computed, ref } from 'vue';
 
 interface XPStats {
     total_users: number;
@@ -37,14 +37,14 @@ const props = withDefaults(defineProps<Props>(), {
         total_xp_distributed: 0,
         average_xp: 0,
         highest_xp: 0,
-        level_distribution: {}
+        level_distribution: {},
     }),
     xpConfig: () => ({
         base_xp: 100,
         bonus_multiplier: 1.5,
         skill_weights: {},
-        level_thresholds: { 1: 0 }
-    })
+        level_thresholds: { 1: 0 },
+    }),
 });
 
 // XP Settings editing state
@@ -52,7 +52,6 @@ const editingXPSettings = ref(false);
 const editableBaseXP = ref(0);
 const editableBonusMultiplier = ref(0);
 const editingXPField = ref<'base_xp' | 'bonus_multiplier' | null>(null);
-
 
 // Threshold editing state
 const editingThresholds = ref(false);
@@ -87,17 +86,14 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const sortedLevels = computed(() => {
-    return Object.entries(props.xpStats.level_distribution)
-        .sort(([a], [b]) => Number(a) - Number(b));
+    return Object.entries(props.xpStats.level_distribution).sort(([a], [b]) => Number(a) - Number(b));
 });
 const sortedLevelThresholds = computed(() => {
-    return Object.entries(props.xpConfig.level_thresholds)
-        .sort(([a], [b]) => Number(a) - Number(b));
+    return Object.entries(props.xpConfig.level_thresholds).sort(([a], [b]) => Number(a) - Number(b));
 });
 
 const sortedSkillWeights = computed(() => {
-    return Object.entries(props.xpConfig.skill_weights)
-        .sort(([a], [b]) => a.localeCompare(b));
+    return Object.entries(props.xpConfig.skill_weights).sort(([a], [b]) => a.localeCompare(b));
 });
 
 // XP Settings functions
@@ -114,7 +110,7 @@ const saveXPSettings = () => {
         onSuccess: () => {
             editingXPSettings.value = false;
             editingXPField.value = null;
-        }
+        },
     });
 };
 
@@ -156,7 +152,7 @@ const saveThresholds = () => {
         onSuccess: () => {
             editingThresholds.value = false;
             editingIndex.value = null;
-        }
+        },
     });
 };
 
@@ -179,14 +175,14 @@ const startEditingSkillWeights = () => {
     editingSkillWeights.value = true;
     editableSkillWeights.value = Object.entries(props.xpConfig.skill_weights).map(([skill_name, multiplier]) => ({
         skill_name,
-        multiplier: Number(multiplier)
+        multiplier: Number(multiplier),
     }));
 };
 
 const addNewSkillWeight = () => {
     editableSkillWeights.value.push({
         skill_name: 'new_skill',
-        multiplier: 1.0
+        multiplier: 1.0,
     });
 };
 
@@ -202,7 +198,7 @@ const saveSkillWeights = () => {
         onSuccess: () => {
             editingSkillWeights.value = false;
             editingSkillIndex.value = null;
-        }
+        },
     });
 };
 
@@ -234,9 +230,7 @@ const finishEditingSkillValue = () => {
                             <Icon name="chart-bar" class="h-6 w-6" />
                             <Heading title="Admin Dashboard" />
                         </CardTitle>
-                        <p class="text-sm text-muted-foreground">
-                            Monitor XP distribution and user statistics
-                        </p>
+                        <p class="text-sm text-muted-foreground">Monitor XP distribution and user statistics</p>
                     </CardHeader>
                 </Card>
 
@@ -250,9 +244,7 @@ const finishEditingSkillValue = () => {
                         </CardHeader>
                         <CardContent>
                             <div class="text-2xl font-bold">{{ formatNumber(props.xpStats.total_users) }}</div>
-                            <p class="text-xs text-muted-foreground">
-                                {{ formatNumber(props.xpStats.users_with_xp) }} with XP earned
-                            </p>
+                            <p class="text-xs text-muted-foreground">{{ formatNumber(props.xpStats.users_with_xp) }} with XP earned</p>
                         </CardContent>
                     </Card>
 
@@ -264,9 +256,7 @@ const finishEditingSkillValue = () => {
                         </CardHeader>
                         <CardContent>
                             <div class="text-2xl font-bold">{{ formatNumber(props.xpStats.total_xp_distributed) }}</div>
-                            <p class="text-xs text-muted-foreground">
-                                Avg: {{ formatNumber(props.xpStats.average_xp) }} per active user
-                            </p>
+                            <p class="text-xs text-muted-foreground">Avg: {{ formatNumber(props.xpStats.average_xp) }} per active user</p>
                         </CardContent>
                     </Card>
 
@@ -278,9 +268,7 @@ const finishEditingSkillValue = () => {
                         </CardHeader>
                         <CardContent>
                             <div class="text-2xl font-bold">{{ formatNumber(props.xpStats.highest_xp) }}</div>
-                            <p class="text-xs text-muted-foreground">
-                                Top performer
-                            </p>
+                            <p class="text-xs text-muted-foreground">Top performer</p>
                         </CardContent>
                     </Card>
 
@@ -291,15 +279,13 @@ const finishEditingSkillValue = () => {
                             <Icon name="list" class="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div class="max-h-32 overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-muted-foreground/20 hover:scrollbar-thumb-muted-foreground/40">
+                            <div
+                                class="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-muted-foreground/20 hover:scrollbar-thumb-muted-foreground/40 max-h-32 overflow-y-auto"
+                            >
                                 <div v-if="Object.keys(props.xpStats.level_distribution).length > 0" class="space-y-2 pr-2">
-                                    <div
-                                        v-for="([level, count]) in sortedLevels"
-                                        :key="level"
-                                        class="flex items-center justify-between text-sm"
-                                    >
+                                    <div v-for="[level, count] in sortedLevels" :key="level" class="flex items-center justify-between text-sm">
                                         <span class="flex items-center gap-2">
-                                            <Badge variant="outline" class="w-8 h-6 p-0 flex items-center justify-center text-xs font-semibold">
+                                            <Badge variant="outline" class="flex h-6 w-8 items-center justify-center p-0 text-xs font-semibold">
                                                 {{ level }}
                                             </Badge>
                                             <span>Level {{ level }}</span>
@@ -310,8 +296,8 @@ const finishEditingSkillValue = () => {
                                     </div>
                                 </div>
 
-                                <div v-else class="text-center text-muted-foreground py-4">
-                                    <Icon name="cube" class="mx-auto h-6 w-6 mb-2 opacity-50" />
+                                <div v-else class="py-4 text-center text-muted-foreground">
+                                    <Icon name="cube" class="mx-auto mb-2 h-6 w-6 opacity-50" />
                                     <p class="text-xs">No users with XP yet</p>
                                 </div>
                             </div>
@@ -333,23 +319,21 @@ const finishEditingSkillValue = () => {
                         <CardContent class="space-y-4">
                             <!-- Display Mode -->
                             <div v-if="!editingXPSettings" class="space-y-4">
-                                <div class="flex justify-between items-center">
+                                <div class="flex items-center justify-between">
                                     <span class="text-sm font-medium">Base XP</span>
                                     <Badge variant="outline" class="font-mono">
                                         {{ formatNumber(props.xpConfig.base_xp) }}
                                     </Badge>
                                 </div>
-                                <div class="flex justify-between items-center">
+                                <div class="flex items-center justify-between">
                                     <span class="text-sm font-medium">Bonus Multiplier</span>
-                                    <Badge variant="outline" class="font-mono">
-                                        {{ props.xpConfig.bonus_multiplier }}x
-                                    </Badge>
+                                    <Badge variant="outline" class="font-mono"> {{ props.xpConfig.bonus_multiplier }}x </Badge>
                                 </div>
                             </div>
 
                             <!-- Edit Mode -->
                             <div v-else class="space-y-4">
-                                <div class="flex justify-between items-center">
+                                <div class="flex items-center justify-between">
                                     <span class="text-sm font-medium">Base XP</span>
                                     <div class="flex items-center gap-1">
                                         <input
@@ -357,7 +341,7 @@ const finishEditingSkillValue = () => {
                                             v-model.number="editableBaseXP"
                                             @blur="finishEditingXPField"
                                             @keyup.enter="finishEditingXPField"
-                                            class="w-20 h-6 px-1 text-xs text-center border rounded font-mono"
+                                            class="h-6 w-20 rounded border px-1 text-center font-mono text-xs"
                                             type="number"
                                             min="1"
                                             max="10000"
@@ -366,14 +350,14 @@ const finishEditingSkillValue = () => {
                                         <Badge
                                             v-else
                                             variant="outline"
-                                            class="font-mono cursor-pointer hover:bg-secondary/80"
+                                            class="cursor-pointer font-mono hover:bg-secondary/80"
                                             @click="startEditingXPField('base_xp')"
                                         >
                                             {{ formatNumber(editableBaseXP) }}
                                         </Badge>
                                     </div>
                                 </div>
-                                <div class="flex justify-between items-center">
+                                <div class="flex items-center justify-between">
                                     <span class="text-sm font-medium">Bonus Multiplier</span>
                                     <div class="flex items-center gap-1">
                                         <input
@@ -381,7 +365,7 @@ const finishEditingSkillValue = () => {
                                             v-model.number="editableBonusMultiplier"
                                             @blur="finishEditingXPField"
                                             @keyup.enter="finishEditingXPField"
-                                            class="w-20 h-6 px-1 text-xs text-center border rounded font-mono"
+                                            class="h-6 w-20 rounded border px-1 text-center font-mono text-xs"
                                             type="number"
                                             min="0.1"
                                             max="10"
@@ -391,7 +375,7 @@ const finishEditingSkillValue = () => {
                                         <Badge
                                             v-else
                                             variant="outline"
-                                            class="font-mono cursor-pointer hover:bg-secondary/80"
+                                            class="cursor-pointer font-mono hover:bg-secondary/80"
                                             @click="startEditingXPField('bonus_multiplier')"
                                         >
                                             {{ editableBonusMultiplier }}x
@@ -401,37 +385,21 @@ const finishEditingSkillValue = () => {
                             </div>
 
                             <!-- Action Buttons -->
-                            <div v-if="!editingXPSettings" class="pt-2 border-t">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    class="w-full"
-                                    @click="startEditingXPSettings"
-                                >
-                                    <Icon name="edit" class="h-4 w-4 mr-2" />
+                            <div v-if="!editingXPSettings" class="border-t pt-2">
+                                <Button variant="outline" size="sm" class="w-full" @click="startEditingXPSettings">
+                                    <Icon name="edit" class="mr-2 h-4 w-4" />
                                     Modify XP Settings
                                 </Button>
                             </div>
 
-                            <div v-else class="pt-2 border-t">
+                            <div v-else class="border-t pt-2">
                                 <div class="flex gap-2">
-                                    <Button
-                                        variant="default"
-                                        size="sm"
-                                        class="flex-1"
-                                        @click="saveXPSettings"
-                                        :disabled="xpSettingsForm.processing"
-                                    >
-                                        <Icon name="check" class="h-4 w-4 mr-2" />
+                                    <Button variant="default" size="sm" class="flex-1" @click="saveXPSettings" :disabled="xpSettingsForm.processing">
+                                        <Icon name="check" class="mr-2 h-4 w-4" />
                                         Save
                                     </Button>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        class="flex-1"
-                                        @click="cancelEditingXPSettings"
-                                    >
-                                        <Icon name="x" class="h-4 w-4 mr-2" />
+                                    <Button variant="outline" size="sm" class="flex-1" @click="cancelEditingXPSettings">
+                                        <Icon name="x" class="mr-2 h-4 w-4" />
                                         Cancel
                                     </Button>
                                 </div>
@@ -448,23 +416,23 @@ const finishEditingSkillValue = () => {
                             </CardTitle>
                         </CardHeader>
                         <CardContent class="space-y-4">
-                            <div class="max-h-48 overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-muted-foreground/20 hover:scrollbar-thumb-muted-foreground/40">
+                            <div
+                                class="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-muted-foreground/20 hover:scrollbar-thumb-muted-foreground/40 max-h-48 overflow-y-auto"
+                            >
                                 <!-- Display Mode -->
                                 <div v-if="!editingThresholds" class="space-y-2 pr-2">
                                     <div
-                                        v-for="([level, threshold]) in sortedLevelThresholds"
+                                        v-for="[level, threshold] in sortedLevelThresholds"
                                         :key="level"
                                         class="flex items-center justify-between text-sm"
                                     >
                                         <span class="flex items-center gap-2">
-                                            <Badge variant="outline" class="w-8 h-6 p-0 flex items-center justify-center text-xs font-semibold">
+                                            <Badge variant="outline" class="flex h-6 w-8 items-center justify-center p-0 text-xs font-semibold">
                                                 {{ level }}
                                             </Badge>
                                             <span>Level {{ level }}</span>
                                         </span>
-                                        <Badge variant="secondary" class="font-mono">
-                                            {{ formatNumber(Number(threshold)) }} XP
-                                        </Badge>
+                                        <Badge variant="secondary" class="font-mono"> {{ formatNumber(Number(threshold)) }} XP </Badge>
                                     </div>
                                 </div>
 
@@ -476,7 +444,7 @@ const finishEditingSkillValue = () => {
                                         class="flex items-center justify-between gap-2 text-sm"
                                     >
                                         <span class="flex items-center gap-2">
-                                            <Badge variant="outline" class="w-8 h-6 p-0 flex items-center justify-center text-xs font-semibold">
+                                            <Badge variant="outline" class="flex h-6 w-8 items-center justify-center p-0 text-xs font-semibold">
                                                 {{ index + 1 }}
                                             </Badge>
                                             <span>Level {{ index + 1 }}</span>
@@ -487,7 +455,7 @@ const finishEditingSkillValue = () => {
                                                 v-model.number="editableThresholds[index]"
                                                 @blur="finishEditingValue"
                                                 @keyup.enter="finishEditingValue"
-                                                class="w-20 h-6 px-1 text-xs text-center border rounded font-mono"
+                                                class="h-6 w-20 rounded border px-1 text-center font-mono text-xs"
                                                 type="number"
                                                 min="0"
                                                 autofocus
@@ -495,7 +463,7 @@ const finishEditingSkillValue = () => {
                                             <Badge
                                                 v-else
                                                 variant="secondary"
-                                                class="font-mono cursor-pointer hover:bg-secondary/80"
+                                                class="cursor-pointer font-mono hover:bg-secondary/80"
                                                 @click="startEditingValue(index)"
                                             >
                                                 {{ formatNumber(threshold) }} XP
@@ -515,46 +483,25 @@ const finishEditingSkillValue = () => {
                             </div>
 
                             <!-- Action Buttons -->
-                            <div v-if="!editingThresholds" class="pt-2 border-t">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    class="w-full"
-                                    @click="startEditingThresholds"
-                                >
-                                    <Icon name="edit" class="h-4 w-4 mr-2" />
+                            <div v-if="!editingThresholds" class="border-t pt-2">
+                                <Button variant="outline" size="sm" class="w-full" @click="startEditingThresholds">
+                                    <Icon name="edit" class="mr-2 h-4 w-4" />
                                     Modify Thresholds
                                 </Button>
                             </div>
 
-                            <div v-else class="pt-2 border-t space-y-2">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    class="w-full"
-                                    @click="addNewThreshold"
-                                >
-                                    <Icon name="plus" class="h-4 w-4 mr-2" />
+                            <div v-else class="space-y-2 border-t pt-2">
+                                <Button variant="outline" size="sm" class="w-full" @click="addNewThreshold">
+                                    <Icon name="plus" class="mr-2 h-4 w-4" />
                                     Add Level
                                 </Button>
                                 <div class="flex gap-2">
-                                    <Button
-                                        variant="default"
-                                        size="sm"
-                                        class="flex-1"
-                                        @click="saveThresholds"
-                                        :disabled="thresholdForm.processing"
-                                    >
-                                        <Icon name="check" class="h-4 w-4 mr-2" />
+                                    <Button variant="default" size="sm" class="flex-1" @click="saveThresholds" :disabled="thresholdForm.processing">
+                                        <Icon name="check" class="mr-2 h-4 w-4" />
                                         Save
                                     </Button>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        class="flex-1"
-                                        @click="cancelEditing"
-                                    >
-                                        <Icon name="x" class="h-4 w-4 mr-2" />
+                                    <Button variant="outline" size="sm" class="flex-1" @click="cancelEditing">
+                                        <Icon name="x" class="mr-2 h-4 w-4" />
                                         Cancel
                                     </Button>
                                 </div>
@@ -571,23 +518,23 @@ const finishEditingSkillValue = () => {
                             </CardTitle>
                         </CardHeader>
                         <CardContent class="space-y-4">
-                            <div class="max-h-48 overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-muted-foreground/20 hover:scrollbar-thumb-muted-foreground/40">
+                            <div
+                                class="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-muted-foreground/20 hover:scrollbar-thumb-muted-foreground/40 max-h-48 overflow-y-auto"
+                            >
                                 <!-- Display Mode -->
                                 <div v-if="!editingSkillWeights" class="space-y-2 pr-2">
                                     <div v-if="Object.keys(props.xpConfig.skill_weights).length > 0">
                                         <div
-                                            v-for="([skill, weight]) in sortedSkillWeights"
+                                            v-for="[skill, weight] in sortedSkillWeights"
                                             :key="skill"
                                             class="flex items-center justify-between text-sm"
                                         >
                                             <span class="font-medium capitalize">{{ skill }}</span>
-                                            <Badge variant="secondary" class="font-mono">
-                                                {{ weight }}x
-                                            </Badge>
+                                            <Badge variant="secondary" class="font-mono"> {{ weight }}x </Badge>
                                         </div>
                                     </div>
-                                    <div v-else class="text-center text-muted-foreground py-4">
-                                        <Icon name="code" class="mx-auto h-6 w-6 mb-2 opacity-50" />
+                                    <div v-else class="py-4 text-center text-muted-foreground">
+                                        <Icon name="code" class="mx-auto mb-2 h-6 w-6 opacity-50" />
                                         <p class="text-xs">No skills configured</p>
                                     </div>
                                 </div>
@@ -599,10 +546,10 @@ const finishEditingSkillValue = () => {
                                         :key="index"
                                         class="flex items-center justify-between gap-2 text-sm"
                                     >
-                                        <div class="flex items-center gap-2 flex-1">
+                                        <div class="flex flex-1 items-center gap-2">
                                             <input
                                                 v-model="skillWeight.skill_name"
-                                                class="flex-1 h-6 px-1 text-xs border rounded"
+                                                class="h-6 flex-1 rounded border px-1 text-xs"
                                                 type="text"
                                                 placeholder="Skill name"
                                             />
@@ -613,7 +560,7 @@ const finishEditingSkillValue = () => {
                                                 v-model.number="skillWeight.multiplier"
                                                 @blur="finishEditingSkillValue"
                                                 @keyup.enter="finishEditingSkillValue"
-                                                class="w-16 h-6 px-1 text-xs text-center border rounded font-mono"
+                                                class="h-6 w-16 rounded border px-1 text-center font-mono text-xs"
                                                 type="number"
                                                 min="0"
                                                 max="10"
@@ -623,7 +570,7 @@ const finishEditingSkillValue = () => {
                                             <Badge
                                                 v-else
                                                 variant="secondary"
-                                                class="font-mono cursor-pointer hover:bg-secondary/80"
+                                                class="cursor-pointer font-mono hover:bg-secondary/80"
                                                 @click="startEditingSkillValue(index)"
                                             >
                                                 {{ skillWeight.multiplier }}x
@@ -643,26 +590,16 @@ const finishEditingSkillValue = () => {
                             </div>
 
                             <!-- Action Buttons -->
-                            <div v-if="!editingSkillWeights" class="pt-2 border-t">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    class="w-full"
-                                    @click="startEditingSkillWeights"
-                                >
-                                    <Icon name="edit" class="h-4 w-4 mr-2" />
+                            <div v-if="!editingSkillWeights" class="border-t pt-2">
+                                <Button variant="outline" size="sm" class="w-full" @click="startEditingSkillWeights">
+                                    <Icon name="edit" class="mr-2 h-4 w-4" />
                                     Modify Skill Weights
                                 </Button>
                             </div>
 
-                            <div v-else class="pt-2 border-t space-y-2">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    class="w-full"
-                                    @click="addNewSkillWeight"
-                                >
-                                    <Icon name="plus" class="h-4 w-4 mr-2" />
+                            <div v-else class="space-y-2 border-t pt-2">
+                                <Button variant="outline" size="sm" class="w-full" @click="addNewSkillWeight">
+                                    <Icon name="plus" class="mr-2 h-4 w-4" />
                                     Add Skill
                                 </Button>
                                 <div class="flex gap-2">
@@ -673,16 +610,11 @@ const finishEditingSkillValue = () => {
                                         @click="saveSkillWeights"
                                         :disabled="skillWeightsForm.processing"
                                     >
-                                        <Icon name="check" class="h-4 w-4 mr-2" />
+                                        <Icon name="check" class="mr-2 h-4 w-4" />
                                         Save
                                     </Button>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        class="flex-1"
-                                        @click="cancelEditingSkillWeights"
-                                    >
-                                        <Icon name="x" class="h-4 w-4 mr-2" />
+                                    <Button variant="outline" size="sm" class="flex-1" @click="cancelEditingSkillWeights">
+                                        <Icon name="x" class="mr-2 h-4 w-4" />
                                         Cancel
                                     </Button>
                                 </div>

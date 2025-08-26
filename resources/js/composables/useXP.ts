@@ -19,7 +19,7 @@ export function useXP() {
         return {
             totalXP,
             level,
-            formattedXP: formatXP(totalXP)
+            formattedXP: formatXP(totalXP),
         };
     });
 
@@ -29,6 +29,6 @@ export function useXP() {
         formatXP,
         getUserXP,
         userXPData,
-        auth
+        auth,
     };
 }

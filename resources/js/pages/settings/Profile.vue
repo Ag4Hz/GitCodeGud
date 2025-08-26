@@ -8,9 +8,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { getInitials } from '@/composables/useInitials';
 import AppLayout from '@/layouts/AppLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
-import { getInitials } from '@/composables/useInitials';
 import { type BreadcrumbItem, type User } from '@/types';
 import { computed } from 'vue';
 
@@ -62,11 +62,11 @@ const cancel = () => {
                 <HeadingSmall title="Profile information" description="Update your profile information and settings" />
 
                 <!-- Avatar Section -->
-                <div class="flex items-center gap-6 p-6 border border-border rounded-lg bg-card">
+                <div class="flex items-center gap-6 rounded-lg border border-border bg-card p-6">
                     <div class="relative">
                         <Avatar class="h-20 w-20 overflow-hidden rounded-lg">
                             <AvatarImage v-if="user.avatar" :src="user.avatar" :alt="user.name" />
-                            <AvatarFallback class="rounded-lg bg-neutral-200 font-semibold text-black dark:bg-neutral-700 dark:text-white text-2xl">
+                            <AvatarFallback class="rounded-lg bg-neutral-200 text-2xl font-semibold text-black dark:bg-neutral-700 dark:text-white">
                                 {{ getInitials(user.name) }}
                             </AvatarFallback>
                         </Avatar>
@@ -81,21 +81,21 @@ const cancel = () => {
                             <div class="relative">
                                 <textarea
                                     id="description"
-                                    class="w-full px-3 py-2 border border-border rounded-md shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent resize-none"
+                                    class="w-full resize-none rounded-md border border-border px-3 py-2 shadow-sm placeholder:text-muted-foreground focus:border-transparent focus:ring-2 focus:ring-ring focus:outline-none"
                                     :class="{ 'border-red-500 focus:ring-red-500': isDescriptionTooLong }"
                                     v-model="form.description"
                                     placeholder="Tell others about yourself..."
                                     rows="3"
                                 ></textarea>
-                                <div class="absolute bottom-2 right-2 text-xs text-muted-foreground"
-                                     :class="{ 'text-red-500': isDescriptionTooLong }">
+                                <div
+                                    class="absolute right-2 bottom-2 text-xs text-muted-foreground"
+                                    :class="{ 'text-red-500': isDescriptionTooLong }"
+                                >
                                     {{ descriptionLength }}/{{ maxDescriptionLength }}
                                 </div>
                             </div>
                             <InputError class="mt-1" :message="form.errors.description" />
-                            <p class="text-xs text-muted-foreground">
-                                This will be displayed on your public profile.
-                            </p>
+                            <p class="text-xs text-muted-foreground">This will be displayed on your public profile.</p>
                         </div>
                     </div>
                 </div>
@@ -103,14 +103,7 @@ const cancel = () => {
                 <form @submit.prevent="submit" class="space-y-6">
                     <div class="grid gap-2">
                         <Label for="name">Name</Label>
-                        <Input
-                            id="name"
-                            class="mt-1 block w-full"
-                            v-model="form.name"
-                            required
-                            autocomplete="name"
-                            placeholder="Full name"
-                        />
+                        <Input id="name" class="mt-1 block w-full" v-model="form.name" required autocomplete="name" placeholder="Full name" />
                         <InputError class="mt-2" :message="form.errors.name" />
                     </div>
 
@@ -148,22 +141,11 @@ const cancel = () => {
 
                     <!-- Save/Cancel buttons with validation -->
                     <div class="flex items-center gap-4">
-                        <Button
-                            type="submit"
-                            :disabled="form.processing || isDescriptionTooLong"
-                            class="min-w-20"
-                        >
+                        <Button type="submit" :disabled="form.processing || isDescriptionTooLong" class="min-w-20">
                             {{ form.processing ? 'Saving...' : 'Save' }}
                         </Button>
 
-                        <Button
-                            type="button"
-                            variant="outline"
-                            @click="cancel"
-                            :disabled="form.processing"
-                        >
-                            Cancel
-                        </Button>
+                        <Button type="button" variant="outline" @click="cancel" :disabled="form.processing"> Cancel </Button>
 
                         <Transition
                             enter-active-class="transition ease-in-out"
@@ -171,7 +153,7 @@ const cancel = () => {
                             leave-active-class="transition ease-in-out"
                             leave-to-class="opacity-0"
                         >
-                            <p v-if="form.recentlySuccessful" class="text-sm text-green-600 font-medium">Saved successfully!</p>
+                            <p v-if="form.recentlySuccessful" class="text-sm font-medium text-green-600">Saved successfully!</p>
                         </Transition>
                     </div>
                 </form>

@@ -1,7 +1,6 @@
-
 export enum BountyStatus {
     OPEN = 'open',
-    CLOSED = 'closed'
+    CLOSED = 'closed',
 }
 
 export interface Bounty {

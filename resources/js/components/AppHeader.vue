@@ -46,7 +46,7 @@ const mainNavItems: NavItem[] = [
         title: 'Leaderboard',
         href: '/leaderboard',
     },
-]
+];
 
 if (auth.value.user.role === 'admin') {
     mainNavItems.push({

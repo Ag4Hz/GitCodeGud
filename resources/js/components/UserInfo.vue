@@ -28,7 +28,6 @@ const { getUserXP } = useXP();
 
 const showAvatar = computed(() => props.user.avatar && props.user.avatar !== '');
 const userXPData = computed(() => getUserXP.value(props.user));
-
 </script>
 
 <template>
@@ -38,7 +37,7 @@ const userXPData = computed(() => getUserXP.value(props.user));
                 :is="clickable ? Link : 'div'"
                 :href="clickable ? '/profile' : undefined"
                 class="block"
-                :class="{ 'cursor-pointer hover:opacity-80 transition-opacity': clickable }"
+                :class="{ 'cursor-pointer transition-opacity hover:opacity-80': clickable }"
             >
                 <Avatar class="h-8 w-8 overflow-hidden rounded-lg">
                     <AvatarImage v-if="showAvatar" :src="user.avatar!" :alt="user.name" />
@@ -49,10 +48,11 @@ const userXPData = computed(() => getUserXP.value(props.user));
             </component>
             <Tooltip v-if="showXP">
                 <TooltipTrigger as-child>
-                    <div class="absolute -bottom-1 -right-1 flex items-center justify-center">
-                        <Badge variant="secondary"
-                               class="h-5 min-w-5 px-1 text-xs font-bold bg-orange-500 text-white border-2 border-white dark:border-gray-900 shadow-sm cursor-help"
-                               :aria-label="`Level ${userXPData.level}, ${userXPData.totalXP} experience points`"
+                    <div class="absolute -right-1 -bottom-1 flex items-center justify-center">
+                        <Badge
+                            variant="secondary"
+                            class="h-5 min-w-5 cursor-help border-2 border-white bg-orange-500 px-1 text-xs font-bold text-white shadow-sm dark:border-gray-900"
+                            :aria-label="`Level ${userXPData.level}, ${userXPData.totalXP} experience points`"
                         >
                             {{ userXPData.level }}
                         </Badge>
@@ -67,14 +67,10 @@ const userXPData = computed(() => getUserXP.value(props.user));
             <span class="truncate font-medium">{{ user.name }}</span>
             <div class="flex items-center gap-2">
                 <span v-if="showEmail" class="truncate text-xs text-muted-foreground">{{ user.email }}</span>
-                <span v-if="showXP && userXPData.totalXP" class="text-xs text-muted-foreground">
-                    {{ userXPData.formattedXP }} XP
-                </span>
+                <span v-if="showXP && userXPData.totalXP" class="text-xs text-muted-foreground"> {{ userXPData.formattedXP }} XP </span>
             </div>
             <div v-if="showDescription && user.description" class="mt-1">
-                <span class="text-xs text-muted-foreground italic truncate block">
-                    "{{ user.description }}"
-                </span>
+                <span class="block truncate text-xs text-muted-foreground italic"> "{{ user.description }}" </span>
             </div>
         </div>
     </div>
