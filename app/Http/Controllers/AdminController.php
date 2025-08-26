@@ -11,14 +11,16 @@ class AdminController extends Controller
 {
     public function index()
     {
-        $xpStats = $this->getXPStatistics();
+        $xpStats = $this->getXPStats();
+        $xpConfig = $this->getXPConfigs();
 
         return Inertia::render('Admin', [
             'xpStats' => $xpStats,
+            'xpConfig' => $xpConfig,
         ]);
     }
 
-    private function getXPStatistics()
+    private function getXPStats()
     {
         // Single query to get all user XP data
         $userXpData = DB::table('user_skills')
@@ -42,6 +44,28 @@ class AdminController extends Controller
             'average_xp' => $averageXp,
             'highest_xp' => $highestXp,
             'level_distribution' => $levelDistribution,
+        ];
+    }
+
+    private function getXPConfigs()
+    {
+        // Get all skills with their weights in a single query
+        $skillWeights = DB::table('skills')
+            ->select('skill_name', 'multiplier')
+            ->orderBy('skill_name')
+            ->get()
+            ->keyBy('skill_name')
+            ->map(fn($skill) => $skill->multiplier);
+
+        // Get XP configuration from XPHelper
+        $xpSettings = XPHelper::getXPConfigs();
+        $levelThresholds = XPHelper::getLevelThresholds();
+
+        return [
+            'base_xp' => $xpSettings['base_xp'] ?? 100,
+            'bonus_multiplier' => $xpSettings['bonus_multiplier'] ?? 1.5,
+            'skill_weights' => $skillWeights->toArray(),
+            'level_thresholds' => $levelThresholds,
         ];
     }
 

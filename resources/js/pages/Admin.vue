@@ -17,8 +17,16 @@ interface XPStats {
     level_distribution: Record<number, number>;
 }
 
+interface XPConfig {
+    base_xp: number;
+    bonus_multiplier: number;
+    skill_weights: Record<string, number>;
+    level_thresholds: Record<number, number>;
+}
+
 interface Props {
     xpStats?: XPStats;
+    xpConfig?: XPConfig;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -29,6 +37,12 @@ const props = withDefaults(defineProps<Props>(), {
         average_xp: 0,
         highest_xp: 0,
         level_distribution: {}
+    }),
+    xpConfig: () => ({
+        base_xp: 100,
+        bonus_multiplier: 1.5,
+        skill_weights: {},
+        level_thresholds: { 1: 0 }
     })
 });
 
@@ -46,6 +60,15 @@ const breadcrumbs: BreadcrumbItem[] = [
 const sortedLevels = computed(() => {
     return Object.entries(props.xpStats.level_distribution)
         .sort(([a], [b]) => Number(a) - Number(b));
+});
+const sortedLevelThresholds = computed(() => {
+    return Object.entries(props.xpConfig.level_thresholds)
+        .sort(([a], [b]) => Number(a) - Number(b));
+});
+
+const sortedSkillWeights = computed(() => {
+    return Object.entries(props.xpConfig.skill_weights)
+        .sort(([a], [b]) => a.localeCompare(b));
 });
 </script>
 
@@ -147,8 +170,95 @@ const sortedLevels = computed(() => {
                     </Card>
                 </div>
 
-                <!-- Fine tune -->
-                
+                <!-- Fine tuning -->
+                <!-- XP Configuration -->
+                <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    <!-- XP Settings -->
+                    <Card>
+                        <CardHeader>
+                            <CardTitle class="flex items-center gap-2 text-base">
+                                <Icon name="settings" class="h-5 w-5" />
+                                XP Settings
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent class="space-y-4">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm font-medium">Base XP</span>
+                                <Badge variant="outline" class="font-mono">
+                                    {{ formatNumber(props.xpConfig.base_xp) }}
+                                </Badge>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm font-medium">Bonus Multiplier</span>
+                                <Badge variant="outline" class="font-mono">
+                                    {{ props.xpConfig.bonus_multiplier }}x
+                                </Badge>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <!-- Level Thresholds -->
+                    <Card>
+                        <CardHeader>
+                            <CardTitle class="flex items-center gap-2 text-base">
+                                <Icon name="trending-up" class="h-5 w-5" />
+                                Level Thresholds
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div class="max-h-48 overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-muted-foreground/20 hover:scrollbar-thumb-muted-foreground/40">
+                                <div class="space-y-2 pr-2">
+                                    <div
+                                        v-for="([level, threshold]) in sortedLevelThresholds"
+                                        :key="level"
+                                        class="flex items-center justify-between text-sm"
+                                    >
+                                        <span class="flex items-center gap-2">
+                                            <Badge variant="outline" class="w-8 h-6 p-0 flex items-center justify-center text-xs font-semibold">
+                                                {{ level }}
+                                            </Badge>
+                                            <span>Level {{ level }}</span>
+                                        </span>
+                                        <Badge variant="secondary" class="font-mono">
+                                            {{ formatNumber(Number(threshold)) }} XP
+                                        </Badge>
+                                    </div>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <!-- Skill Weights -->
+                    <Card>
+                        <CardHeader>
+                            <CardTitle class="flex items-center gap-2 text-base">
+                                <Icon name="code" class="h-5 w-5" />
+                                Skill Weights
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div class="max-h-48 overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-muted-foreground/20 hover:scrollbar-thumb-muted-foreground/40">
+                                <div v-if="Object.keys(props.xpConfig.skill_weights).length > 0" class="space-y-2 pr-2">
+                                    <div
+                                        v-for="([skill, weight]) in sortedSkillWeights"
+                                        :key="skill"
+                                        class="flex items-center justify-between text-sm"
+                                    >
+                                        <span class="font-medium capitalize">{{ skill }}</span>
+                                        <Badge variant="secondary" class="font-mono">
+                                            {{ weight }}x
+                                        </Badge>
+                                    </div>
+                                </div>
+
+                                <div v-else class="text-center text-muted-foreground py-4">
+                                    <Icon name="code" class="mx-auto h-6 w-6 mb-2 opacity-50" />
+                                    <p class="text-xs">No skills configured</p>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
         </div>
     </AppLayout>
