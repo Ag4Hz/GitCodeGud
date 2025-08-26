@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BountyController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
