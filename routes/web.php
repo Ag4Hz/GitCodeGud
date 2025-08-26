@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\BountyController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
@@ -36,15 +37,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 Route::middleware(['auth', 'verified', 'admin'])->group(function () {
-    Route::get('/admin', function () {
-        return Inertia::render('Admin');
-    })->name('admin');
-});
-
-Route::middleware(['auth', 'verified', 'admin'])->group(function () {
-    Route::get('/admin', function () {
-        return Inertia::render('Admin');
-    })->name('admin');
+    Route::get('/admin', [AdminController::class, 'index'])->name('admin.index');
 });
 
 Route::middleware('auth')->group(function () {
