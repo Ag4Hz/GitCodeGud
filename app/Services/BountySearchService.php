@@ -9,39 +9,45 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class BountySearchService
 {
-    /**
-     * Get complete bounty search data for controllers
-     */
-    public function getBountyData(Request $request, int $perPage = 12): array
+    public function buildBountyQuery(): Builder
     {
-        $query = Bounty::with(['issue.repo'])
+        return Bounty::with(['issue.repo'])
             ->active()
             ->where('status', 'open')
             ->latest();
-
-        // Search functionality
-        $query->when($request->filled('search'), function ($q) use ($request) {
-            $searchTerm = strtolower($request->get('search'));
+    }
+    public function applySearchFilter(Builder $query, Request $request): Builder
+    {
+        return $query->when($request->filled('search'), function ($q) use ($request) {
+            $searchTerm = $request->get('search');
             return $q->where(function ($query) use ($searchTerm) {
-                $query->whereRaw('LOWER(title) LIKE ?', ["%{$searchTerm}%"])
-                    ->orWhereRaw('LOWER(description) LIKE ?', ["%{$searchTerm}%"])
+                $query->where('title', 'ILIKE', "%{$searchTerm}%")
+                    ->orWhere('description', 'ILIKE', "%{$searchTerm}%")
                     ->orWhereHas('issue.repo', function ($repo) use ($searchTerm) {
-                        $repo->whereRaw('LOWER(git_id) LIKE ?', ["%{$searchTerm}%"]);
+                        $repo->where('git_id', 'ILIKE', "%{$searchTerm}%");
                     });
             });
         });
-
-        // Language filtering
-        $query->when($request->filled('language'), function ($q) use ($request) {
+    }
+    public function applyLanguageFilter(Builder $query, Request $request): Builder
+    {
+        return $query->when($request->filled('language'), function ($q) use ($request) {
             return $q->whereJsonContains('languages', $request->get('language'));
         });
-
-        $bounties = $query->paginate($perPage)->withQueryString();
-        $availableLanguages = Bounty::getAvailableLanguages();
+    }
+    public function getPaginatedBounties(Builder $query, int $perPage = 12): LengthAwarePaginator
+    {
+        return $query->paginate($perPage)->withQueryString();
+    }
+    public function getBountyData(Request $request, int $perPage = 12): array
+    {
+        $query = $this->buildBountyQuery();
+        $query = $this->applySearchFilter($query, $request);
+        $query = $this->applyLanguageFilter($query, $request);
 
         return [
-            'bounties' => $bounties,
-            'availableLanguages' => $availableLanguages,
+            'bounties' => $this->getPaginatedBounties($query, $perPage),
+            'availableLanguages' => Bounty::getAvailableLanguages(),
             'filters' => [
                 'search' => $request->get('search', ''),
                 'language' => $request->get('language', ''),
