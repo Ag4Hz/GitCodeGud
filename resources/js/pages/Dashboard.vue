@@ -131,11 +131,20 @@ const navigateToBounty = (bounty: Bounty) => {
 };
 
 const navigateToPage = (page: number) => {
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams();
+
+    if (searchQuery.value.trim()) {
+        params.set('search', searchQuery.value.trim());
+    }
+
+    if (selectedLanguage.value) {
+        params.set('language', selectedLanguage.value);
+    }
+
     params.set('page', page.toString());
 
     const queryString = params.toString();
-    const url = `${route('dashboard')}?${queryString}`;
+    const url = queryString ? `${route('dashboard')}?${queryString}` : route('dashboard');
 
     router.visit(url, {
         preserveState: true,
