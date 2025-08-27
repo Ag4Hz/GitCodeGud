@@ -138,7 +138,6 @@ const cancelEditingXPSettings = () => {
     editingXPField.value = null;
     editableBaseXP.value = 0;
     editableBonusMultiplier.value = 0;
-    updateHasChanges();
 };
 
 const startEditingXPField = (field: 'base_xp' | 'bonus_multiplier') => {
@@ -181,7 +180,6 @@ const cancelEditing = () => {
     editingThresholds.value = false;
     editingIndex.value = null;
     editableThresholds.value = [];
-    updateHasChanges();
 };
 
 const startEditingValue = (index: number) => {
@@ -229,7 +227,6 @@ const cancelEditingSkillWeights = () => {
     editingSkillWeights.value = false;
     editingSkillIndex.value = null;
     editableSkillWeights.value = [];
-    updateHasChanges();
 };
 
 const startEditingSkillValue = (index: number) => {
@@ -288,7 +285,7 @@ const cancelAllChanges = () => {
     cancelEditingXPSettings();
     cancelEditing();
     cancelEditingSkillWeights();
-    updateHasChanges();
+    hasAnyChanges.value = false;
 };
 </script>
 
