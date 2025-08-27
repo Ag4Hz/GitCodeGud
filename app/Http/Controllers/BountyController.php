@@ -118,15 +118,20 @@ class BountyController extends Controller
             ->with('success', 'Bounty restored successfully!');
     }
 
-    private function getRepositoryLanguages($user, string $repoFullName): array
+    public function getComments(Bounty $bounty)
     {
+        $user = request()->user();
         $githubApi = new GitHubApiService($user);
 
         if (!$githubApi->hasValidToken()) {
-            return [];
+            return response()->json(['comments' => []]);
         }
 
-        $languageStats = $githubApi->getRepositoryLanguages($repoFullName);
-        return collect($languageStats)->sortDesc()->keys()->toArray();
+        $issueUrl = $bounty->issue?->url;
+        if (!$issueUrl) {
+            return response()->json(['comments' => []]);
+        }
+        $comments = $githubApi->getIssueCommentsByUrl($issueUrl);
+        return response()->json(['comments' => $comments]);
     }
 }
