@@ -33,6 +33,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/bounties/{id}/restore', [BountyController::class, 'restore'])
         ->where('id', '[0-9]+')
         ->name('bounties.restore');
+
+    Route::get('/api/bounties/{bounty}/comments', [BountyController::class, 'getComments'])
+        ->name('bounties.comments');
 });
 
 Route::middleware('auth')->group(function () {
