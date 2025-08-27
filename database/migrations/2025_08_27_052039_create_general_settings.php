@@ -18,7 +18,7 @@ return new class extends Migration
         });
 
         // Insert default values
-        DB::table('xp_settings')->insert([
+        DB::table('general_settings')->insert([
             [
                 'key' => 'base_xp',
                 'value' => '100',
