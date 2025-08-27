@@ -49,6 +49,14 @@ const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
     },
 ]);
 
+const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+    });
+};
+
 const getStatusColor = (status: string) => {
     switch (status) {
         case 'open':
@@ -288,6 +296,39 @@ const canUserSubmit = computed(() => {
                                 </div>
                             </CardContent>
                         </Card>
+                    </div>
+
+                    <!-- Technical Details -->
+                    <div>
+                        <h3 class="text-lg font-semibold mb-3 flex items-center gap-2">
+                            <Tag class="h-5 w-5" />
+                            Technical Details
+                        </h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <!-- Languages -->
+                            <Card>
+                                <CardContent class="p-4">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <Code class="h-4 w-4" />
+                                        <span class="font-medium">Languages</span>
+                                    </div>
+                                    <div class="flex flex-wrap gap-1">
+                                        <Badge
+                                            v-for="language in bounty.languages"
+                                            :key="language"
+                                            variant="secondary"
+                                            class="text-xs"
+                                        >
+                                            {{ language }}
+                                        </Badge>
+                                        <div v-if="!bounty.languages || bounty.languages.length === 0" class="text-sm text-muted-foreground">
+                                            Not specified
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
                     </div>
                 </CardContent>
             </Card>
