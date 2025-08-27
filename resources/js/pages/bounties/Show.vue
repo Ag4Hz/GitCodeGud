@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem, type User } from '@/types';
 import { type Bounty } from '@/types/bounty';
-import { DollarSign, ExternalLink, Target, User as UserIcon, GitBranch } from 'lucide-vue-next';
+import { Calendar, DollarSign, ExternalLink, Target, User as UserIcon, GitBranch, Users, Tag, Code } from 'lucide-vue-next';
 import { computed } from 'vue';
 
 interface BountyWithDetails extends Bounty {
@@ -48,8 +48,6 @@ const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
         href: `/bounties/${props.bounty.id}`,
     },
 ]);
-
-
 
 const getStatusColor = (status: string) => {
     switch (status) {
@@ -155,6 +153,25 @@ const canUserSubmit = computed(() => {
                 </CardHeader>
 
                 <CardContent class="space-y-6">
+                    <!-- Description -->
+                    <div>
+                        <h3 class="text-lg font-semibold mb-3 flex items-center gap-2">
+                            <Target class="h-5 w-5" />
+                            Bounty Description
+                        </h3>
+                        <div class="prose prose-sm max-w-none">
+                            <div class="bg-gray-50 dark:bg-gray-900 border rounded-lg p-4">
+                                <p v-if="bounty.description && bounty.description.trim()"
+                                   class="text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                                    {{ bounty.description }}
+                                </p>
+                                <p v-else class="text-muted-foreground italic">
+                                    No description provided for this bounty.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Repository and Issue Links -->
                     <div>
                         <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
