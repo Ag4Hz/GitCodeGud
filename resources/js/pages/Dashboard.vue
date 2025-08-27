@@ -10,30 +10,34 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Calendar, DollarSign, Search, Target, Loader2, ChevronDown } from 'lucide-vue-next';
-import { type BreadcrumbItem } from '@/types';
 import { BountyStatus, type BountyPagination, type Bounty } from '@/types/bounty';
+import type { AppPageProps, BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/vue3';
-import type { AppPageProps } from '@/types';
+import UserSearch from '@/components/UserSearch.vue';
 
 type User = { id: number; nickname: string; avatar: string; name: string };
 
-type DashboardProps = AppPageProps<{
+type PageProps = AppPageProps<{
     bounties?: BountyPagination;
     availableLanguages?: string[];
-    filters?: {
+    filters?: { 
         search?: string;
+        bounty_search?: string;
         language?: string;
     };
-    results?: { data?: User[] };
+    userFilters?: { search?: string };
+    users?: { data?: User[] };
 }>;
 
-const props = withDefaults(defineProps<DashboardProps>(), {
+const props = withDefaults(defineProps<PageProps>(), {
     bounties: () => ({ data: [], total: 0, current_page: 1, last_page: 1 }),
     availableLanguages: () => [],
     filters: () => ({ search: '', language: '' }),
+    userFilters: () => ({ search: '' }),
+    users: () => ({ data: [] }),
 });
 
-const searchBountyQuery = computed(() => props.filters?.search || '');
+const searchBountyQuery = computed(() => props.filters?.bounty_search || props.filters?.search || '');
 const selectedBountyLanguage = computed(() => props.filters?.language || '');
 const isBountySearching = ref(false);
 
@@ -63,12 +67,12 @@ const debounce = <T extends (...args: any[]) => void>(func: T, wait: number): ((
 const debouncedBountySearch = debounce(() => {
     const params = new URLSearchParams(window.location.search);
 
-    params.delete('search');
+    params.delete('bounty_search');
     params.delete('language');
     params.delete('page');
 
     if (localSearchQuery.value.trim()) {
-        params.set('search', localSearchQuery.value.trim());
+        params.set('bounty_search', localSearchQuery.value.trim());
     }
 
     if (localSelectedLanguage.value) {
@@ -147,7 +151,7 @@ const navigateToBountyPage = (page: number) => {
     const params = new URLSearchParams();
 
     if (localSearchQuery.value.trim()) {
-        params.set('search', localSearchQuery.value.trim());
+        params.set('bounty_search', localSearchQuery.value.trim());
     }
 
     if (localSelectedLanguage.value) {
@@ -178,8 +182,8 @@ const hasActiveBountyFilters = computed(() => {
             <!-- User Search at the top -->
             <div class="relative mx-auto mt-10 mb-16 w-full max-w-md">
                 <UserSearch
-                    :filters="props.filters"
-                    :results="props.results"
+                    :filters="props.userFilters"
+                    :results="props.users"
                 />
             </div>
 
