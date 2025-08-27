@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link, usePage } from '@inertiajs/vue3';
+import { Head, Link, usePage, router } from '@inertiajs/vue3';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -32,13 +32,14 @@ interface BountyWithDetails extends Bounty {
 
 interface Props {
     bounty: BountyWithDetails;
+    comments?: any[];
 }
 
 const props = defineProps<Props>();
 const page = usePage();
 const currentUser = page.props.auth?.user as User;
 
-const comments = ref<any[]>([]);
+const comments = ref(props.comments || []);
 const loadingComments = ref(false);
 const commentsError = ref<string | null>(null);
 
@@ -129,26 +130,23 @@ const canUserSubmit = computed(() => {
         currentUser.id !== ownerInfo.value.id;
 });
 
-const fetchComments = async () => {
+const fetchComments = () => {
     loadingComments.value = true;
     commentsError.value = null;
 
-    try {
-        const response = await fetch(`/api/bounties/${props.bounty.id}/comments`);
-
-        if (response.ok) {
-            const data = await response.json();
-            comments.value = data.comments || [];
-        } else {
-            comments.value = [];
+    router.reload({
+        only: ['comments'],
+        onSuccess: (page) => {
+            const pageComments = (page.props as any).comments;
+            comments.value = Array.isArray(pageComments) ? pageComments : [];
+            loadingComments.value = false;
+        },
+        onError: () => {
             commentsError.value = 'Unable to load comments';
-        }
-    } catch (error) {
-        comments.value = [];
-        commentsError.value = 'Unable to load comments'+error;
-    } finally {
-        loadingComments.value = false;
-    }
+            comments.value = [];
+            loadingComments.value = false;
+        },
+    });
 };
 
 onMounted(() => {
