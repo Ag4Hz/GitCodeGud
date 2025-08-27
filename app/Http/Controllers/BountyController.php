@@ -83,13 +83,11 @@ class BountyController extends Controller
         $this->authorize('update', $bounty);
         $validated = $request->validated();
 
-        DB::transaction(function () use ($bounty, $validated) {
-            $bounty->update([
+        $bounty->update([
                 'title' => $validated['title'],
                 'description' => $validated['description'],
                 'reward_xp' => $validated['reward_xp'],
             ]);
-        });
 
         return redirect()
             ->route('profile.show')
@@ -101,9 +99,7 @@ class BountyController extends Controller
         $bounty = Bounty::findOrFail($id);
         $this->authorize('delete', $bounty);
 
-        DB::transaction(function () use ($bounty) {
-            $bounty->delete();
-        });
+        $bounty->delete();
 
         return redirect()
             ->route('profile.show')
@@ -115,9 +111,7 @@ class BountyController extends Controller
         $bounty = Bounty::withTrashed()->findOrFail($id);
         $this->authorize('restore', $bounty);
 
-        DB::transaction(function () use ($bounty) {
-            $bounty->restore();
-        });
+        $bounty->restore();
 
         return redirect()
             ->route('profile.show')
