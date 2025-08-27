@@ -328,6 +328,77 @@ const canUserSubmit = computed(() => {
                                     </div>
                                 </CardContent>
                             </Card>
+
+                            <!-- Created Date -->
+                            <Card>
+                                <CardContent class="p-4">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <Calendar class="h-4 w-4" />
+                                        <span class="font-medium">Created</span>
+                                    </div>
+                                    <p class="text-sm">{{ formatDate(bounty.created_at) }}</p>
+                                </CardContent>
+                            </Card>
+
+                            <!-- Submissions Count -->
+                            <Card>
+                                <CardContent class="p-4">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <Users class="h-4 w-4" />
+                                        <span class="font-medium">Submissions</span>
+                                    </div>
+                                    <p class="text-sm">{{ bounty.submissions?.length || 0 }} submission(s)</p>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    </div>
+
+                    <!-- Submissions List (if any exist) -->
+                    <div v-if="bounty.submissions && bounty.submissions.length > 0">
+                        <h3 class="text-lg font-semibold mb-3 flex items-center gap-2">
+                            <Users class="h-5 w-5" />
+                            Submissions ({{ bounty.submissions.length }})
+                        </h3>
+
+                        <div class="space-y-3">
+                            <Card
+                                v-for="submission in bounty.submissions"
+                                :key="submission.id"
+                                class="hover:shadow-md transition-shadow"
+                            >
+                                <CardContent class="p-4">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-3">
+                                            <Avatar class="h-8 w-8">
+                                                <AvatarImage
+                                                    :src="`https://github.com/${submission.user.nickname}.png`"
+                                                    :alt="submission.user.name"
+                                                />
+                                                <AvatarFallback>
+                                                    {{ submission.user.name?.charAt(0)?.toUpperCase() || 'U' }}
+                                                </AvatarFallback>
+                                            </Avatar>
+
+                                            <div>
+                                                <p class="font-medium">{{ submission.user.name }}</p>
+                                                <p class="text-sm text-muted-foreground">@{{ submission.user.nickname }}</p>
+                                            </div>
+                                        </div>
+
+                                        <div class="flex items-center gap-3">
+                                            <Badge
+                                                :variant="submission.status === 'accepted' ? 'default' : 'secondary'"
+                                                class="text-xs"
+                                            >
+                                                {{ submission.status.toUpperCase() }}
+                                            </Badge>
+                                            <span class="text-sm text-muted-foreground">
+                        {{ formatDate(submission.created_at) }}
+                      </span>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
                         </div>
                     </div>
                 </CardContent>
