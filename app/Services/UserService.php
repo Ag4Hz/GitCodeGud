@@ -6,7 +6,7 @@ use App\Models\User;
 class UserService{
     public static function listUser(string $term = ''){
         return User::query()
-            ->when($term !== '', function ($query) use ($term) {
+            ->when($term, function ($query) use ($term) {
                 $query->where('nickname', 'like', "%{$term}%");
             })->orderBy('nickname')
             ->paginate(30)
@@ -18,6 +18,14 @@ class UserService{
                 'name' => $user->name,
             ]);
     }
+
+    public static function searchUser($users){
+        return [
+            'users' => $users,
+        ];
+    }
+
+
 }
 
 

@@ -37,18 +37,7 @@ class DashboardController extends Controller
 
         $term = $request->string('search_user');
         $users = UserService::listUser($term);
-
-        return Inertia::render('Dashboard', [
-            'bounties' => $bounties,
-            'availableLanguages' => $availableLanguages,
-            'filters' => [
-                'search' => $request->get('search', ''),
-                'language' => $request->get('language', ''),
-            ],
-            'userFilters' => [
-                'search' => $term,
-            ],
-            'users' => $users,
-        ]);
+        $props = UserService::searchUser($users);
+        return Inertia::render('Dashboard', $props );
     }
 }
