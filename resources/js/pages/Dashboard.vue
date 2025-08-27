@@ -20,7 +20,7 @@ type User = { id: number; nickname: string; avatar: string; name: string };
 type PageProps = AppPageProps<{
     bounties?: BountyPagination;
     availableLanguages?: string[];
-    filters?: { 
+    filters?: {
         search?: string;
         bounty_search?: string;
         language?: string;
@@ -37,7 +37,7 @@ const props = withDefaults(defineProps<PageProps>(), {
     users: () => ({ data: [] }),
 });
 
-const searchBountyQuery = computed(() => props.filters?.bounty_search || props.filters?.search || '');
+const searchBountyQuery = computed(() => props.filters?.bounty_search || '');
 const selectedBountyLanguage = computed(() => props.filters?.language || '');
 const isBountySearching = ref(false);
 
@@ -67,16 +67,20 @@ const debounce = <T extends (...args: any[]) => void>(func: T, wait: number): ((
 const debouncedBountySearch = debounce(() => {
     const params = new URLSearchParams(window.location.search);
 
-    params.delete('bounty_search');
+    params.delete('search');
     params.delete('language');
     params.delete('page');
 
     if (localSearchQuery.value.trim()) {
-        params.set('bounty_search', localSearchQuery.value.trim());
+        params.set('search', localSearchQuery.value.trim());
     }
 
     if (localSelectedLanguage.value) {
         params.set('language', localSelectedLanguage.value);
+    }
+
+    if (localSearchQuery.value.trim()) {
+        params.set('search', localSearchQuery.value.trim());
     }
 
     const queryString = params.toString();

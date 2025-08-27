@@ -13,17 +13,16 @@ class DashboardController extends Controller
 {
     public function index(Request $request): Response
     {
-
         $bountySearchService = new BountySearchService();
         $bountySearchData = $bountySearchService->getBountyData($request);
-        $term = $request->string('search');
-      
-        $users = UserService::listUser($term);
-        $userProps = UserService::searchUser($users);
+
+        $searchTerm = $request->string('search_user');
+        $users = UserService::listUser($searchTerm);
+        $userSearchData = UserService::searchUser($users);
 
         $combinedProps = array_merge($bountySearchData, [
-            'userFilters' => ['search' => $term->toString()],
-            'users' => $userProps['results'] ?? ['data' => []],
+            'userFilters' => ['search' => $searchTerm->toString()],
+            'users' => $userSearchData['users'] ?? ['data' => []],
         ]);
 
         return Inertia::render('Dashboard', $combinedProps);
