@@ -401,6 +401,38 @@ onMounted(() => {
                             </div>
                         </div>
 
+                        <!-- Error State -->
+                        <div v-else-if="commentsError" class="text-center py-8">
+                            <Card class="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950">
+                                <CardContent class="p-4">
+                                    <p class="text-red-600 dark:text-red-400">{{ commentsError }}</p>
+                                    <Button @click="fetchComments" variant="outline" size="sm" class="mt-2">
+                                        Try Again
+                                    </Button>
+                                </CardContent>
+                            </Card>
+                        </div>
+
+                        <!-- No Comments -->
+                        <div v-else-if="comments.length === 0" class="text-center py-8">
+                            <Card>
+                                <CardContent class="p-6">
+                                    <MessageSquare class="mx-auto h-12 w-12 text-muted-foreground mb-3" />
+                                    <p class="text-muted-foreground">No comments yet on this GitHub issue.</p>
+                                    <a
+                                        v-if="isValidGitHubUrl(bounty.issue?.url || '')"
+                                        :href="bounty.issue?.url || '#'"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline mt-2"
+                                    >
+                                        <ExternalLink class="h-3 w-3" />
+                                        Add a comment on GitHub
+                                    </a>
+                                </CardContent>
+                            </Card>
+                        </div>
+
                         <!-- Comments List -->
                         <div v-else class="space-y-4">
                             <Card
@@ -465,6 +497,14 @@ onMounted(() => {
                                     </div>
                                 </CardContent>
                             </Card>
+
+                            <!-- Refresh Button -->
+                            <div class="text-center pt-4">
+                                <Button @click="fetchComments" variant="outline" size="sm" class="flex items-center gap-2 mx-auto">
+                                    <MessageSquare class="h-4 w-4" />
+                                    Refresh Comments
+                                </Button>
+                            </div>
                         </div>
                     </div>
                     <!-- Submissions List (if any exist) -->
