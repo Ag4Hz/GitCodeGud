@@ -23,6 +23,7 @@ class ProviderCallbackController extends Controller
             'oauth_provider' => $provider,
         ], [
             'name' => $githubUser->name,
+            'nickname' => $githubUser->nickname,
             'email' => $githubUser->email,
             'oauth_provider_token' => $githubUser->token,
         ]);

@@ -10,23 +10,25 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Calendar, DollarSign, Search, Target, Loader2, ChevronDown } from 'lucide-vue-next';
-import { type BreadcrumbItem } from '@/types';
 import { BountyStatus, type BountyPagination, type Bounty } from '@/types/bounty';
+import type { AppPageProps, BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/vue3';
+import UserSearch from '@/components/UserSearch.vue';
 
-interface Props {
-    bounties?: BountyPagination;
-    availableLanguages?: string[];
-    filters?: {
-        search: string;
-        language: string;
-    };
-}
+type User = { id: number; nickname: string; avatar: string; name: string };
 
-const props = withDefaults(defineProps<Props>(), {
-    bounties: () => ({ data: [], total: 0, current_page: 1, last_page: 1 }),
-    availableLanguages: () => [],
-    filters: () => ({ search: '', language: '' }),
+type PageProps = AppPageProps<{
+    bounties: BountyPagination;
+    availableLanguages: string[];
+    filters: { search: string; language: string };
+    userFilters: { search: string };
+    users: { data: User[] };
+}>;
+
+const props = withDefaults(defineProps<PageProps>(), {
+        bounties: () => ({ data: [], total: 0, current_page: 1, last_page: 1 }),
+        availableLanguages: () => [],
+        filters: () => ({ search: '', language: '' }),
 });
 
 const searchQuery = ref(props.filters?.search || '');
@@ -163,8 +165,11 @@ const hasActiveFilters = computed(() => {
     <AppLayout :breadcrumbs="breadcrumbs">
         <div>
             <!-- Existing User Search at the top -->
-            <div class="relative mx-auto mt-10 mb-16 w-full max-w-md">
-                <UserSearch />
+            <div class="relative mx-auto mt-10 mb-96 w-full max-w-md">
+                <UserSearch
+                    :filters="props.userFilters"
+                    :results="props.users"
+                />
             </div>
 
             <!-- Bounty Search and Grid Section -->
@@ -361,7 +366,10 @@ const hasActiveFilters = computed(() => {
 
             <!-- Footer -->
             <NavFooter :items="contactLinks" />
+
         </div>
+
+        <NavFooter :items="contactLinks" />
     </AppLayout>
 </template>
 
