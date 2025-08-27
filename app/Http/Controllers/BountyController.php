@@ -11,6 +11,7 @@ use App\Services\BountySearchService;
 use App\Services\GitHubApiService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -62,11 +63,30 @@ class BountyController extends Controller
             ->with('success', 'Bounty created successfully!');
     }
 
-    public function show(Bounty $bounty): Response
+    public function show(Bounty $bounty, Request $request): Response
     {
-        return Inertia::render('bounties/Show', [
-            'bounty' => $bounty->load(['issue.repo', 'submissions.user']),
-        ]);
+        $bountyData = [
+            'bounty' => $bounty->load(['issue.repo.user', 'submissions.user']),
+        ];
+
+        if ($request->header('X-Inertia-Partial-Component') === 'bounties/Show' &&
+            in_array('comments', explode(',', $request->header('X-Inertia-Partial-Data', '')))) {
+
+            $user = $request->user();
+            if ($user) {
+                $githubApi = new GitHubApiService($user);
+
+                if ($githubApi->hasValidToken() && $bounty->issue?->url) {
+                    $bountyData['comments'] = $githubApi->getIssueCommentsByUrl($bounty->issue->url);
+                } else {
+                    $bountyData['comments'] = [];
+                }
+            } else {
+                $bountyData['comments'] = [];
+            }
+        }
+
+        return Inertia::render('bounties/Show', $bountyData);
     }
 
     public function edit(Bounty $bounty): Response
@@ -84,10 +104,10 @@ class BountyController extends Controller
         $validated = $request->validated();
 
         $bounty->update([
-                'title' => $validated['title'],
-                'description' => $validated['description'],
-                'reward_xp' => $validated['reward_xp'],
-            ]);
+            'title' => $validated['title'],
+            'description' => $validated['description'],
+            'reward_xp' => $validated['reward_xp'],
+        ]);
 
         return redirect()
             ->route('profile.show')
@@ -116,22 +136,5 @@ class BountyController extends Controller
         return redirect()
             ->route('profile.show')
             ->with('success', 'Bounty restored successfully!');
-    }
-
-    public function getComments(Bounty $bounty)
-    {
-        $user = request()->user();
-        $githubApi = new GitHubApiService($user);
-
-        if (!$githubApi->hasValidToken()) {
-            return response()->json(['comments' => []]);
-        }
-
-        $issueUrl = $bounty->issue?->url;
-        if (!$issueUrl) {
-            return response()->json(['comments' => []]);
-        }
-        $comments = $githubApi->getIssueCommentsByUrl($issueUrl);
-        return response()->json(['comments' => $comments]);
     }
 }
