@@ -20,10 +20,9 @@ class Repo extends Model
         'git_id'
     ];
 
-
-    public function users(): BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->BelongsTo(User::class);
+        return $this->belongsTo(User::class);
     }
 
     public function issues(): HasMany
