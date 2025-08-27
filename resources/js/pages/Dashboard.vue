@@ -33,9 +33,12 @@ const props = withDefaults(defineProps<DashboardProps>(), {
     filters: () => ({ search: '', language: '' }),
 });
 
-const searchBountyQuery = ref(props.filters?.search || '');
-const selectedBountyLanguage = ref(props.filters?.language || '');
+const searchBountyQuery = computed(() => props.filters?.search || '');
+const selectedBountyLanguage = computed(() => props.filters?.language || '');
 const isBountySearching = ref(false);
+
+const localSearchQuery = ref(searchBountyQuery.value);
+const localSelectedLanguage = ref(selectedBountyLanguage.value);
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -64,12 +67,12 @@ const debouncedBountySearch = debounce(() => {
     params.delete('language');
     params.delete('page');
 
-    if (searchBountyQuery.value.trim()) {
-        params.set('search', searchBountyQuery.value.trim());
+    if (localSearchQuery.value.trim()) {
+        params.set('search', localSearchQuery.value.trim());
     }
 
-    if (selectedBountyLanguage.value) {
-        params.set('language', selectedBountyLanguage.value);
+    if (localSelectedLanguage.value) {
+        params.set('language', localSelectedLanguage.value);
     }
 
     const queryString = params.toString();
@@ -87,13 +90,19 @@ const debouncedBountySearch = debounce(() => {
     });
 }, 300);
 
-watch([searchBountyQuery, selectedBountyLanguage], () => {
+watch([localSearchQuery, localSelectedLanguage], () => {
     debouncedBountySearch();
 });
 
+watch(searchBountyQuery, (newValue) => {
+    localSearchQuery.value = newValue;
+});
+
+watch(selectedBountyLanguage, (newValue) => {
+    localSelectedLanguage.value = newValue;
+});
+
 const clearBountyFilters = () => {
-    searchBountyQuery.value = '';
-    selectedBountyLanguage.value = '';
     router.visit(route('dashboard'), {
         preserveState: true,
         preserveScroll: true,
@@ -137,12 +146,12 @@ const navigateToBounty = (bounty: Bounty) => {
 const navigateToBountyPage = (page: number) => {
     const params = new URLSearchParams();
 
-    if (searchBountyQuery.value.trim()) {
-        params.set('search', searchBountyQuery.value.trim());
+    if (localSearchQuery.value.trim()) {
+        params.set('search', localSearchQuery.value.trim());
     }
 
-    if (selectedBountyLanguage.value) {
-        params.set('language', selectedBountyLanguage.value);
+    if (localSelectedLanguage.value) {
+        params.set('language', localSelectedLanguage.value);
     }
 
     params.set('page', page.toString());
@@ -157,7 +166,7 @@ const navigateToBountyPage = (page: number) => {
 };
 
 const hasActiveBountyFilters = computed(() => {
-    return searchBountyQuery.value.trim() !== '' || selectedBountyLanguage.value !== '';
+    return localSearchQuery.value.trim() !== '' || localSelectedLanguage.value !== '';
 });
 </script>
 
@@ -198,7 +207,7 @@ const hasActiveBountyFilters = computed(() => {
                             <div class="flex-1 relative">
                                 <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <Input
-                                    v-model="searchBountyQuery"
+                                    v-model="localSearchQuery"
                                     placeholder="Search bounties by title, description, or repository..."
                                     class="pl-10 pr-4"
                                 />
@@ -209,22 +218,22 @@ const hasActiveBountyFilters = computed(() => {
                                 <DropdownMenu>
                                     <DropdownMenuTrigger as-child>
                                         <Button variant="outline" class="w-full justify-between">
-                                            {{ selectedBountyLanguage || 'All Languages' }}
+                                            {{ localSelectedLanguage || 'All Languages' }}
                                             <ChevronDown class="h-4 w-4 opacity-50" />
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent class="w-48">
                                         <DropdownMenuItem
-                                            @click="selectedBountyLanguage = ''"
-                                            :class="selectedBountyLanguage === '' ? 'bg-accent' : ''"
+                                            @click="localSelectedLanguage = ''"
+                                            :class="{ 'bg-accent': !localSelectedLanguage }"
                                         >
                                             All Languages
                                         </DropdownMenuItem>
                                         <DropdownMenuItem
                                             v-for="language in availableLanguages"
                                             :key="language"
-                                            @click="selectedBountyLanguage = language"
-                                            :class="selectedBountyLanguage === language ? 'bg-accent' : ''"
+                                            @click="localSelectedLanguage = language"
+                                            :class="{ 'bg-accent': localSelectedLanguage === language }"
                                         >
                                             {{ language }}
                                         </DropdownMenuItem>
@@ -246,11 +255,11 @@ const hasActiveBountyFilters = computed(() => {
 
                         <!-- Active Filters Display -->
                         <div v-if="hasActiveBountyFilters" class="flex flex-wrap gap-2">
-                            <Badge v-if="searchBountyQuery.trim()" variant="secondary" class="flex items-center gap-1">
-                                Search: "{{ searchBountyQuery.trim() }}"
+                            <Badge v-if="localSearchQuery.trim()" variant="secondary" class="flex items-center gap-1">
+                                Search: "{{ localSearchQuery.trim() }}"
                             </Badge>
-                            <Badge v-if="selectedBountyLanguage" variant="secondary" class="flex items-center gap-1">
-                                Language: {{ selectedBountyLanguage }}
+                            <Badge v-if="localSelectedLanguage" variant="secondary" class="flex items-center gap-1">
+                                Language: {{ localSelectedLanguage }}
                             </Badge>
                         </div>
                     </CardContent>
