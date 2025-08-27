@@ -30,6 +30,11 @@ interface Props {
     xpConfig?: XPConfig;
 }
 
+interface SkillWeight {
+    skill_name: string;
+    multiplier: number;
+}
+
 const props = withDefaults(defineProps<Props>(), {
     xpStats: () => ({
         total_users: 0,

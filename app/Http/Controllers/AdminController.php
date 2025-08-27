@@ -24,7 +24,6 @@ class AdminController extends Controller
 
     private function getXPStats()
     {
-        // Single query to get all user XP data
         $userXpData = DB::table('user_skills')
             ->select('user_id', DB::raw('SUM(xp) as total_xp'))
             ->groupBy('user_id')
@@ -36,7 +35,6 @@ class AdminController extends Controller
         $averageXp = $usersWithXp > 0 ? round($userXpData->avg('total_xp'), 2) : 0;
         $highestXp = $usersWithXp > 0 ? $userXpData->max('total_xp') : 0;
 
-        // Calculate level distribution
         $levelDistribution = $this->calculateLevelDistribution($userXpData);
 
         return [
@@ -51,7 +49,6 @@ class AdminController extends Controller
 
     private function getXPConfigs()
     {
-        // Get all skills with their weights in a single query
         $skillWeights = DB::table('skills')
             ->select('skill_name', 'multiplier')
             ->orderBy('skill_name')
@@ -59,7 +56,6 @@ class AdminController extends Controller
             ->keyBy('skill_name')
             ->map(fn($skill) => $skill->multiplier);
 
-        // Get XP configuration from XPHelper
         $xpSettings = XPHelper::getXPConfigs();
         $levelThresholds = XPHelper::getLevelThresholds();
 
@@ -97,12 +93,11 @@ class AdminController extends Controller
             'thresholds.*' => 'required|integer|min:0'
         ]);
 
-        // Sort thresholds by value to maintain proper level order
         $sortedThresholds = array_values($thresholds['thresholds']);
         sort($sortedThresholds);
 
-        // Cache the new thresholds
-        Cache::put('xp_thresholds', $sortedThresholds, now()->addYear());
+        LevelThreshold::updateThresholds($sortedThresholds);
+        XPHelper::clearCaches();
 
         return back()->with('success', 'Level thresholds updated successfully!');
     }
@@ -131,11 +126,10 @@ class AdminController extends Controller
             'bonus_multiplier' => 'required|numeric|min:0.1|max:10'
         ]);
 
-        // Update the XP configuration cache
-        Cache::put('xp_configuration', [
-            'base_xp' => $xpSettings['base_xp'],
-            'bonus_multiplier' => $xpSettings['bonus_multiplier'],
-        ], now()->addYear());
+        GeneralSetting::setValue('base_xp', $xpSettings['base_xp'], 'integer');
+        GeneralSetting::setValue('bonus_multiplier', $xpSettings['bonus_multiplier'], 'float');
+
+        XPHelper::clearCaches();
 
         return back()->with('success', 'XP settings updated successfully!');
     }

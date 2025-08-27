@@ -2,6 +2,8 @@
 
 namespace App\Helpers;
 
+use App\Models\GeneralSetting;
+use App\Models\LevelThreshold;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
 
@@ -9,7 +11,9 @@ class XPHelper
 {
     private static function getXPThresholds(): array
     {
-        return Cache::get('xp_thresholds', [0, 1000, 5000, 15000, 30000, 60000, 120000, 250000, 400000, 500000]);
+        return Cache::remember('xp_thresholds', 3600, function () {
+            return LevelThreshold::orderBy('level')->pluck('xp_required')->toArray();
+        });
     }
 
     public static function calculateLevel(int $xp): int
@@ -18,7 +22,7 @@ class XPHelper
 
         for ($level = count($thresholds) - 1; $level >= 1; $level--) {
             if ($xp >= $thresholds[$level]) {
-                return $level;
+                return $level + 1;
             }
         }
 
@@ -79,21 +83,25 @@ class XPHelper
 
     public static function getXPConfigs(): array
     {
-        return Cache::get('xp_configuration', [
-            'base_xp' => 100,
-            'bonus_multiplier' => 1.5,
-        ]);
+        return Cache::remember('xp_configuration', 3600, function () {
+            return [
+                'base_xp' => GeneralSetting::getValue('base_xp', 100),
+                'bonus_multiplier' => GeneralSetting::getValue('bonus_multiplier', 1.5),
+            ];
+        });
     }
 
     public static function getLevelThresholds(): array
     {
-        $thresholds = self::getXPThresholds();
-        $levelThresholds = [];
+        return Cache::remember('level_thresholds_keyed', 3600, function () {
+            return LevelThreshold::getThresholds();
+        });
+    }
 
-        for ($i = 0; $i < count($thresholds); $i++) {
-            $levelThresholds[$i + 1] = $thresholds[$i];
-        }
-
-        return $levelThresholds;
+    public static function clearCaches(): void
+    {
+        Cache::forget('xp_thresholds');
+        Cache::forget('xp_configuration');
+        Cache::forget('level_thresholds_keyed');
     }
 }
