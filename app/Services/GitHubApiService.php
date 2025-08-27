@@ -112,11 +112,6 @@ class GitHubApiService
         return self::parseGitHubIssueUrl($url) !== null;
     }
 
-    public static function isValidGitHubPullRequestUrl(string $url): bool
-    {
-        return self::parseGitHubPullRequestUrl($url) !== null;
-    }
-
     public function hasValidToken(): bool
     {
         return !empty($this->user->oauth_provider_token);
@@ -151,5 +146,23 @@ class GitHubApiService
         $data = $this->handleSimpleResponse($response);
 
         return isset($data['state']) && $data['state'] === 'open';
+    }
+
+    public function getIssueComments(string $repoFullName, int $issueNumber): array
+    {
+        $response = $this->createClient()->get("/repos/{$repoFullName}/issues/{$issueNumber}/comments");
+        return $this->handleSimpleResponse($response);
+    }
+
+    public function getIssueCommentsByUrl(string $issueUrl): array
+    {
+        $issueInfo = self::parseGitHubIssueUrl($issueUrl);
+
+        if (!$issueInfo) {
+            return [];
+        }
+
+        $repoFullName = $issueInfo['owner'] . '/' . $issueInfo['name'];
+        return $this->getIssueComments($repoFullName, $issueInfo['issue_number']);
     }
 }
