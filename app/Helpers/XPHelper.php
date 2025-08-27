@@ -12,7 +12,7 @@ class XPHelper
     private static function getXPThresholds(): array
     {
         return Cache::remember('xp_thresholds', 3600, function () {
-            return LevelThreshold::orderBy('level')->pluck('xp_required')->toArray();
+            return LevelThreshold::getThresholds();
         });
     }
 
@@ -22,7 +22,7 @@ class XPHelper
 
         for ($level = count($thresholds) - 1; $level >= 1; $level--) {
             if ($xp >= $thresholds[$level]) {
-                return $level + 1;
+                return $level;
             }
         }
 
