@@ -13,7 +13,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem, type User } from '@/types';
 import { type BountyPagination } from '@/types/bounty';
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { AlertCircle, Code, Database, Github, Plus, Settings, Star, Target, Trophy, Zap } from 'lucide-vue-next';
+import { AlertCircle, Code, Database, Github, Plus, Settings, Star, Target, Trophy, Zap, Users, UserCheck } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 
 interface UserWithXP extends Omit<User, 'skills'> {
@@ -28,6 +28,8 @@ interface UserWithXP extends Omit<User, 'skills'> {
         xp: number;
         level: number;
     }>;
+    followers_count: number;
+    followings_count: number;
 }
 
 interface Props {
@@ -229,6 +231,16 @@ function unfollow() {
                                         <Zap class="h-4 w-4 text-blue-500" />
                                         {{ formatXP(user.total_xp) }} XP
                                     </div>
+                                    <div class="flex items-center gap-1 text-sm font-medium">
+                                        <Users class="h-4 w-4 text-green-700" />
+                                        {{ user.followers_count }} Followers
+                                    </div>
+
+                                    <div class="flex items-center gap-1 text-sm font-medium">
+                                        <UserCheck class="h-4 w-4 text-green-700" />
+                                        {{ user.followings_count }} Following
+                                    </div>
+
                                 </div>
                             </div>
 
