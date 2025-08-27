@@ -2,11 +2,8 @@
 
 use App\Http\Controllers\BountyController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\UserController;
 use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\DashboardController;
-use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -33,14 +30,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/bounties/{id}/restore', [BountyController::class, 'restore'])
         ->where('id', '[0-9]+')
         ->name('bounties.restore');
-
-    Route::get('/api/bounties/{bounty}/comments', [BountyController::class, 'getComments'])
-        ->name('bounties.comments');
 });
 
 Route::middleware('auth')->group(function () {
-    Route::get('/leaderboard', [LeaderboardController::class, 'index'])
-        ->name('leaderboard');
+    Route::get('/leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard');
 });
 
 require __DIR__.'/settings.php';
