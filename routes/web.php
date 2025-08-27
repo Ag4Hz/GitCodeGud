@@ -3,10 +3,10 @@
 use App\Http\Controllers\BountyController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
-use Illuminate\Http\Request;
 use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\DashboardController;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -29,7 +29,6 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
-
     Route::resource('bounties', BountyController::class)->except(['create']);
     Route::patch('/bounties/{id}/restore', [BountyController::class, 'restore'])
         ->where('id', '[0-9]+')

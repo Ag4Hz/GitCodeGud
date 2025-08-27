@@ -7,52 +7,61 @@ use App\Http\Requests\BountyUpdateRequest;
 use App\Models\Bounty;
 use App\Models\Issue;
 use App\Models\Repo;
+use App\Services\BountySearchService;
 use App\Services\GitHubApiService;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class BountyController extends Controller
 {
-    /**
-     * Store a newly created bounty in storage.
-     */
+    use AuthorizesRequests;
+
+    public function __construct(
+        private BountySearchService $bountySearchService
+    ) {}
+
+    public function index(Request $request)
+    {
+        $bountySearchData = $this->bountySearchService->getBountyData($request);
+
+        return Inertia::render('bounties/Index', $bountySearchData);
+    }
+
     public function store(BountyStoreRequest $request): RedirectResponse
     {
         $validated = $request->validated();
-        $user = $request->user();
         $repoInfo = GitHubApiService::parseGitHubUrl($validated['repo_url']);
 
-        return DB::transaction(function () use ($validated, $user, $repoInfo) {
-            $repo = $this->findOrCreateRepo($validated['repo_url'], $user, $repoInfo);
-            $issue = Issue::firstOrCreate(
-                ['url' => $validated['issue_url'], 'repo_id' => $repo->id],
-                ['description' => $validated['description'] ?? '']
-            );
-            $repoLanguages = $this->getRepositoryLanguages($user, $repoInfo['full_name']);
+        $repo = Repo::where('git_id', $repoInfo['full_name'])->firstOrFail();
 
-            Bounty::create([
-                'issue_id' => $issue->id,
-                'title' => $validated['title'],
-                'description' => $validated['description'] ?? '',
-                'reward_xp' => $validated['reward_xp'],
-                'languages' => $repoLanguages,
-                'status' => 'open',
-            ]);
+        $issue = Issue::firstOrCreate(
+            ['url' => $validated['issue_url'], 'repo_id' => $repo->id],
+            ['description' => $validated['description'] ?? '']
+        );
 
-        });
+        $user = $request->user();
+        $githubApi = new GitHubApiService($user);
+        $repoLanguages = $githubApi->hasValidToken()
+            ? $githubApi->getRepositoryLanguages($repoInfo['full_name'])
+            : [];
+
+        Bounty::create([
+            'issue_id' => $issue->id,
+            'title' => $validated['title'],
+            'description' => $validated['description'] ?? '',
+            'reward_xp' => $validated['reward_xp'],
+            'languages' => collect($repoLanguages)->sortDesc()->keys()->toArray(),
+            'status' => 'open',
+        ]);
 
         return redirect()
             ->route('profile.show')
             ->with('success', 'Bounty created successfully!');
     }
 
-    /**
-     * Show the bounty details.
-     */
     public function show(Bounty $bounty): Response
     {
         return Inertia::render('bounties/Show', [
@@ -60,9 +69,6 @@ class BountyController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for editing the specified bounty.
-     */
     public function edit(Bounty $bounty): Response
     {
         $this->authorize('update', $bounty);
@@ -72,32 +78,27 @@ class BountyController extends Controller
         ]);
     }
 
-    /**
-     * Update the specified bounty in storage.
-     */
     public function update(BountyUpdateRequest $request, Bounty $bounty): RedirectResponse
     {
         $this->authorize('update', $bounty);
         $validated = $request->validated();
 
         $bounty->update([
-            'title' => $validated['title'],
-            'description' => $validated['description'],
-            'reward_xp' => $validated['reward_xp'],
-        ]);
+                'title' => $validated['title'],
+                'description' => $validated['description'],
+                'reward_xp' => $validated['reward_xp'],
+            ]);
 
         return redirect()
             ->route('profile.show')
             ->with('success', 'Bounty updated successfully!');
     }
 
-    /**
-     * Soft delete the specified bounty.
-     */
     public function destroy(string $id): RedirectResponse
     {
         $bounty = Bounty::findOrFail($id);
         $this->authorize('delete', $bounty);
+
         $bounty->delete();
 
         return redirect()
@@ -105,13 +106,11 @@ class BountyController extends Controller
             ->with('success', 'Bounty archived successfully! You can restore it from your archived bounties.');
     }
 
-    /**
-     * Restore a soft deleted bounty.
-     */
     public function restore(string $id): RedirectResponse
     {
         $bounty = Bounty::withTrashed()->findOrFail($id);
         $this->authorize('restore', $bounty);
+
         $bounty->restore();
 
         return redirect()
@@ -119,71 +118,6 @@ class BountyController extends Controller
             ->with('success', 'Bounty restored successfully!');
     }
 
-    /**
-     * Get public bounties for search/popular lists (excludes soft deleted).
-     */
-    public function index(Request $request)
-    {
-        $bounties = Bounty::with(['issue.repo'])
-            ->active()
-            ->where('status', 'open')
-            ->latest()
-            ->when($request->filled('search'), function ($q) use ($request) {
-                $searchTerm = strtolower($request->get('search'));
-                return $q->where(function ($query) use ($searchTerm) {
-                    $query->whereRaw('LOWER(title) LIKE ?', ["%{$searchTerm}%"])
-                        ->orWhereRaw('LOWER(description) LIKE ?', ["%{$searchTerm}%"])
-                        ->orWhereHas('issue.repo', function ($repo) use ($searchTerm) {
-                            $repo->whereRaw('LOWER(git_id) LIKE ?', ["%{$searchTerm}%"]);
-                        });
-                });
-            })
-            ->when($request->filled('language'), function ($q) use ($request) {
-                return $q->whereJsonContains('languages', $request->get('language'));
-            })
-            ->paginate(12)
-            ->withQueryString();
-
-        $availableLanguages = Bounty::getAvailableLanguages();
-
-        return Inertia::render('bounties/Index', [
-            'bounties' => $bounties,
-            'availableLanguages' => $availableLanguages,
-            'filters' => [
-                'search' => $request->get('search', ''),
-                'language' => $request->get('language', ''),
-            ],
-        ]);
-    }
-    /**
-     * Find or create repository.
-     */
-    private function findOrCreateRepo(string $repoUrl, $user, array $repoInfo): Repo
-    {
-        return Repo::updateOrCreate(
-            ['url' => $repoUrl],
-            [
-                'user_id' => $user->id,
-                'description' => "Repository for {$repoInfo['full_name']}",
-                'git_id' => $repoInfo['full_name'],
-            ]
-        );
-    }
-
-    /**
-     * Find or create issue.
-     */
-    private function findOrCreateIssue(string $issueUrl, int $repoId, ?string $description): Issue
-    {
-        return Issue::firstOrCreate(
-            ['url' => $issueUrl, 'repo_id' => $repoId],
-            ['description' => $description ?? '']
-        );
-    }
-
-    /**
-     * Get repository programming languages from GitHub API.
-     */
     private function getRepositoryLanguages($user, string $repoFullName): array
     {
         $githubApi = new GitHubApiService($user);
