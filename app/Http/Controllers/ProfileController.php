@@ -26,6 +26,7 @@ class ProfileController extends Controller
         return Inertia::render('Profile', [
             'user' => XPHelper::getUserWithXP($user),
             'bounties' => BountyResource::collection($bounties),
+            'isFollowing' => auth()->check()? auth()->user()->isFollowing($user): false,
             'isOwner' => $request->user() && $request->user()->id === $user->id,
         ]);
     }

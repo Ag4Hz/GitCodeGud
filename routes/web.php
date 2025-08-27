@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BountyController;
+use App\Http\Controllers\FollowerController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\LeaderboardController;
@@ -21,6 +22,10 @@ Route::middleware('auth')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::get('/users/{user}', [ProfileController::class, 'show'])->name('users.show');
+
+    Route::post('/users/{user}/follow', [FollowerController::class, 'store'])->name('users.follow');
+    Route::delete('/users/{user}/follow', [FollowerController::class, 'destroy'])->name('users.unfollow');
+
 });
 
 Route::middleware('auth')->group(function () {
