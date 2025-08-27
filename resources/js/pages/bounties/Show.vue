@@ -7,8 +7,8 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem, type User } from '@/types';
 import { type Bounty } from '@/types/bounty';
-import { Calendar, DollarSign, ExternalLink, Target, User as UserIcon, GitBranch, Users, Tag, Code } from 'lucide-vue-next';
-import { computed } from 'vue';
+import { Calendar, DollarSign, ExternalLink, Target, User as UserIcon, GitBranch, Users, Tag, Code, MessageSquare } from 'lucide-vue-next';
+import { computed, ref, onMounted } from 'vue';
 
 interface BountyWithDetails extends Bounty {
     issue: {
@@ -37,6 +37,10 @@ interface Props {
 const props = defineProps<Props>();
 const page = usePage();
 const currentUser = page.props.auth?.user as User;
+
+const comments = ref<any[]>([]);
+const loadingComments = ref(false);
+const commentsError = ref<string | null>(null);
 
 const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
     {
@@ -123,6 +127,32 @@ const canUserSubmit = computed(() => {
     return currentUser &&
         props.bounty.status === 'open' &&
         currentUser.id !== ownerInfo.value.id;
+});
+
+const fetchComments = async () => {
+    loadingComments.value = true;
+    commentsError.value = null;
+
+    try {
+        const response = await fetch(`/api/bounties/${props.bounty.id}/comments`);
+
+        if (response.ok) {
+            const data = await response.json();
+            comments.value = data.comments || [];
+        } else {
+            comments.value = [];
+            commentsError.value = 'Unable to load comments';
+        }
+    } catch (error) {
+        comments.value = [];
+        commentsError.value = 'Unable to load comments'+error;
+    } finally {
+        loadingComments.value = false;
+    }
+};
+
+onMounted(() => {
+    fetchComments();
 });
 </script>
 
@@ -353,6 +383,90 @@ const canUserSubmit = computed(() => {
                         </div>
                     </div>
 
+                    <!-- GitHub Comments Section -->
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                            <MessageSquare class="h-5 w-5" />
+                            GitHub Comments
+                            <span v-if="!loadingComments && comments.length > 0" class="text-sm text-muted-foreground">
+                ({{ comments.length }})
+              </span>
+                        </h3>
+
+                        <!-- Loading State -->
+                        <div v-if="loadingComments" class="flex items-center justify-center py-8">
+                            <div class="flex items-center gap-2 text-muted-foreground">
+                                <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+                                <span>Loading comments...</span>
+                            </div>
+                        </div>
+
+                        <!-- Comments List -->
+                        <div v-else class="space-y-4">
+                            <Card
+                                v-for="comment in comments"
+                                :key="comment.id"
+                                class="hover:shadow-md transition-shadow"
+                            >
+                                <CardContent class="p-4">
+                                    <div class="flex items-start gap-3">
+                                        <!-- User Avatar -->
+                                        <Avatar class="h-10 w-10 flex-shrink-0">
+                                            <AvatarImage
+                                                :src="comment.user?.avatar_url || ''"
+                                                :alt="comment.user?.login || 'User'"
+                                            />
+                                            <AvatarFallback>
+                                                {{ (comment.user?.login || 'U').charAt(0).toUpperCase() }}
+                                            </AvatarFallback>
+                                        </Avatar>
+
+                                        <!-- Comment Content -->
+                                        <div class="flex-1 min-w-0">
+                                            <!-- Comment Header -->
+                                            <div class="flex items-center gap-2 mb-2">
+                                                <span class="font-semibold text-sm">{{ comment.user?.login || 'Unknown User' }}</span>
+                                                <Badge variant="outline" class="text-xs">
+                                                    GitHub User
+                                                </Badge>
+                                                <span class="text-xs text-muted-foreground">
+                          {{ formatDate(comment.created_at) }}
+                        </span>
+                                                <a
+                                                    :href="comment.html_url"
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    class="ml-auto text-xs text-blue-600 hover:underline flex items-center gap-1"
+                                                >
+                                                    <ExternalLink class="h-3 w-3" />
+                                                    View on GitHub
+                                                </a>
+                                            </div>
+
+                                            <!-- Comment Body -->
+                                            <div class="prose prose-sm max-w-none">
+                                                <div class="bg-gray-50 dark:bg-gray-900 border rounded-lg p-3">
+                                                    <p class="text-sm leading-relaxed whitespace-pre-wrap break-words">
+                                                        {{ comment.body || 'No content' }}
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <!-- Comment Actions -->
+                                            <div class="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                        <span v-if="comment.updated_at !== comment.created_at">
+                          Edited {{ formatDate(comment.updated_at) }}
+                        </span>
+                                                <span v-if="comment.reactions?.total_count > 0">
+                          {{ comment.reactions.total_count }} reactions
+                        </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    </div>
                     <!-- Submissions List (if any exist) -->
                     <div v-if="bounty.submissions && bounty.submissions.length > 0">
                         <h3 class="text-lg font-semibold mb-3 flex items-center gap-2">
