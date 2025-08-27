@@ -4,8 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Helpers\XPHelper;
 use App\Models\User;
+use App\Models\LevelThreshold;
+use App\Models\GeneralSetting;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
