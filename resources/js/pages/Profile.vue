@@ -57,7 +57,7 @@ const activeTab = ref('bounties');
 const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
     {
         title: isOwner.value ? 'My Profile' : `${props.user.name}'s Profile`,
-        href: isOwner.value ? '/profile' : `/profile/${props.user.id}`,
+        href: isOwner.value ? '/profile' : `/users/${props.user.id}`,
     },
 ]);
 
