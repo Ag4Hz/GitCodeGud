@@ -35,6 +35,8 @@ class ProfileController extends Controller
                     'followings_count' => $user->followings_count,
                 ]
             ),
+            'followers'  => $this->followStatsService->getFollowers($user),
+            'followings' => $this->followStatsService->getFollowings($user),
             'bounties' => BountyResource::collection($bounties),
             'isFollowing' => auth()->check()? auth()->user()->isFollowing($user): false,
             'isOwner' => $request->user() && $request->user()->id === $user->id,

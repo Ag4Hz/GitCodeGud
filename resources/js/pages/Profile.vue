@@ -38,6 +38,8 @@ interface Props {
     isOwner?: boolean;
     isFollowing?: boolean;
     profileUserId: number;
+    followers: { data: User[] };
+    followings: { data: User[] };
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -649,5 +651,18 @@ function unfollow() {
                 </div>
             </div>
         </div>
+
+        <ul>
+            <li v-for="f in followers.data" :key="f.id">
+                {{ f.name }} <span>(id:{{ f.id }})</span>
+            </li>
+        </ul>
+
+        <ul>
+            <li v-for="f in followings.data" :key="f.id">
+                {{ f.name }} <span>(id:{{ f.id }})</span>
+            </li>
+        </ul>
+
     </AppLayout>
 </template>
