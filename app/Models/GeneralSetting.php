@@ -13,7 +13,6 @@ class GeneralSetting extends Model
     protected $fillable = [
         'key',
         'value',
-        'type',
         'description',
     ];
 
@@ -22,34 +21,18 @@ class GeneralSetting extends Model
         'updated_at' => 'datetime',
     ];
 
-    // Accessor to get the properly typed value
-    protected function typedValue(): Attribute
-    {
-        return Attribute::make(
-            get: function () {
-                return match ($this->type) {
-                    'integer' => (int) $this->value,
-                    'float' => (float) $this->value,
-                    'boolean' => (bool) $this->value,
-                    default => $this->value,
-                };
-            }
-        );
-    }
-
     public static function getValue(string $key, mixed $default = null): mixed
     {
         $setting = static::where('key', $key)->first();
-        return $setting ? $setting->typed_value : $default;
+        return $setting ? $setting->value : $default;
     }
 
-    public static function setValue(string $key, mixed $value, string $type = 'string'): bool
+    public static function setValue(string $key, mixed $value): bool
     {
         return static::updateOrCreate(
             ['key' => $key],
             [
                 'value' => (string) $value,
-                'type' => $type,
             ]
         )->exists;
     }

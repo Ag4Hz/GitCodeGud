@@ -12,7 +12,6 @@ return new class extends Migration
             $table->id();
             $table->string('key')->unique();
             $table->string('value');
-            $table->string('type')->default('integer'); // integer, float, string
             $table->text('description')->nullable();
             $table->timestamps();
         });
@@ -22,7 +21,6 @@ return new class extends Migration
             [
                 'key' => 'base_xp',
                 'value' => '100',
-                'type' => 'integer',
                 'description' => 'Base XP awarded for completing tasks',
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -30,7 +28,6 @@ return new class extends Migration
             [
                 'key' => 'bonus_multiplier',
                 'value' => '1.5',
-                'type' => 'float',
                 'description' => 'Multiplier applied to bonus XP',
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -40,6 +37,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('xp_settings');
+        Schema::dropIfExists('general_settings');
     }
 };
