@@ -53,6 +53,7 @@ const { formatXP } = useXP();
 const syncing = ref(false);
 const showCreateForm = ref(false);
 const activeTab = ref('bounties');
+const followingBusy = ref(false);
 
 const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
     {
@@ -181,11 +182,28 @@ const switchTab = (tab: string) => {
     }
 };
 function follow() {
-    router.post(route('users.follow', props.user.id), {}, { preserveScroll: true });
+    if (followingBusy.value) return;
+    followingBusy.value = true;
+    router.post(
+        route('users.follow', props.user.id),
+        {},
+        {
+            preserveScroll: true,
+            onFinish: () => { followingBusy.value = false; },
+        },
+    );
 }
 
 function unfollow() {
-    router.delete(route('users.unfollow', props.user.id), { preserveScroll: true });
+    if (followingBusy.value) return;
+    followingBusy.value = true;
+    router.delete(
+        route('users.unfollow', props.user.id),
+        {
+            preserveScroll: true,
+            onFinish: () => { followingBusy.value = false; },
+        },
+    );
 }
 </script>
 
@@ -249,6 +267,8 @@ function unfollow() {
                                     v-if="!isFollowing"
                                     type="button"
                                     class="rounded-md bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600"
+                                    :loading="followingBusy"
+                                    :disabled="followingBusy"
                                     @click="follow"
                                 >
                                     Follow
@@ -258,6 +278,8 @@ function unfollow() {
                                     v-else
                                     type="button"
                                     class="rounded-md bg-gray-200 px-3 py-1.5 text-sm font-medium text-gray-900 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"
+                                    :loading="followingBusy"
+                                    :disabled="followingBusy"
                                     @click="unfollow"
                                 >
                                     Unfollow

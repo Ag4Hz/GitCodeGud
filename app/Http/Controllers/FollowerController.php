@@ -10,11 +10,13 @@ class FollowerController extends Controller
     {
         Gate::authorize('follow', $user);
         auth()->user()->followings()->syncWithoutDetaching([$user->id]);
+        redirect()->back();
     }
 
     public function destroy(User $user)
     {
         Gate::authorize('unfollow', $user);
         auth()->user()->followings()->detach($user->id);
+        redirect()->back();
     }
 }
