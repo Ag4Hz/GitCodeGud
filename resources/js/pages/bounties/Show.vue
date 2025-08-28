@@ -4,11 +4,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import Pagination from '@/components/Pagination.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem, type User } from '@/types';
 import { type Bounty } from '@/types/bounty';
 import { Calendar, DollarSign, ExternalLink, Target, User as UserIcon, GitBranch, Users, Tag, Code, MessageSquare } from 'lucide-vue-next';
-import { computed, ref, onMounted } from 'vue';
+import { computed, ref } from 'vue';
 
 interface BountyWithDetails extends Bounty {
     issue: {
@@ -30,18 +31,31 @@ interface BountyWithDetails extends Bounty {
     }>;
 }
 
+interface CommentsData {
+    data: any[];
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+    from: number | null;
+    to: number | null;
+    links: Array<{
+        url: string | null;
+        label: string;
+        active: boolean;
+    }>;
+}
+
 interface Props {
     bounty: BountyWithDetails;
-    comments?: any[];
+    comments?: CommentsData | null;
 }
 
 const props = defineProps<Props>();
 const page = usePage();
 const currentUser = page.props.auth?.user as User;
 
-const comments = ref(props.comments || []);
 const loadingComments = ref(false);
-const commentsError = ref<string | null>(null);
 
 const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
     {
@@ -130,27 +144,22 @@ const canUserSubmit = computed(() => {
         currentUser.id !== ownerInfo.value.id;
 });
 
-const fetchComments = () => {
+const refreshComments = () => {
     loadingComments.value = true;
-    commentsError.value = null;
-
     router.reload({
         only: ['comments'],
-        onSuccess: (page) => {
-            const pageComments = (page.props as any).comments;
-            comments.value = Array.isArray(pageComments) ? pageComments : [];
-            loadingComments.value = false;
-        },
-        onError: () => {
-            commentsError.value = 'Unable to load comments';
-            comments.value = [];
+        onFinish: () => {
             loadingComments.value = false;
         },
     });
 };
 
-onMounted(() => {
-    fetchComments();
+const hasComments = computed(() => {
+    return props.comments && props.comments.data && props.comments.data.length > 0;
+});
+
+const shouldShowPagination = computed(() => {
+    return props.comments && props.comments.links && props.comments.links.length > 3;
 });
 </script>
 
@@ -386,9 +395,9 @@ onMounted(() => {
                         <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
                             <MessageSquare class="h-5 w-5" />
                             GitHub Comments
-                            <span v-if="!loadingComments && comments.length > 0" class="text-sm text-muted-foreground">
-                ({{ comments.length }})
-              </span>
+                            <span v-if="comments?.total && comments.total > 0" class="text-sm text-muted-foreground">
+                                ({{ comments.total }})
+                            </span>
                         </h3>
 
                         <!-- Loading State -->
@@ -399,20 +408,8 @@ onMounted(() => {
                             </div>
                         </div>
 
-                        <!-- Error State -->
-                        <div v-else-if="commentsError" class="text-center py-8">
-                            <Card class="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950">
-                                <CardContent class="p-4">
-                                    <p class="text-red-600 dark:text-red-400">{{ commentsError }}</p>
-                                    <Button @click="fetchComments" variant="outline" size="sm" class="mt-2">
-                                        Try Again
-                                    </Button>
-                                </CardContent>
-                            </Card>
-                        </div>
-
                         <!-- No Comments -->
-                        <div v-else-if="comments.length === 0" class="text-center py-8">
+                        <div v-else-if="!hasComments" class="text-center py-8">
                             <Card>
                                 <CardContent class="p-6">
                                     <MessageSquare class="mx-auto h-12 w-12 text-muted-foreground mb-3" />
@@ -434,7 +431,7 @@ onMounted(() => {
                         <!-- Comments List -->
                         <div v-else class="space-y-4">
                             <Card
-                                v-for="comment in comments"
+                                v-for="comment in comments?.data || []"
                                 :key="comment.id"
                                 class="hover:shadow-md transition-shadow"
                             >
@@ -460,8 +457,8 @@ onMounted(() => {
                                                     GitHub User
                                                 </Badge>
                                                 <span class="text-xs text-muted-foreground">
-                          {{ formatDate(comment.created_at) }}
-                        </span>
+                                                    {{ formatDate(comment.created_at) }}
+                                                </span>
                                                 <a
                                                     :href="comment.html_url"
                                                     target="_blank"
@@ -484,27 +481,33 @@ onMounted(() => {
 
                                             <!-- Comment Actions -->
                                             <div class="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                        <span v-if="comment.updated_at !== comment.created_at">
-                          Edited {{ formatDate(comment.updated_at) }}
-                        </span>
+                                                <span v-if="comment.updated_at !== comment.created_at">
+                                                    Edited {{ formatDate(comment.updated_at) }}
+                                                </span>
                                                 <span v-if="comment.reactions?.total_count > 0">
-                          {{ comment.reactions.total_count }} reactions
-                        </span>
+                                                    {{ comment.reactions.total_count }} reactions
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
                                 </CardContent>
                             </Card>
 
+                            <!-- Pagination Component -->
+                            <div v-if="shouldShowPagination">
+                                <Pagination :links="comments!.links" />
+                            </div>
+
                             <!-- Refresh Button -->
                             <div class="text-center pt-4">
-                                <Button @click="fetchComments" variant="outline" size="sm" class="flex items-center gap-2 mx-auto">
+                                <Button @click="refreshComments" variant="outline" size="sm" class="flex items-center gap-2 mx-auto" :disabled="loadingComments">
                                     <MessageSquare class="h-4 w-4" />
                                     Refresh Comments
                                 </Button>
                             </div>
                         </div>
                     </div>
+
                     <!-- Submissions List (if any exist) -->
                     <div v-if="bounty.submissions && bounty.submissions.length > 0">
                         <h3 class="text-lg font-semibold mb-3 flex items-center gap-2">
@@ -545,8 +548,8 @@ onMounted(() => {
                                                 {{ submission.status.toUpperCase() }}
                                             </Badge>
                                             <span class="text-sm text-muted-foreground">
-                        {{ formatDate(submission.created_at) }}
-                      </span>
+                                                {{ formatDate(submission.created_at) }}
+                                            </span>
                                         </div>
                                     </div>
                                 </CardContent>

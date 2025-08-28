@@ -65,17 +65,42 @@ class BountyController extends Controller
 
     public function show(Bounty $bounty, Request $request): Response
     {
-        $user = $request->user();
-        $githubApi = new GitHubApiService($user);
-
-        $comments = ($user && $githubApi->hasValidToken() && $bounty->issue?->url)
-            ? $githubApi->getIssueCommentsByUrl($bounty->issue->url)
-            : [];
-
         return Inertia::render('bounties/Show', [
             'bounty' => $bounty->load(['issue.repo.user', 'submissions.user']),
-            'comments' => $comments
+            'comments' => Inertia::merge(fn() => $this->getPaginatedComments($bounty, $request)),
         ]);
+    }
+
+    private function getPaginatedComments(Bounty $bounty, Request $request): array
+    {
+        $user = $request->user();
+        if (!$user) return [];
+
+        $githubApi = new GitHubApiService($user);
+        if (!$githubApi->hasValidToken() || !$bounty->issue?->url) {
+            return [];
+        }
+
+        $allComments = $githubApi->getIssueCommentsByUrl($bounty->issue->url);
+        if (empty($allComments)) return [];
+
+        $perPage = $request->get('per_page', 10);
+        $currentPage = $request->get('page', 1);
+
+        $comments = collect($allComments);
+
+        $paginatedComments = new \Illuminate\Pagination\LengthAwarePaginator(
+            $comments->forPage($currentPage, $perPage),
+            $comments->count(),
+            $perPage,
+            $currentPage,
+            [
+                'path' => $request->url(),
+                'pageName' => 'page',
+            ]
+        );
+
+        return $paginatedComments->withQueryString()->toArray();
     }
 
     public function edit(Bounty $bounty): Response
