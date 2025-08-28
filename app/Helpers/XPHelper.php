@@ -21,8 +21,8 @@ class XPHelper
     {
         $thresholds = self::getXPThresholds();
 
-        for ($level = count($thresholds); $level >= 1; $level--) {
-            if ($xp >= $thresholds[$level]) {
+        foreach (array_reverse($thresholds, true) as $level => $requiredXP) {
+            if ($xp >= $requiredXP) {
                 return $level;
             }
         }
@@ -34,8 +34,19 @@ class XPHelper
     {
         $thresholds = self::getXPThresholds();
 
-        $currentLevelXP = $thresholds[$currentLevel - 1] ?? 0;
-        $nextLevelXP = $thresholds[$currentLevel] ?? $thresholds[count($thresholds) - 1];
+        $currentLevelXP = $thresholds[$currentLevel] ?? 0;
+        $nextLevel = $currentLevel + 1;
+        $nextLevelXP = $thresholds[$nextLevel] ?? null;
+
+        if ($nextLevelXP === null) {
+            return [
+                'current_level_xp' => $currentLevelXP,
+                'next_level_xp' => $currentLevelXP,
+                'progress_xp' => $totalXP - $currentLevelXP,
+                'total_needed' => 0,
+                'progress_percentage' => 100,
+            ];
+        }
 
         $progressXP = $totalXP - $currentLevelXP;
         $totalNeeded = $nextLevelXP - $currentLevelXP;
