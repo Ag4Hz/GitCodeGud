@@ -14,11 +14,6 @@ class LevelThreshold extends Model
         'xp_required',
     ];
 
-    protected $casts = [
-        'level' => 'integer',
-        'xp_required' => 'integer',
-    ];
-
     public static function rules(): array
     {
         return [
