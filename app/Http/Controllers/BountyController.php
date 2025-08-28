@@ -65,22 +65,17 @@ class BountyController extends Controller
 
     public function show(Bounty $bounty, Request $request): Response
     {
-        $bountyData = [
+        $user = $request->user();
+        $githubApi = new GitHubApiService($user);
+
+        $comments = ($user && $githubApi->hasValidToken() && $bounty->issue?->url)
+            ? $githubApi->getIssueCommentsByUrl($bounty->issue->url)
+            : [];
+
+        return Inertia::render('bounties/Show', [
             'bounty' => $bounty->load(['issue.repo.user', 'submissions.user']),
-        ];
-
-        if ($request->wantsJson() || $request->header('X-Inertia-Partial-Data')) {
-            $user = $request->user();
-            $bountyData['comments'] = [];
-            if ($user) {
-                $githubApi = new GitHubApiService($user);
-                if ($githubApi->hasValidToken() && $bounty->issue?->url) {
-                    $bountyData['comments'] = $githubApi->getIssueCommentsByUrl($bounty->issue->url);
-                }
-            }
-        }
-
-        return Inertia::render('bounties/Show', $bountyData);
+            'comments' => $comments
+        ]);
     }
 
     public function edit(Bounty $bounty): Response
