@@ -23,7 +23,7 @@ class XPHelper
 
         for ($level = count($thresholds) - 1; $level >= 1; $level--) {
             if ($xp >= $thresholds[$level]) {
-                return $level;
+                return $level + 1;
             }
         }
 
