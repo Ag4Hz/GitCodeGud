@@ -6,15 +6,18 @@ import { computed, ref, watch } from 'vue';
 
 type User = { id: number; nickname: string; avatar: string; name: string };
 
-const props = withDefaults(defineProps<{
-    filters?: { search?: string };
-    results?: { data?: User[] };
-    placeholder?: string;
-}>(), {
-    filters: () => ({ search: '' }),
-    results: () => ({ data: [] }),
-    placeholder: 'Looking for a buddy?',
-});
+const props = withDefaults(
+    defineProps<{
+        filters?: { search?: string };
+        results?: { data?: User[] };
+        placeholder?: string;
+    }>(),
+    {
+        filters: () => ({ search: '' }),
+        results: () => ({ data: [] }),
+        placeholder: 'Looking for a buddy?',
+    },
+);
 
 const search = ref(props.filters?.search ?? '');
 
@@ -31,7 +34,6 @@ watch(search, () => {
         reset: ['users'],
     });
 });
-
 </script>
 
 <template>
