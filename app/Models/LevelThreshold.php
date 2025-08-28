@@ -38,12 +38,6 @@ class LevelThreshold extends Model
         return static::orderBy('level')->pluck('xp_required', 'level')->toArray();
     }
 
-    public static function getThresholdForLevel(int $level): ?int
-    {
-        $threshold = static::where('level', $level)->first();
-        return $threshold ? $threshold->xp_required : null;
-    }
-
     public static function updateThresholds(array $thresholds): void
     {
         static::query()->delete();

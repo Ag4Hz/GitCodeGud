@@ -6,6 +6,7 @@ use App\Models\GeneralSetting;
 use App\Models\LevelThreshold;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class XPHelper
 {
@@ -81,7 +82,7 @@ class XPHelper
         ]);
     }
 
-    public static function getXPConfigs(): array
+    public static function getXPConfigsFromDB(): array
     {
         return Cache::remember('xp_configuration', 3600, function () {
             return [
@@ -103,5 +104,74 @@ class XPHelper
         Cache::forget('xp_thresholds');
         Cache::forget('xp_configuration');
         Cache::forget('level_thresholds_keyed');
+    }
+
+    public static function getXPStats()
+    {
+        return Cache::remember('admin_xp_stats', 3600, function () {
+            $userXpData = DB::table('user_skills')
+                ->select('user_id', DB::raw('SUM(xp) as total_xp'))
+                ->groupBy('user_id')
+                ->get();
+
+            $totalUsers = User::count();
+            $usersWithXp = $userXpData->count();
+            $totalXpDistributed = $userXpData->sum('total_xp');
+            $averageXp = $usersWithXp > 0 ? round($userXpData->avg('total_xp'), 2) : 0;
+            $highestXp = $usersWithXp > 0 ? $userXpData->max('total_xp') : 0;
+
+            $levelDistribution = self::calculateLevelDistribution($userXpData);
+
+            return [
+                'total_users' => $totalUsers,
+                'users_with_xp' => $usersWithXp,
+                'total_xp_distributed' => $totalXpDistributed,
+                'average_xp' => $averageXp,
+                'highest_xp' => $highestXp,
+                'level_distribution' => $levelDistribution,
+            ];
+        });
+    }
+
+    public static function getXPConfigs(): array
+    {
+        $skillWeights = Cache::remember('admin_skill_weights', 3600, function () {
+            return DB::table('skills')
+                ->select('skill_name', 'multiplier')
+                ->orderBy('skill_name')
+                ->get()
+                ->keyBy('skill_name')
+                ->map(fn($skill) => $skill->multiplier)
+                ->toArray();
+        });
+
+        $xpSettings = XPHelper::getXPConfigsFromDB();
+        $levelThresholds = XPHelper::getLevelThresholds();
+
+        return [
+            'base_xp' => $xpSettings['base_xp'] ?? 100,
+            'bonus_multiplier' => $xpSettings['bonus_multiplier'] ?? 1.5,
+            'skill_weights' => $skillWeights,
+            'level_thresholds' => $levelThresholds,
+        ];
+    }
+
+    public static function calculateLevelDistribution($userXpData): array
+    {
+        $distribution = [];
+
+        foreach ($userXpData as $userXp) {
+            if ($userXp->total_xp > 0) {
+                $level = XPHelper::calculateLevel($userXp->total_xp);
+                $distribution[$level] = ($distribution[$level] ?? 0) + 1;
+            }
+        }
+
+        if (empty($distribution)) {
+            $distribution[1] = 0;
+        }
+
+        ksort($distribution);
+        return $distribution;
     }
 }

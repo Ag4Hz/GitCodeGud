@@ -36,25 +36,34 @@ const activeItemStyles = computed(
 
 const { userXPData } = useXP();
 
-const mainNavItems: NavItem[] = [
-    {
-        title: 'Dashboard',
-        href: '/dashboard',
-        icon: LayoutGrid,
-    },
-    {
-        title: 'Leaderboard',
-        href: '/leaderboard',
-    },
-];
-
-if (auth.value.user.role === 'admin') {
-    mainNavItems.push({
-        title: 'Admin',
-        href: '/admin',
-        icon: ShieldCheck,
-    });
+enum UserRole {
+    USER = 'user',
+    ADMIN = 'admin',
 }
+
+const mainNavItems = computed((): NavItem[] => {
+    const items: NavItem[] = [
+        {
+            title: 'Dashboard',
+            href: '/dashboard',
+            icon: LayoutGrid,
+        },
+        {
+            title: 'Leaderboard',
+            href: '/leaderboard',
+        },
+    ];
+
+    if (auth.value.user.role === UserRole.ADMIN) {
+        items.push({
+            title: 'Admin',
+            href: '/admin',
+            icon: ShieldCheck,
+        });
+    }
+
+    return items;
+});
 </script>
 
 <template>
