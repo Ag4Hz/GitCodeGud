@@ -21,7 +21,7 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
-    Route::post('/profile/sync-github-skills', [ProfileController::class, 'syncGitHubSkills'])
+    Route::post('/profile/sync-github-skills', [ProfileController::class, 'handleGitHubSkillsSync'])
         ->name('profile.sync-github-skills');
 });
 

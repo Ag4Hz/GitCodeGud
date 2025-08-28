@@ -33,20 +33,23 @@ class ProfileController extends Controller
             'isOwner' => $request->user() && $request->user()->id === $user->id,
         ]);
     }
-
-    public function syncGitHubSkills(Request $request): RedirectResponse
+    public function syncGitHubSkills(Request $request): bool
     {
         /** @var User $user */
         $user = Auth::user();
 
         if (!$user || !$user->oauth_provider_token) {
-            return redirect()->back()->with('error', 'GitHub token not available. Please reconnect your GitHub account.');
+            return false;
         }
 
-        $success = $this->gitHubSkillSync->syncUserSkillsFromGitHub($user);
+        return $this->gitHubSkillSync->syncUserSkillsFromGitHub($user);
+    }
+    public function handleGitHubSkillsSync(Request $request): RedirectResponse
+    {
+        $success = $this->syncGitHubSkills($request);
 
         if (!$success) {
-            return redirect()->back()->with('error', 'Failed to sync skills from GitHub. Please try again.');
+            return redirect()->back()->with('error', 'Failed to sync skills from GitHub. GitHub token may not be available or sync failed. Please try again.');
         }
 
         return redirect()->route('profile.show')->with('success', 'Skills successfully synced from GitHub!');
