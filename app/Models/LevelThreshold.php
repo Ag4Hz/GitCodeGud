@@ -17,20 +17,14 @@ class LevelThreshold extends Model
     protected $casts = [
         'level' => 'integer',
         'xp_required' => 'integer',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
     ];
 
-    // Ensure level is unique
-    public static function boot(): void
+    public static function rules(): array
     {
-        parent::boot();
-
-        static::creating(function ($threshold) {
-            if (static::where('level', $threshold->level)->exists()) {
-                throw new \Exception("Level {$threshold->level} threshold already exists");
-            }
-        });
+        return [
+            'level' => 'required|integer|unique:level_thresholds,level',
+            'xp_required' => 'required|integer|min:0',
+        ];
     }
 
     public static function getThresholds(): array
