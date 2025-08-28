@@ -34,8 +34,8 @@ class XPHelper
     {
         $thresholds = self::getXPThresholds();
 
-        $currentLevelXP = $thresholds[$currentLevel - 1] ?? 0;
-        $nextLevelXP = $thresholds[$currentLevel] ?? $thresholds[count($thresholds) - 1];
+        $currentLevelXP = $thresholds[$currentLevel] ?? 0;
+        $nextLevelXP = $thresholds[$currentLevel + 1] ?? $thresholds[count($thresholds) - 1];
 
         $progressXP = $totalXP - $currentLevelXP;
         $totalNeeded = $nextLevelXP - $currentLevelXP;
