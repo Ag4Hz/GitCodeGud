@@ -69,20 +69,14 @@ class BountyController extends Controller
             'bounty' => $bounty->load(['issue.repo.user', 'submissions.user']),
         ];
 
-        if ($request->header('X-Inertia-Partial-Component') === 'bounties/Show' &&
-            in_array('comments', explode(',', $request->header('X-Inertia-Partial-Data', '')))) {
-
+        if ($request->wantsJson() || $request->header('X-Inertia-Partial-Data')) {
             $user = $request->user();
+            $bountyData['comments'] = [];
             if ($user) {
                 $githubApi = new GitHubApiService($user);
-
                 if ($githubApi->hasValidToken() && $bounty->issue?->url) {
                     $bountyData['comments'] = $githubApi->getIssueCommentsByUrl($bounty->issue->url);
-                } else {
-                    $bountyData['comments'] = [];
                 }
-            } else {
-                $bountyData['comments'] = [];
             }
         }
 
