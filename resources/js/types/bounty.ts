@@ -1,4 +1,3 @@
-
 export enum BountyStatus {
     OPEN = 'open',
     CLOSED = 'closed'
@@ -9,6 +8,7 @@ export interface Bounty {
     title: string;
     description: string;
     reward_xp: number;
+    views?: number;
     status: BountyStatus;
     created_at: string;
     updated_at: string;
@@ -21,6 +21,7 @@ export interface Bounty {
         };
     };
     submissions_count?: number;
+    popularity_score?: number;
 }
 
 export interface BountyPagination {

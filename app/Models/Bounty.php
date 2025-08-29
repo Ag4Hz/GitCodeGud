@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Builder;
 
 class Bounty extends Model
 {
@@ -20,6 +21,7 @@ class Bounty extends Model
         'title',
         'description',
         'reward_xp',
+        'views',
         'languages',
     ];
 
@@ -27,6 +29,7 @@ class Bounty extends Model
     {
         return [
             'reward_xp' => 'integer',
+            'views' => 'integer',
             'status' => 'string',
             'languages' => 'array',
             'deleted_at' => 'datetime',
@@ -42,24 +45,21 @@ class Bounty extends Model
     {
         return $this->belongsTo(Issue::class);
     }
-    public function scopeActive($query)
-    {
-        return $query->whereNull('deleted_at');
-    }
+    
     public static function getAvailableLanguages(): array
     {
-            $languages = Bounty::active()
-                ->where('status', 'open')
-                ->whereNotNull('languages')
-                ->get()
-                ->pluck('languages')
-                ->flatten()
-                ->unique()
-                ->filter()
-                ->sort()
-                ->values()
-                ->toArray();
+        $languages = Bounty::active()
+            ->where('status', 'open')
+            ->whereNotNull('languages')
+            ->get()
+            ->pluck('languages')
+            ->flatten()
+            ->unique()
+            ->filter()
+            ->sort()
+            ->values()
+            ->toArray();
 
-            return $languages;
+        return $languages;
     }
 }
