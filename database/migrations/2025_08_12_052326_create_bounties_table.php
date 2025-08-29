@@ -19,6 +19,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->json('languages')->nullable();
             $table->unsignedInteger('reward_xp')->default(0);
+            $table->unsignedInteger('views')->default(0);
             $table->timestamps();
             $table->softDeletes();
         });

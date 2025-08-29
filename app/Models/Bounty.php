@@ -45,7 +45,7 @@ class Bounty extends Model
     {
         return $this->belongsTo(Issue::class);
     }
-    
+
     public static function getAvailableLanguages(): array
     {
         $languages = Bounty::active()
@@ -61,5 +61,19 @@ class Bounty extends Model
             ->toArray();
 
         return $languages;
+    }
+    public function scopeActive($query)
+    {
+        return $query->whereNull('deleted_at');
+    }
+
+    public function scopeOpen($query)
+    {
+        return $query->where('status', 'open');
+    }
+
+    public function scopeRecent($query, int $days = 7)
+    {
+        return $query->where('created_at', '>=', now()->subDays($days));
     }
 }

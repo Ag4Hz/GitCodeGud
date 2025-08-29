@@ -8,21 +8,27 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use App\Services\UserService;
+use App\Services\PopularBountiesService;
 
 class DashboardController extends Controller
 {
+    public function __construct(
+        protected PopularBountiesService $popularBountiesService
+    ) {}
     public function index(Request $request): Response
     {
         $bountySearchService = new BountySearchService();
         $bountySearchData = $bountySearchService->getBountyData($request);
 
-        $searchTerm = $request->string('search_user');
-        $users = UserService::listUser($searchTerm);
+        $userSearchTerm = $request->string('search_user');
+        $users = UserService::listUser($userSearchTerm);
         $userSearchData = UserService::searchUser($users);
 
         $combinedProps = array_merge($bountySearchData, [
-            'userFilters' => ['search' => $searchTerm->toString()],
+            'userFilters' => ['search' => $userSearchTerm->toString()],
             'users' => $userSearchData['users'] ?? ['data' => []],
+            'popularBounties' => $this->popularBountiesService->getPopularBounties(10),
+            'trendingBounties' => $this->popularBountiesService->getTrendingBounties(5),
         ]);
 
         return Inertia::render('Dashboard', $combinedProps);
