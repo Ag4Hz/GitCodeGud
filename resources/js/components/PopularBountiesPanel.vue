@@ -3,7 +3,7 @@ import { computed } from 'vue';
 import { router } from '@inertiajs/vue3';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TrendingUp} from 'lucide-vue-next';
+import { TrendingUp, Eye, Target, DollarSign, Calendar } from 'lucide-vue-next';
 
 enum BountyStatus {
     OPEN = 'open',
@@ -41,6 +41,12 @@ const props = withDefaults(defineProps<Props>(), {
     title: 'Popular Bounties'
 });
 
+const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+    });
+};
 
 const getStatusColor = (status: BountyStatus) => {
     switch (status) {
@@ -102,7 +108,7 @@ const sortedBounties = computed(() => {
                                         </span>
                                     </div>
 
-                                    <!-- Languagee-->
+                                    <!-- Languages-->
                                     <div v-if="bounty.languages && bounty.languages.length > 0" class="flex flex-wrap gap-1">
                                         <Badge
                                             v-for="language in bounty.languages.slice(0, 2)"
@@ -116,11 +122,47 @@ const sortedBounties = computed(() => {
                                             +{{ bounty.languages.length - 2 }}
                                         </span>
                                     </div>
+
+                                    <!-- Stats Row -->
+                                    <div class="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+                                        <div class="flex items-center gap-1 text-yellow-600 dark:text-yellow-500">
+                                            <DollarSign class="h-3 w-3" />
+                                            {{ bounty.reward_xp }} XP
+                                        </div>
+                                        <div v-if="bounty.views && bounty.views > 0" class="flex items-center gap-1">
+                                            <Eye class="h-3 w-3" />
+                                            {{ bounty.views }}
+                                        </div>
+                                        <div v-if="bounty.submissions_count && bounty.submissions_count > 0" class="flex items-center gap-1">
+                                            <Target class="h-3 w-3" />
+                                            {{ bounty.submissions_count }}
+                                        </div>
+                                        <div class="flex items-center gap-1">
+                                            <Calendar class="h-3 w-3" />
+                                            {{ formatDate(bounty.created_at) }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Popularity Score -->
+                            <div class="flex flex-col items-end text-right flex-shrink-0">
+                                <div class="text-xs font-medium text-orange-600 dark:text-orange-400">
+                                    {{ bounty.popularity_score ?? 0 }} pts
+                                </div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">
+                                    popularity
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- Empty State -->
+            <div v-if="props.bounties.length === 0" class="py-8 text-center text-gray-500 dark:text-gray-400">
+                <TrendingUp class="mx-auto h-8 w-8 opacity-50 mb-2" />
+                <p class="text-sm">No popular bounties yet</p>
             </div>
         </CardContent>
     </Card>
