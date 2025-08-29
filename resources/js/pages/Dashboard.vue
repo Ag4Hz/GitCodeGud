@@ -14,6 +14,8 @@ import { BountyStatus, type BountyPagination, type Bounty } from '@/types/bounty
 import type { AppPageProps, BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/vue3';
 import UserSearch from '@/components/UserSearch.vue';
+import PopularBountiesPanel from '@/components/PopularBountiesPanel.vue';
+import { Eye } from 'lucide-vue-next';
 
 type User = { id: number; nickname: string; avatar: string; name: string };
 
@@ -27,7 +29,13 @@ type PageProps = AppPageProps<{
     };
     userFilters?: { search?: string };
     users?: { data?: User[] };
+    popularBounties?: PopularBounty[];
+    trendingBounties?: PopularBounty[];
 }>;
+
+type PopularBounty = Bounty & {
+    popularity_score?: number;
+};
 
 const props = withDefaults(defineProps<PageProps>(), {
     bounties: () => ({ data: [], total: 0, current_page: 1, last_page: 1 }),
@@ -35,10 +43,17 @@ const props = withDefaults(defineProps<PageProps>(), {
     filters: () => ({ search: '', language: '' }),
     userFilters: () => ({ search: '' }),
     users: () => ({ data: [] }),
+    popularBounties: () => [],
+    trendingBounties: () => [],
 });
 
-const searchBountyQuery = computed(() => props.filters?.bounty_search || '');
-const selectedBountyLanguage = computed(() => props.filters?.language || '');
+const searchBountyQuery = computed(() => {
+    return props.filters?.search || '';
+});
+const selectedBountyLanguage = computed(() => {
+    return props.filters?.language || '';
+});
+
 const isBountySearching = ref(false);
 
 const localSearchQuery = ref(searchBountyQuery.value);
@@ -193,13 +208,48 @@ const hasActiveBountyFilters = computed(() => {
 
             <!-- Bounty Search and Grid Section -->
             <div class="flex h-full flex-1 flex-col gap-6 rounded-xl p-4 mb-96">
-                <!-- Header -->
-                <div class="text-center max-w-2xl mx-auto">
-                    <h1 class="text-3xl font-bold tracking-tight mb-2">Find Open Bounties</h1>
-                    <p class="text-muted-foreground">
-                        Discover rewarding development opportunities and earn XP by contributing to open source projects.
-                    </p>
+
+                <!-- Top Section - Popular and Trending Bounties -->
+                <div class="w-full space-y-6">
+                    <!-- Header -->
+                    <div class="text-center max-w-2xl mx-auto">
+                        <h1 class="text-3xl font-bold tracking-tight mb-2">Find Open Bounties</h1>
+                        <p class="text-muted-foreground">
+                            Discover rewarding development opportunities and earn XP by contributing to open source projects.
+                        </p>
+                    </div>
+
+                    <!-- Popular Bounties Section -->
+                        <div :class="[
+                    'grid grid-cols-1 gap-6',
+                    (trendingBounties && trendingBounties.length > 0)
+                      ? 'lg:grid-cols-2'
+                      : 'lg:grid-cols-1 justify-items-center'
+                  ]">
+
+                    <!-- Popular Bounties -->
+                        <PopularBountiesPanel
+                            :bounties="popularBounties"
+                            title="🔥 Popular Bounties"
+                        />
+
+                        <!-- Trending Bounties -->
+                        <PopularBountiesPanel
+                            v-if="trendingBounties && trendingBounties.length > 0"
+                            :bounties="trendingBounties"
+                            title="📈 Trending This Week"
+                        />
+
+                        <div v-else class="flex items-center justify-center border-2 border-dashed border-gray-200 rounded-lg p-8 dark:border-gray-700">
+                            <div class="text-center">
+                                <Target class="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">More Coming Soon</h3>
+                                <p class="text-gray-500 dark:text-gray-400">New bounties are added regularly</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+                <div class="border-t border-gray-200 dark:border-gray-700"></div>
 
                 <!-- Search and Filters -->
                 <Card class="w-full max-w-4xl mx-auto">
@@ -279,64 +329,82 @@ const hasActiveBountyFilters = computed(() => {
                     <span class="ml-2 text-muted-foreground">Searching bounties...</span>
                 </div>
 
-                <!-- Bounties Grid -->
-                <div v-else-if="bounties && bounties.data && bounties.data.length > 0" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    <Card
-                        v-for="bounty in bounties.data"
-                        :key="bounty.id"
-                        class="cursor-pointer transition-all hover:shadow-lg hover:-translate-y-1 border-l-4 border-l-green-500"
-                        @click="navigateToBounty(bounty)"
-                    >
-                        <CardHeader class="pb-3">
-                            <div class="flex items-start justify-between gap-2">
-                                <h3 class="font-semibold line-clamp-2 text-lg leading-tight">
-                                    {{ bounty.title }}
-                                </h3>
-                                <Badge :class="getStatusColor(bounty.status)" class="flex-shrink-0 text-xs">
-                                    {{ getStatusDisplayText(bounty.status) }}
-                                </Badge>
-                            </div>
-                        </CardHeader>
-                        <CardContent class="space-y-4">
-                            <!-- Short Description (max 20 chars) -->
-                            <p v-if="bounty.description" class="text-sm text-muted-foreground">
-                                {{ bounty.description.length > 20 ? bounty.description.substring(0, 20) + '...' : bounty.description }}
-                            </p>
+                <div v-else-if="bounties && bounties.data && bounties.data.length > 0">
+                    <div class="mb-6">
+                        <h2 class="text-xl font-semibold">All Bounties</h2>
+                        <p class="text-muted-foreground">Browse all available bounties</p>
+                    </div>
 
-                            <!-- Languages (max 3) -->
-                            <div v-if="bounty.languages && bounty.languages.length > 0" class="flex flex-wrap gap-1">
-                                <Badge
-                                    v-for="language in bounty.languages.slice(0, 3)"
-                                    :key="language"
-                                    variant="outline"
-                                    class="text-xs"
-                                >
-                                    {{ language }}
-                                </Badge>
-                                <Badge
-                                    v-if="bounty.languages.length > 3"
-                                    variant="outline"
-                                    class="text-xs"
-                                >
-                                    +{{ bounty.languages.length - 3 }}
-                                </Badge>
-                            </div>
+                    <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                        <Card
+                            v-for="bounty in bounties.data"
+                            :key="bounty.id"
+                            class="cursor-pointer transition-all hover:shadow-lg hover:-translate-y-1 border-l-4 border-l-green-500"
+                            @click="navigateToBounty(bounty)"
+                        >
+                            <CardHeader class="pb-3">
+                                <div class="flex items-start justify-between gap-2">
+                                    <h3 class="font-semibold line-clamp-2 text-lg leading-tight">
+                                        {{ bounty.title }}
+                                    </h3>
+                                    <Badge :class="getStatusColor(bounty.status)" class="flex-shrink-0 text-xs">
+                                        {{ getStatusDisplayText(bounty.status) }}
+                                    </Badge>
+                                </div>
+                            </CardHeader>
+                            <CardContent class="space-y-4">
+                                <!-- Short Description -->
+                                <p v-if="bounty.description" class="text-sm text-muted-foreground">
+                                    {{ bounty.description.length > 100 ? bounty.description.substring(0, 100) + '...' : bounty.description }}
+                                </p>
 
-                            <!-- Only Reward XP -->
-                            <div class="flex items-center justify-between text-sm">
-                                <div class="flex items-center gap-1 text-yellow-600 font-medium">
-                                    <DollarSign class="h-4 w-4" />
-                                    {{ bounty.reward_xp }} XP
+                                <!-- Languages -->
+                                <div v-if="bounty.languages && bounty.languages.length > 0" class="flex flex-wrap gap-1">
+                                    <Badge
+                                        v-for="language in bounty.languages.slice(0, 3)"
+                                        :key="language"
+                                        variant="outline"
+                                        class="text-xs"
+                                    >
+                                        {{ language }}
+                                    </Badge>
+                                    <Badge
+                                        v-if="bounty.languages.length > 3"
+                                        variant="outline"
+                                        class="text-xs"
+                                    >
+                                        +{{ bounty.languages.length - 3 }}
+                                    </Badge>
                                 </div>
 
-                                <!-- Created Date -->
-                                <span class="flex items-center gap-1 text-xs text-muted-foreground">
-                                    <Calendar class="h-3 w-3" />
-                                    {{ formatDate(bounty.created_at) }}
-                                </span>
-                            </div>
-                        </CardContent>
-                    </Card>
+                                <!-- Metadata with views -->
+                                <div class="flex items-center justify-between text-sm">
+                                    <div class="flex items-center gap-3">
+                                        <div class="flex items-center gap-1 text-yellow-600 font-medium">
+                                            <DollarSign class="h-4 w-4" />
+                                            {{ bounty.reward_xp }} XP
+                                        </div>
+                                        <!-- Views megjelenítése -->
+                                        <div v-if="bounty.views && bounty.views > 0" class="flex items-center gap-1 text-muted-foreground">
+                                            <Eye class="h-3 w-3" />
+                                            {{ bounty.views }}
+                                        </div>
+                                        <!-- Submissions count ha van -->
+                                        <div v-if="bounty.submissions_count && bounty.submissions_count > 0" class="flex items-center gap-1 text-muted-foreground">
+                                            <Target class="h-3 w-3" />
+                                            {{ bounty.submissions_count }}
+                                        </div>
+                                    </div>
+
+                                    <!-- Created Date -->
+                                    <span class="flex items-center gap-1 text-xs text-muted-foreground">
+                                        <Calendar class="h-3 w-3" />
+                                        {{ formatDate(bounty.created_at) }}
+                                    </span>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
                 </div>
 
                 <!-- Empty State -->
