@@ -16,6 +16,7 @@ class BountySearchService
             ->where('status', 'open')
             ->latest();
     }
+
     public function applySearchFilter(Builder $query, Request $request): Builder
     {
         return $query->when($request->filled('search'), function ($q) use ($request) {
@@ -29,16 +30,25 @@ class BountySearchService
             });
         });
     }
+
     public function applyLanguageFilter(Builder $query, Request $request): Builder
     {
         return $query->when($request->filled('language'), function ($q) use ($request) {
-            return $q->whereJsonContains('languages', $request->get('language'));
+            $language = $request->get('language');
+
+            if (config('database.default') === 'pgsql') {
+                return $q->whereRaw("languages::jsonb ? ?", [$language]);
+            }
+
+            return $q->whereJsonContains('languages', $language);
         });
     }
+
     public function getPaginatedBounties(Builder $query, int $perPage = 12): LengthAwarePaginator
     {
         return $query->paginate($perPage)->withQueryString();
     }
+
     public function getBountyData(Request $request, int $perPage = 12): array
     {
         $query = $this->buildBountyQuery();

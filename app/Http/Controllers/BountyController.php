@@ -10,6 +10,7 @@ use App\Models\Repo;
 use App\Services\BountySearchService;
 use App\Services\GitHubApiService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -26,8 +27,43 @@ class BountyController extends Controller
     public function index(Request $request)
     {
         $bountySearchData = $this->bountySearchService->getBountyData($request);
-
         return Inertia::render('bounties/Index', $bountySearchData);
+    }
+
+    public function show(Request $request, Bounty $bounty): Response
+    {
+        $this->trackBountyView($request, $bounty);
+
+        $bountyData = $bounty->load(['issue.repo', 'submissions.user'])
+            ->loadCount('submissions');
+
+        return Inertia::render('bounties/Show', [
+            'bounty' => $bountyData,
+            'popularityScore' => ($bounty->views ?? 0) + ($bountyData->submissions_count ?? 0),
+        ]);
+    }
+
+    private function trackBountyView(Request $request, Bounty $bounty): void
+    {
+        $user = $request->user();
+
+        if ($user) {
+            $cacheKey = "user_{$user->id}_viewed_bounty_{$bounty->id}";
+
+            if (!cache()->has($cacheKey)) {
+                $bounty->increment('views');
+                cache()->put($cacheKey, true, now()->addDay());
+            }
+        } else {
+            $sessionKey = 'viewed_bounties';
+            $viewedBounties = session()->get($sessionKey, []);
+
+            if (!in_array($bounty->id, $viewedBounties)) {
+                $bounty->increment('views');
+                $viewedBounties[] = $bounty->id;
+                session()->put($sessionKey, $viewedBounties);
+            }
+        }
     }
 
     public function store(BountyStoreRequest $request): RedirectResponse
@@ -62,13 +98,6 @@ class BountyController extends Controller
             ->with('success', 'Bounty created successfully!');
     }
 
-    public function show(Bounty $bounty): Response
-    {
-        return Inertia::render('bounties/Show', [
-            'bounty' => $bounty->load(['issue.repo', 'submissions.user']),
-        ]);
-    }
-
     public function edit(Bounty $bounty): Response
     {
         $this->authorize('update', $bounty);
@@ -84,10 +113,10 @@ class BountyController extends Controller
         $validated = $request->validated();
 
         $bounty->update([
-                'title' => $validated['title'],
-                'description' => $validated['description'],
-                'reward_xp' => $validated['reward_xp'],
-            ]);
+            'title' => $validated['title'],
+            'description' => $validated['description'],
+            'reward_xp' => $validated['reward_xp'],
+        ]);
 
         return redirect()
             ->route('profile.show')
@@ -116,17 +145,5 @@ class BountyController extends Controller
         return redirect()
             ->route('profile.show')
             ->with('success', 'Bounty restored successfully!');
-    }
-
-    private function getRepositoryLanguages($user, string $repoFullName): array
-    {
-        $githubApi = new GitHubApiService($user);
-
-        if (!$githubApi->hasValidToken()) {
-            return [];
-        }
-
-        $languageStats = $githubApi->getRepositoryLanguages($repoFullName);
-        return collect($languageStats)->sortDesc()->keys()->toArray();
     }
 }
