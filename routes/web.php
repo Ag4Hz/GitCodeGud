@@ -5,6 +5,7 @@ use App\Http\Controllers\FollowerController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\GitHubSkillController;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -24,11 +25,10 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/users/{user}/follow', [FollowerController::class, 'store'])->name('users.follow');
     Route::delete('/users/{user}/follow', [FollowerController::class, 'destroy'])->name('users.unfollow');
-
 });
 
 Route::middleware('auth')->group(function () {
-    Route::post('/profile/sync-github-skills', [ProfileController::class, 'syncGitHubSkills'])
+    Route::post('/profile/sync-github-skills', [GitHubSkillController::class, 'sync'])
         ->name('profile.sync-github-skills');
 });
 
@@ -37,6 +37,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/bounties/{id}/restore', [BountyController::class, 'restore'])
         ->where('id', '[0-9]+')
         ->name('bounties.restore');
+
+    Route::get('/api/bounties/popular', [BountyController::class, 'popular'])
+        ->name('bounties.popular');
 });
 
 Route::middleware('auth')->group(function () {
