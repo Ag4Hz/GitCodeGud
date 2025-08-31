@@ -6,15 +6,13 @@ import { useInfiniteScroll} from '@/composables/useInfiniteScroll';
 import { useIntersect } from '@/composables/useIntersect';
 import { ref } from 'vue';
 
-defineProps<{
-    followers: {
-        data: { id: number; nickname: string }[];
-        next_page_url: string | null;
-    };
+const props = defineProps<{
+    propName: string;
+    title?: string
     count?: number
 }>();
 
-const { items, loadMoreItems} = useInfiniteScroll('followers');
+const { items, loadMoreItems} = useInfiniteScroll(props.propName);
 
 const landmark = ref<HTMLElement | null>(null);
 
@@ -31,17 +29,17 @@ useIntersect(landmark, loadMoreItems, {
                 <Users class="h-4 w-4 text-green-700" />
                 <span class="inline-flex items-center gap-1.5">
                   <span>{{ count }}</span>
-                  <span>Followers</span>
+                  <span>{{ title }}</span>
                 </span>
             </button>
         </DialogTrigger>
 
         <DialogContent>
-            <DialogTitle>Followers</DialogTitle>
+            <DialogTitle>{{ title }}</DialogTitle>
             <DialogDescription />
             <ul class="max-h-64 overflow-y-auto">
-                <li v-for="follower in items" :key="follower.id">
-                    {{ follower.nickname }}
+                <li v-for="item in items" :key="item.id">
+                    {{ item.nickname }}
                 </li>
                 <li ref="landmark" class="h-8"></li>
             </ul>

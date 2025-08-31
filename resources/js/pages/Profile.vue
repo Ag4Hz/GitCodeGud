@@ -39,7 +39,10 @@ interface Props {
     isOwner?: boolean;
     isFollowing?: boolean;
     profileUserId: number;
-    followings: { data: User[] };
+    followings: {
+        data: { id: number; nickname: string }[]
+        next_page_url: string | null
+    }
     followers: {
         data: { id: number; nickname: string }[]
         next_page_url: string | null
@@ -257,12 +260,8 @@ function unfollow() {
                                         {{ formatXP(user.total_xp) }} XP
                                     </div>
 
-                                    <FollowModal :followers="props.followers" :count="user.followers_count"/>
-
-                                    <div class="flex items-center gap-1 text-sm font-medium">
-                                        <UserCheck class="h-4 w-4 text-green-700" />
-                                        {{ user.followings_count }} Following
-                                    </div>
+                                    <FollowModal prop-name="followers" title="Followers" :count="user.followers_count" />
+                                    <FollowModal prop-name="followings" title="Followings" :count="user.followings_count" />
 
                                 </div>
                             </div>
