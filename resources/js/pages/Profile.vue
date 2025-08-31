@@ -201,6 +201,9 @@ function follow() {
         {
             preserveScroll: true,
             onFinish: () => { followingBusy.value = false; },
+            onSuccess: () => {
+                router.reload({ only: ['followers', 'followings', 'user'] });
+            },
         },
     );
 }
@@ -213,6 +216,9 @@ function unfollow() {
         {
             preserveScroll: true,
             onFinish: () => { followingBusy.value = false; },
+            onSuccess: () => {
+                router.reload({ only: ['followers', 'followings', 'user']});
+            },
         },
     );
 }
