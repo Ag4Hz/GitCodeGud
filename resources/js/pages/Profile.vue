@@ -13,8 +13,9 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem, type User } from '@/types';
 import { type BountyPagination } from '@/types/bounty';
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { AlertCircle, Code, Database, Github, Plus, Settings, Star, Target, Trophy, Zap, Users, UserCheck } from 'lucide-vue-next';
+import { AlertCircle, Code, Database, Github, Plus, Settings, Star, Target, Trophy, Zap, UserCheck } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
+import FollowModal from "@/components/FollowModal.vue"
 
 interface UserWithXP extends Omit<User, 'skills'> {
     total_xp: number;
@@ -38,13 +39,17 @@ interface Props {
     isOwner?: boolean;
     isFollowing?: boolean;
     profileUserId: number;
-    followers: { data: User[] };
     followings: { data: User[] };
+    followers: {
+        data: { id: number; nickname: string }[]
+        next_page_url: string | null
+    }
 }
 
 const props = withDefaults(defineProps<Props>(), {
     bounties: () => ({ data: [], total: 0, current_page: 1, last_page: 1 }),
     isFollowing: false,
+    followers: Object,
 });
 
 const isOwner = computed(() => props.isOwner);
@@ -251,10 +256,8 @@ function unfollow() {
                                         <Zap class="h-4 w-4 text-blue-500" />
                                         {{ formatXP(user.total_xp) }} XP
                                     </div>
-                                    <div class="flex items-center gap-1 text-sm font-medium">
-                                        <Users class="h-4 w-4 text-green-700" />
-                                        {{ user.followers_count }} Followers
-                                    </div>
+
+                                    <FollowModal :followers="props.followers" :count="user.followers_count"/>
 
                                     <div class="flex items-center gap-1 text-sm font-medium">
                                         <UserCheck class="h-4 w-4 text-green-700" />
@@ -651,18 +654,5 @@ function unfollow() {
                 </div>
             </div>
         </div>
-
-        <ul>
-            <li v-for="f in followers.data" :key="f.id">
-                {{ f.name }} <span>(id:{{ f.id }})</span>
-            </li>
-        </ul>
-
-        <ul>
-            <li v-for="f in followings.data" :key="f.id">
-                {{ f.name }} <span>(id:{{ f.id }})</span>
-            </li>
-        </ul>
-
     </AppLayout>
 </template>

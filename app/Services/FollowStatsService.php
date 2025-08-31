@@ -22,9 +22,7 @@ class FollowStatsService
 
     public function getFollowers(User $user, int $perPage = 10)
     {
-        return $user->followers()
-            ->select('users.id', 'users.name')
-            ->paginate($perPage);
+        return $user->followers()->paginate(10);
     }
 
     public function getFollowings(User $user, int $perPage = 10)
