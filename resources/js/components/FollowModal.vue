@@ -5,6 +5,8 @@ import { Users } from 'lucide-vue-next';
 import { useInfiniteScroll} from '@/composables/useInfiniteScroll';
 import { useIntersect } from '@/composables/useIntersect';
 import { ref } from 'vue';
+import UserRow from '@/components/UserRow.vue';
+import { router } from '@inertiajs/vue3';
 
 const props = defineProps<{
     propName: string;
@@ -15,6 +17,7 @@ const props = defineProps<{
 const { items, loadMoreItems} = useInfiniteScroll(props.propName);
 
 const landmark = ref<HTMLElement | null>(null);
+const goToProfile = (user: { id: number }) => router.visit(`/users/${user.id}`);
 
 useIntersect(landmark, loadMoreItems, {
     rootMargin: '0px 0px 150px 0px',
@@ -34,19 +37,20 @@ useIntersect(landmark, loadMoreItems, {
             </button>
         </DialogTrigger>
 
-        <DialogContent>
-            <DialogTitle>{{ title }}</DialogTitle>
-            <DialogDescription />
-            <ul class="max-h-64 overflow-y-auto">
-                <li v-for="item in items" :key="item.id">
-                    {{ item.nickname }}
-                </li>
+        <DialogContent
+            class="w-full max-w-md rounded-xl border border-gray-200 p-2 text-sm shadow-xl
+         ring-1 ring-black/5 bg-white/80 backdrop-blur-sm
+         dark:border-white/10 dark:bg-white/10 dark:text-gray-200"
+        >
+            <DialogTitle class="flex justify-center mt-2 text-sm font-semibold">{{ title }}</DialogTitle>
+            <DialogDescription class="sr-only" />
+
+            <ul class="mt-2 max-h-72 overflow-y-auto rounded-lg p-1">
+                <UserRow v-for="user in items" :key="user.id" :user="user" @click="goToProfile(user)" />
                 <li ref="landmark" class="h-8"></li>
             </ul>
 
-            <DialogClose>
-                <button>Close</button>
-            </DialogClose>
         </DialogContent>
+
     </Dialog>
 </template>

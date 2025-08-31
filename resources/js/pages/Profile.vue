@@ -13,7 +13,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem, type User } from '@/types';
 import { type BountyPagination } from '@/types/bounty';
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { AlertCircle, Code, Database, Github, Plus, Settings, Star, Target, Trophy, Zap, UserCheck } from 'lucide-vue-next';
+import { AlertCircle, Code, Database, Github, Plus, Settings, Star, Target, Trophy, Zap } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 import FollowModal from "@/components/FollowModal.vue"
 
@@ -46,6 +46,7 @@ interface Props {
     followers: {
         data: { id: number; nickname: string }[]
         next_page_url: string | null
+        avatar: string | null
     }
 }
 
