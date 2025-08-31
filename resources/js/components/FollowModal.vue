@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Dialog, DialogClose, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Users } from 'lucide-vue-next';
 
 import { useInfiniteScroll} from '@/composables/useInfiniteScroll';
@@ -38,11 +38,12 @@ useIntersect(landmark, loadMoreItems, {
         </DialogTrigger>
 
         <DialogContent
-            class="w-full max-w-md rounded-xl border border-gray-200 p-2 text-sm shadow-xl
-         ring-1 ring-black/5 bg-white/80 backdrop-blur-sm
+            class="w-full max-w-md rounded-xl border border-white/40 p-2 text-sm shadow-xl
+         ring-1 ring-black/5 bg-white/30 backdrop-blur-xs
          dark:border-white/10 dark:bg-white/10 dark:text-gray-200"
         >
-            <DialogTitle class="flex justify-center mt-2 text-sm font-semibold">{{ title }}</DialogTitle>
+
+        <DialogTitle class="flex justify-center mt-2 text-sm font-semibold">{{ title }}</DialogTitle>
             <DialogDescription class="sr-only" />
 
             <ul class="mt-2 max-h-72 overflow-y-auto rounded-lg p-1">

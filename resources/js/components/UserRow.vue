@@ -32,7 +32,7 @@ const initials = computed(() => getInitials(user.name || user.nickname || ''))
         />
         <div
             v-else
-            class="grid h-10 w-10 place-items-center rounded-full bg-neutral-200 text-[15px] font-semibold text-neutral-700 dark:bg-neutral-700 dark:text-neutral-100"
+            class="grid h-10 w-10 place-items-center rounded-full bg-neutral-200 text-[15px] font-semibold text-neutral-800 dark:bg-neutral-700 dark:text-neutral-100"
             aria-hidden="true"
         >
             {{ initials }}
@@ -42,9 +42,10 @@ const initials = computed(() => getInitials(user.name || user.nickname || ''))
             <p class="truncate text-sm font-medium leading-tight">
                 {{ user.nickname || user.name }}
             </p>
-            <p class="truncate text-xs text-muted-foreground">
+            <p class="truncate text-xs text-gray-700 dark:text-muted-foreground">
                 {{ user.name }}
             </p>
+
         </div>
     </li>
 </template>
