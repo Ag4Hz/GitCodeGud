@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { Dialog, DialogClose, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Users } from 'lucide-vue-next';
-import { onMounted, ref, watch } from 'vue';
-import { router, usePage } from '@inertiajs/vue3';
 
-const props = defineProps<{
+import { useInfiniteScroll} from '@/composables/useInfiniteScroll';
+import { useIntersect } from '@/composables/useIntersect';
+import { ref } from 'vue';
+
+defineProps<{
     followers: {
         data: { id: number; nickname: string }[];
         next_page_url: string | null;
@@ -12,49 +14,12 @@ const props = defineProps<{
     count?: number
 }>();
 
-const items = ref([...props.followers.data]);
-const initialUrl = usePage().url;
-
-const loadMoreItems = () => {
-    if (!props.followers.next_page_url) {
-        return;
-    }
-
-    router.get(
-        props.followers.next_page_url,
-        {},
-        {
-            only: ['followers'],
-            preserveState: true,
-            preserveScroll: true,
-            onSuccess: () => {
-                window.history.replaceState({}, '', initialUrl);
-                items.value = [...items.value, ...props.followers.data];
-            },
-        },
-    );
-};
-
-const observer = new IntersectionObserver(
-    (entries) => {
-        entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-                loadMoreItems();
-            }
-        });
-    },
-    {
-        rootMargin: '0px 0px 150px 0px',
-    },
-);
+const { items, loadMoreItems} = useInfiniteScroll('followers');
 
 const landmark = ref<HTMLElement | null>(null);
 
-onMounted(() => {
-    if (landmark.value) observer.observe(landmark.value);
-});
-watch(landmark, (el) => {
-    if (el) observer.observe(el);
+useIntersect(landmark, loadMoreItems, {
+    rootMargin: '0px 0px 150px 0px',
 });
 
 </script>
