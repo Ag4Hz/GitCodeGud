@@ -3,6 +3,7 @@ import { Combobox, ComboboxInput, ComboboxOption, ComboboxOptions } from '@headl
 import { MagnifyingGlassIcon } from '@heroicons/vue/24/solid';
 import { router } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
+import UserRow from '@/components/UserRow.vue';
 
 type User = { id: number; nickname: string; avatar: string; name: string };
 
@@ -55,24 +56,13 @@ watch(search, () => {
             >
                 <template v-if="users.length > 0">
                     <ComboboxOption v-for="user in users" :key="user.id" :value="user" as="template" v-slot="{ active }">
-                        <li
-                            :class="[
-                                'flex cursor-pointer items-center space-x-3 rounded-lg px-3 py-2 transition select-none',
-                                active ? 'bg-green-600 text-white' : 'text-gray-900 dark:text-gray-100',
-                            ]"
-                        >
-                            <img v-if="user.avatar" :src="user.avatar" alt="avatar" class="h-8 w-8 rounded-full object-cover" />
-
-                            <div class="flex flex-col">
-                                <span class="font-medium">{{ user.nickname }}</span>
-                                <span class="text-sm text-gray-500 dark:text-gray-300">{{ user.name }}</span>
-                            </div>
-                        </li>
+                        <UserRow :user="user" :active="active" />
                     </ComboboxOption>
                 </template>
                 <template v-else>
                     <div class="px-3 py-2 text-gray-500 dark:text-gray-300">No buddies found</div>
                 </template>
+
             </ComboboxOptions>
         </Combobox>
     </div>
