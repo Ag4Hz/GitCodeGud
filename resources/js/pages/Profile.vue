@@ -87,8 +87,10 @@ const showDuplicateBountyWarning = computed(() => {
 
 // Repository ownership warning
 const showRepoWarning = computed(() => {
-    return bountyForm.errors.repo_url?.includes('only create bounties for repositories you own') ||
-        bountyForm.errors.repo_url?.includes('Could not verify repository access');
+    return (
+        bountyForm.errors.repo_url?.includes('only create bounties for repositories you own') ||
+        bountyForm.errors.repo_url?.includes('Could not verify repository access')
+    );
 });
 
 // Issue status warning
@@ -98,8 +100,10 @@ const showIssueStatusWarning = computed(() => {
 
 // GitHub API access warning
 const showApiWarning = computed(() => {
-    return bountyForm.errors.issue_url?.includes('GitHub API access is required') ||
-        bountyForm.errors.issue_url?.includes('Could not verify issue status');
+    return (
+        bountyForm.errors.issue_url?.includes('GitHub API access is required') ||
+        bountyForm.errors.issue_url?.includes('Could not verify issue status')
+    );
 });
 
 const levelProgress = computed(() => {
@@ -176,7 +180,7 @@ const submitBounty = () => {
         },
         onError: (errors) => {
             console.log('Validation errors:', errors);
-        }
+        },
     });
 };
 
@@ -337,10 +341,8 @@ function unfollow() {
                             <button
                                 @click="switchTab('bounties')"
                                 :class="[
-                                    'inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all',
-                                    activeTab === 'bounties'
-                                        ? 'bg-background text-foreground shadow-sm'
-                                        : 'hover:bg-background/50'
+                                    'inline-flex items-center justify-center rounded-sm px-3 py-1.5 text-sm font-medium whitespace-nowrap ring-offset-background transition-all',
+                                    activeTab === 'bounties' ? 'bg-background text-foreground shadow-sm' : 'hover:bg-background/50',
                                 ]"
                             >
                                 Bounty Management
@@ -348,10 +350,8 @@ function unfollow() {
                             <button
                                 @click="switchTab('skills')"
                                 :class="[
-                                    'inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all',
-                                    activeTab === 'skills'
-                                        ? 'bg-background text-foreground shadow-sm'
-                                        : 'hover:bg-background/50'
+                                    'inline-flex items-center justify-center rounded-sm px-3 py-1.5 text-sm font-medium whitespace-nowrap ring-offset-background transition-all',
+                                    activeTab === 'skills' ? 'bg-background text-foreground shadow-sm' : 'hover:bg-background/50',
                                 ]"
                             >
                                 Skills & XP
@@ -362,7 +362,7 @@ function unfollow() {
                     <!-- Bounty Management Tab Content -->
                     <div v-if="activeTab === 'bounties'" class="space-y-6">
                         <!-- Create Bounty Section -->
-                        <Card v-if="isOwner" >
+                        <Card v-if="isOwner">
                             <CardHeader>
                                 <div class="flex items-center justify-between">
                                     <div>
@@ -370,64 +370,69 @@ function unfollow() {
                                             <Plus class="h-5 w-5" />
                                             Create Bounty
                                         </CardTitle>
-                                        <CardDescription>
-                                            Create a new bounty to incentivize contributions to your GitHub issues
-                                        </CardDescription>
+                                        <CardDescription> Create a new bounty to incentivize contributions to your GitHub issues </CardDescription>
                                     </div>
-                                    <Button
-                                        @click="toggleCreateForm"
-                                        :variant="showCreateForm ? 'outline' : 'default'"
-                                    >
+                                    <Button @click="toggleCreateForm" :variant="showCreateForm ? 'outline' : 'default'">
                                         {{ showCreateForm ? 'Cancel' : 'Create Bounty' }}
                                     </Button>
                                 </div>
                             </CardHeader>
 
                             <CardContent v-if="showCreateForm">
-                                <div v-if="showDuplicateBountyWarning" class="mb-4 flex items-start gap-3 rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-800 dark:bg-yellow-950">
-                                    <AlertCircle class="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" />
+                                <div
+                                    v-if="showDuplicateBountyWarning"
+                                    class="mb-4 flex items-start gap-3 rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-800 dark:bg-yellow-950"
+                                >
+                                    <AlertCircle class="mt-0.5 h-5 w-5 flex-shrink-0 text-yellow-600 dark:text-yellow-400" />
                                     <div>
-                                        <h4 class="font-medium text-yellow-800 dark:text-yellow-200 mb-1">Bounty Already Exists</h4>
+                                        <h4 class="mb-1 font-medium text-yellow-800 dark:text-yellow-200">Bounty Already Exists</h4>
                                         <p class="text-sm text-yellow-700 dark:text-yellow-300">
-                                            A bounty already exists for this GitHub issue. Each issue can only have one bounty.
-                                            Please select a different issue or check your existing bounties.
+                                            A bounty already exists for this GitHub issue. Each issue can only have one bounty. Please select a
+                                            different issue or check your existing bounties.
                                         </p>
                                     </div>
                                 </div>
 
                                 <!-- Repository ownership warning -->
-                                <div v-if="showRepoWarning" class="mb-4 flex items-start gap-3 rounded-lg border border-orange-200 bg-orange-50 p-4 dark:border-orange-800 dark:bg-orange-950">
-                                    <AlertCircle class="h-5 w-5 text-orange-600 dark:text-orange-400 mt-0.5 flex-shrink-0" />
+                                <div
+                                    v-if="showRepoWarning"
+                                    class="mb-4 flex items-start gap-3 rounded-lg border border-orange-200 bg-orange-50 p-4 dark:border-orange-800 dark:bg-orange-950"
+                                >
+                                    <AlertCircle class="mt-0.5 h-5 w-5 flex-shrink-0 text-orange-600 dark:text-orange-400" />
                                     <div>
-                                        <h4 class="font-medium text-orange-800 dark:text-orange-200 mb-1">Repository Access Required</h4>
+                                        <h4 class="mb-1 font-medium text-orange-800 dark:text-orange-200">Repository Access Required</h4>
                                         <p class="text-sm text-orange-700 dark:text-orange-300">
-                                            You can only create bounties for repositories you own or have push access to.
-                                            Make sure you're the owner or a collaborator of this repository.
+                                            You can only create bounties for repositories you own or have push access to. Make sure you're the owner
+                                            or a collaborator of this repository.
                                         </p>
                                     </div>
                                 </div>
 
                                 <!-- Issue status warning -->
-                                <div v-if="showIssueStatusWarning" class="mb-4 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950">
-                                    <AlertCircle class="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
+                                <div
+                                    v-if="showIssueStatusWarning"
+                                    class="mb-4 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950"
+                                >
+                                    <AlertCircle class="mt-0.5 h-5 w-5 flex-shrink-0 text-red-600 dark:text-red-400" />
                                     <div>
-                                        <h4 class="font-medium text-red-800 dark:text-red-200 mb-1">Issue is Closed</h4>
+                                        <h4 class="mb-1 font-medium text-red-800 dark:text-red-200">Issue is Closed</h4>
                                         <p class="text-sm text-red-700 dark:text-red-300">
-                                            Only open GitHub issues can be used for bounties. This issue appears to be closed.
-                                            Please reopen the issue on GitHub or select a different open issue.
+                                            Only open GitHub issues can be used for bounties. This issue appears to be closed. Please reopen the issue
+                                            on GitHub or select a different open issue.
                                         </p>
                                     </div>
                                 </div>
 
                                 <!-- GitHub API warning -->
-                                <div v-if="showApiWarning" class="mb-4 flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950">
-                                    <Github class="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                                <div
+                                    v-if="showApiWarning"
+                                    class="mb-4 flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950"
+                                >
+                                    <Github class="mt-0.5 h-5 w-5 flex-shrink-0 text-blue-600 dark:text-blue-400" />
                                     <div>
-                                        <h4 class="font-medium text-blue-800 dark:text-blue-200 mb-1">GitHub Access Issue</h4>
-                                        <p class="text-sm text-blue-700 dark:text-blue-300">
-                                            Unable to verify the issue status. Please ensure:
-                                        </p>
-                                        <ul class="text-sm text-blue-700 dark:text-blue-300 mt-1 ml-4 list-disc">
+                                        <h4 class="mb-1 font-medium text-blue-800 dark:text-blue-200">GitHub Access Issue</h4>
+                                        <p class="text-sm text-blue-700 dark:text-blue-300">Unable to verify the issue status. Please ensure:</p>
+                                        <ul class="mt-1 ml-4 list-disc text-sm text-blue-700 dark:text-blue-300">
                                             <li>You're connected to GitHub</li>
                                             <li>The issue exists and you have access to it</li>
                                             <li>The repository is public or you have access to it</li>
@@ -444,9 +449,7 @@ function unfollow() {
                                             v-model="bountyForm.title"
                                             placeholder="e.g., Fix responsive layout bug on mobile devices"
                                             required
-                                            :class="[
-                                                bountyForm.errors.title && 'border-red-500 focus-visible:ring-red-500'
-                                            ]"
+                                            :class="[bountyForm.errors.title && 'border-red-500 focus-visible:ring-red-500']"
                                         />
                                         <InputError :message="bountyForm.errors.title" />
                                     </div>
@@ -460,18 +463,16 @@ function unfollow() {
                                             placeholder="Describe the task in detail. Include acceptance criteria, expected behavior, and any relevant context..."
                                             rows="4"
                                             :class="[
-                                                'flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
-                                                bountyForm.errors.description && 'border-red-500 focus-visible:ring-red-500'
+                                                'flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50',
+                                                bountyForm.errors.description && 'border-red-500 focus-visible:ring-red-500',
                                             ]"
                                         ></textarea>
-                                        <p class="text-sm text-muted-foreground">
-                                            {{ bountyForm.description.length }}/2000 characters
-                                        </p>
+                                        <p class="text-sm text-muted-foreground">{{ bountyForm.description.length }}/2000 characters</p>
                                         <InputError :message="bountyForm.errors.description" />
                                     </div>
 
                                     <!-- Repository and Issue URLs -->
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                                         <!-- Repository URL -->
                                         <div class="space-y-2">
                                             <Label for="repo_url">GitHub Repository URL *</Label>
@@ -481,13 +482,9 @@ function unfollow() {
                                                 type="url"
                                                 placeholder="https://github.com/username/repository"
                                                 required
-                                                :class="[
-                                                    bountyForm.errors.repo_url && 'border-red-500 focus-visible:ring-red-500'
-                                                ]"
+                                                :class="[bountyForm.errors.repo_url && 'border-red-500 focus-visible:ring-red-500']"
                                             />
-                                            <p class="text-sm text-muted-foreground">
-                                                Languages will be detected automatically from the repository
-                                            </p>
+                                            <p class="text-sm text-muted-foreground">Languages will be detected automatically from the repository</p>
                                             <InputError :message="bountyForm.errors.repo_url" />
                                         </div>
 
@@ -500,9 +497,7 @@ function unfollow() {
                                                 type="url"
                                                 placeholder="https://github.com/username/repository/issues/123"
                                                 required
-                                                :class="[
-                                                    bountyForm.errors.issue_url && 'border-red-500 focus-visible:ring-red-500'
-                                                ]"
+                                                :class="[bountyForm.errors.issue_url && 'border-red-500 focus-visible:ring-red-500']"
                                             />
                                             <InputError :message="bountyForm.errors.issue_url" />
                                         </div>
@@ -520,13 +515,9 @@ function unfollow() {
                                                 max="1000"
                                                 required
                                                 class="w-32"
-                                                :class="[
-                                                    bountyForm.errors.reward_xp && 'border-red-500 focus-visible:ring-red-500'
-                                                ]"
+                                                :class="[bountyForm.errors.reward_xp && 'border-red-500 focus-visible:ring-red-500']"
                                             />
-                                            <span class="text-sm text-muted-foreground">
-                                                XP (1-1000)
-                                            </span>
+                                            <span class="text-sm text-muted-foreground"> XP (1-1000) </span>
                                         </div>
                                         <p class="text-sm text-muted-foreground">
                                             Higher rewards attract more contributors. Consider the complexity of the task.
@@ -535,19 +526,11 @@ function unfollow() {
                                     </div>
 
                                     <!-- Form Actions -->
-                                    <div class="flex gap-4 pt-4 border-t">
-                                        <Button
-                                            type="submit"
-                                            :disabled="bountyForm.processing"
-                                        >
+                                    <div class="flex gap-4 border-t pt-4">
+                                        <Button type="submit" :disabled="bountyForm.processing">
                                             {{ bountyForm.processing ? 'Creating...' : 'Create Bounty' }}
                                         </Button>
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            @click="cancelBountyCreation"
-                                            :disabled="bountyForm.processing"
-                                        >
+                                        <Button type="button" variant="outline" @click="cancelBountyCreation" :disabled="bountyForm.processing">
                                             Cancel
                                         </Button>
                                     </div>

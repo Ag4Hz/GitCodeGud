@@ -8,7 +8,6 @@ use App\Models\Bounty;
 use App\Models\User;
 use App\Services\GitHubSkillSyncService;
 use App\Services\FollowStatsService;
-use App\Services\UserBountyService;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
@@ -24,7 +23,7 @@ class ProfileController extends Controller
         private FollowStatsService $followStatsService,
     ) {}
 
-    public function show(Request $request, User $user = null): Response
+    public function show(Request $request, ?User $user = null): Response
     {
         if (!$user) {
             $user = $request->user();

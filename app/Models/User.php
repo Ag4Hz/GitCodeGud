@@ -37,6 +37,12 @@ class User extends Authenticatable
         'oauth_provider_token',
         'oauth_provider_refresh_token'
     ];
+
+    public static function count(): int
+    {
+        return self::query()->count();
+    }
+
     protected function casts(): array
     {
         return [
