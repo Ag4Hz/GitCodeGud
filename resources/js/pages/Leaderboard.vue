@@ -32,9 +32,16 @@ const props = withDefaults(defineProps<PageProps>(), {
                 <h1 class="text-2xl font-semibold tracking-tight text-gray-900 md:text-3xl dark:text-gray-100">Leaderboard</h1>
             </div>
 
-            <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+            <div>
                 <UserSearch :filters="props.userFilters" :results="props.users" />
             </div>
+
+            <h2 class="mt-28 mb-6 text-center text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-3xl md:text-4xl">
+                Hunt bugs. Fix code. Earn XP.
+            </h2>
+            <p class="mb-28 text-center text-base text-gray-600 dark:text-gray-300 sm:text-lg md:text-xl">
+                Welcome to the battleground where developers rise and legends are made.
+            </p>
 
             <LeaderboardTable :users="props.leaderboardUsers" />
             <Pagination :links="props.leaderboardUsers.links" />
