@@ -30,6 +30,47 @@ class BountyController extends Controller
         return Inertia::render('bounties/Index', $bountySearchData);
     }
 
+    public function store(BountyStoreRequest $request): RedirectResponse
+    {
+        $validated = $request->validated();
+        $repoInfo = GitHubApiService::parseGitHubUrl($validated['repo_url']);
+
+        $repo = Repo::where('git_id', $repoInfo['full_name'])->first();
+
+        if (!$repo) {
+            $repo = Repo::create([
+                'git_id' => $repoInfo['full_name'],
+                'name' => $repoInfo['name'],
+                'url' => $validated['repo_url'],
+                'user_id' => $request->user()->id,
+            ]);
+        }
+
+        $issue = Issue::firstOrCreate(
+            ['url' => $validated['issue_url'], 'repo_id' => $repo->id],
+            ['description' => $validated['description'] ?? '']
+        );
+
+        $user = $request->user();
+        $githubApi = new GitHubApiService($user);
+        $repoLanguages = $githubApi->hasValidToken()
+            ? $githubApi->getRepositoryLanguages($repoInfo['full_name'])
+            : [];
+
+        $bounty = Bounty::create([
+            'issue_id' => $issue->id,
+            'title' => $validated['title'],
+            'description' => $validated['description'] ?? '',
+            'reward_xp' => $validated['reward_xp'],
+            'languages' => collect($repoLanguages)->sortDesc()->keys()->toArray(),
+            'status' => 'open',
+        ]);
+
+        return redirect()
+            ->route('profile.show')
+            ->with('success', 'Bounty created successfully!');
+    }
+
     public function show(Request $request, Bounty $bounty): Response
     {
         $this->trackBountyView($request, $bounty);
@@ -40,6 +81,7 @@ class BountyController extends Controller
         return Inertia::render('bounties/Show', [
             'bounty' => $bountyData,
             'popularityScore' => ($bounty->views ?? 0) + ($bountyData->submissions_count ?? 0),
+            'comments' => Inertia::merge(fn() => $this->getPaginatedComments($bounty, $request)),
         ]);
     }
 
@@ -65,36 +107,36 @@ class BountyController extends Controller
         }
     }
 
-    public function store(BountyStoreRequest $request): RedirectResponse
+    private function getPaginatedComments(Bounty $bounty, Request $request): array
     {
-        $validated = $request->validated();
-        $repoInfo = GitHubApiService::parseGitHubUrl($validated['repo_url']);
+        $user = $request->user();
+        if (!$user) return [];
 
-        $repo = Repo::where('git_id', $repoInfo['full_name'])->firstOrFail();
+        $githubApi = new GitHubApiService($user);
+        if (!$githubApi->hasValidToken() || !$bounty->issue?->url) {
+            return [];
+        }
 
-        $issue = Issue::firstOrCreate(
-            ['url' => $validated['issue_url'], 'repo_id' => $repo->id],
-            ['description' => $validated['description'] ?? '']
+        $allComments = $githubApi->getIssueCommentsByUrl($bounty->issue->url);
+        if (empty($allComments)) return [];
+
+        $perPage = $request->get('per_page', 10);
+        $currentPage = $request->get('page', 1);
+
+        $comments = collect($allComments);
+
+        $paginatedComments = new \Illuminate\Pagination\LengthAwarePaginator(
+            $comments->forPage($currentPage, $perPage),
+            $comments->count(),
+            $perPage,
+            $currentPage,
+            [
+                'path' => $request->url(),
+                'pageName' => 'page',
+            ]
         );
 
-        $user = $request->user();
-        $githubApi = new GitHubApiService($user);
-        $repoLanguages = $githubApi->hasValidToken()
-            ? $githubApi->getRepositoryLanguages($repoInfo['full_name'])
-            : [];
-
-        Bounty::create([
-            'issue_id' => $issue->id,
-            'title' => $validated['title'],
-            'description' => $validated['description'] ?? '',
-            'reward_xp' => $validated['reward_xp'],
-            'languages' => collect($repoLanguages)->sortDesc()->keys()->toArray(),
-            'status' => 'open',
-        ]);
-
-        return redirect()
-            ->route('profile.show')
-            ->with('success', 'Bounty created successfully!');
+        return $paginatedComments->withQueryString()->toArray();
     }
 
     public function edit(Bounty $bounty): Response

@@ -19,7 +19,6 @@ class IssueFactory extends Factory
     public function definition(): array
     {
         return [
-            'title' => $this->faker->word() . ' ' . 'Issue',
             'repo_id' => Repo::factory(),
             'url' => $this->faker->url(),
             'description' => $this->faker->sentence(),

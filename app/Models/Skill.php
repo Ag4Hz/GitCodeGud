@@ -12,12 +12,14 @@ class Skill extends Model
     protected $fillable = [
         'skill_name',
         'type',
+        'multiplier',
     ];
 
     protected function casts(): array
     {
         return [
             'type' => 'string',
+            'multiplier' => 'float',
         ];
     }
 

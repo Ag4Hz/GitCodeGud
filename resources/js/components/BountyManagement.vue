@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { Link, useForm, router } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import InputError from '@/components/InputError.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import InputError from '@/components/InputError.vue';
-import { Calendar, DollarSign, ExternalLink, Target, Edit2, Save, X, CheckCircle, Loader2, EyeOff, RotateCcw, Eye, Archive } from 'lucide-vue-next';
-import { BountyStatus, type BountyPagination, type Bounty } from '@/types/bounty';
 import { usePluralization } from '@/composables/usePluralization';
+import { BountyStatus, type Bounty, type BountyPagination } from '@/types/bounty';
+import { Link, router, useForm } from '@inertiajs/vue3';
+import { Archive, Calendar, CheckCircle, DollarSign, Edit2, ExternalLink, Eye, EyeOff, Loader2, RotateCcw, Save, Target, X } from 'lucide-vue-next';
+import { computed, ref } from 'vue';
 
 interface Props {
     bounties: BountyPagination;
@@ -24,16 +24,16 @@ const props = withDefaults(defineProps<Props>(), {
 const { formatCount } = usePluralization();
 
 const editingBounty = ref<number | null>(null);
-const optimisticUpdates = ref<{[key: number]: boolean}>({});
-const successMessages = ref<{[key: number]: string}>({});
+const optimisticUpdates = ref<{ [key: number]: boolean }>({});
+const successMessages = ref<{ [key: number]: string }>({});
 const showDeletedBounties = ref(false);
 
 const activeBounties = computed(() => {
-    return props.bounties.data.filter(bounty => !bounty.deleted_at);
+    return props.bounties.data.filter((bounty) => !bounty.deleted_at);
 });
 
 const deletedBounties = computed(() => {
-    return props.bounties.data.filter(bounty => bounty.deleted_at);
+    return props.bounties.data.filter((bounty) => bounty.deleted_at);
 });
 
 const currentBounties = computed(() => {
@@ -71,11 +71,11 @@ const totalRewardXP = computed(() => {
 });
 
 const openBounties = computed(() => {
-    return activeBounties.value.filter(bounty => bounty.status === BountyStatus.OPEN);
+    return activeBounties.value.filter((bounty) => bounty.status === BountyStatus.OPEN);
 });
 
 const closedBounties = computed(() => {
-    return activeBounties.value.filter(bounty => bounty.status === BountyStatus.CLOSED);
+    return activeBounties.value.filter((bounty) => bounty.status === BountyStatus.CLOSED);
 });
 
 const bountyStats = computed(() => ({
@@ -140,9 +140,7 @@ const saveEdit = (bounty: Bounty) => {
 };
 
 const hasChanges = (bounty: Bounty) => {
-    return editForm.title !== bounty.title ||
-        editForm.description !== bounty.description ||
-        editForm.reward_xp !== bounty.reward_xp;
+    return editForm.title !== bounty.title || editForm.description !== bounty.description || editForm.reward_xp !== bounty.reward_xp;
 };
 
 const softDeleteBounty = (bounty: Bounty) => {
@@ -157,7 +155,7 @@ const softDeleteBounty = (bounty: Bounty) => {
                 if (errors.general) {
                     alert(errors.general);
                 }
-            }
+            },
         });
     }
 };
@@ -173,7 +171,7 @@ const restoreBounty = (bounty: Bounty) => {
             if (errors.general) {
                 alert(errors.general);
             }
-        }
+        },
     });
 };
 </script>
@@ -186,44 +184,42 @@ const restoreBounty = (bounty: Bounty) => {
                     <Target class="h-5 w-5" />
                     My Bounties
                 </CardTitle>
-                <CardDescription>
-                    View and manage your bounty campaigns
-                </CardDescription>
+                <CardDescription> View and manage your bounty campaigns </CardDescription>
             </div>
         </CardHeader>
         <CardContent>
             <!-- Stats Overview -->
-            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-                <div class="p-4 border rounded-lg bg-card">
-                    <div class="flex items-center gap-2 mb-2">
+            <div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-5">
+                <div class="rounded-lg border bg-card p-4">
+                    <div class="mb-2 flex items-center gap-2">
                         <Target class="h-4 w-4 text-blue-600" />
                         <span class="text-sm font-medium">Active</span>
                     </div>
                     <p class="text-2xl font-bold">{{ bountyStats.total }}</p>
                 </div>
-                <div class="p-4 border rounded-lg bg-card">
-                    <div class="flex items-center gap-2 mb-2">
+                <div class="rounded-lg border bg-card p-4">
+                    <div class="mb-2 flex items-center gap-2">
                         <div class="h-4 w-4 rounded-full bg-green-600"></div>
                         <span class="text-sm font-medium">Open</span>
                     </div>
                     <p class="text-2xl font-bold text-green-600">{{ bountyStats.open }}</p>
                 </div>
-                <div class="p-4 border rounded-lg bg-card">
-                    <div class="flex items-center gap-2 mb-2">
+                <div class="rounded-lg border bg-card p-4">
+                    <div class="mb-2 flex items-center gap-2">
                         <div class="h-4 w-4 rounded-full bg-gray-600"></div>
                         <span class="text-sm font-medium">Closed</span>
                     </div>
                     <p class="text-2xl font-bold text-gray-600">{{ bountyStats.closed }}</p>
                 </div>
-                <div class="p-4 border rounded-lg bg-card">
-                    <div class="flex items-center gap-2 mb-2">
+                <div class="rounded-lg border bg-card p-4">
+                    <div class="mb-2 flex items-center gap-2">
                         <Archive class="h-4 w-4 text-orange-600" />
                         <span class="text-sm font-medium">Archived</span>
                     </div>
                     <p class="text-2xl font-bold text-orange-600">{{ bountyStats.archived }}</p>
                 </div>
-                <div class="p-4 border rounded-lg bg-card">
-                    <div class="flex items-center gap-2 mb-2">
+                <div class="rounded-lg border bg-card p-4">
+                    <div class="mb-2 flex items-center gap-2">
                         <DollarSign class="h-4 w-4 text-yellow-600" />
                         <span class="text-sm font-medium">Total Reward XP</span>
                     </div>
@@ -232,7 +228,7 @@ const restoreBounty = (bounty: Bounty) => {
             </div>
 
             <!-- Toggle View -->
-            <div class="flex gap-2 mb-6">
+            <div class="mb-6 flex gap-2">
                 <Button
                     @click="showDeletedBounties = false"
                     :variant="!showDeletedBounties ? 'default' : 'outline'"
@@ -258,14 +254,17 @@ const restoreBounty = (bounty: Bounty) => {
                 <div
                     v-for="bounty in currentBounties"
                     :key="bounty.id"
-                    class="border rounded-lg p-4 transition-colors"
+                    class="rounded-lg border p-4 transition-colors"
                     :class="[
-                        editingBounty === bounty.id ? 'bg-accent/30 border-primary' : 'hover:bg-accent/50',
-                        bounty.deleted_at ? 'bg-gray-50 dark:bg-gray-800/50 border-gray-300' : ''
+                        editingBounty === bounty.id ? 'border-primary bg-accent/30' : 'hover:bg-accent/50',
+                        bounty.deleted_at ? 'border-gray-300 bg-gray-50 dark:bg-gray-800/50' : '',
                     ]"
                 >
                     <!-- Success Message -->
-                    <div v-if="successMessages[bounty.id]" class="mb-4 p-3 rounded-lg bg-green-50 border border-green-200 dark:bg-green-950 dark:border-green-800">
+                    <div
+                        v-if="successMessages[bounty.id]"
+                        class="mb-4 rounded-lg border border-green-200 bg-green-50 p-3 dark:border-green-800 dark:bg-green-950"
+                    >
                         <div class="flex items-center gap-2">
                             <CheckCircle class="h-4 w-4 text-green-600 dark:text-green-400" />
                             <p class="text-sm font-medium text-green-800 dark:text-green-200">{{ successMessages[bounty.id] }}</p>
@@ -274,15 +273,20 @@ const restoreBounty = (bounty: Bounty) => {
 
                     <div class="flex items-start justify-between gap-4">
                         <!-- Bounty Content -->
-                        <div class="flex-1 min-w-0 space-y-3">
+                        <div class="min-w-0 flex-1 space-y-3">
                             <!-- Edit Mode -->
                             <div v-if="editingBounty === bounty.id && !bounty.deleted_at" class="space-y-4">
                                 <!-- Title Edit -->
                                 <div class="space-y-1">
                                     <Label for="edit-title">Title *</Label>
-                                    <Input id="edit-title" v-model="editForm.title" type="text" required maxlength="255"
-                                           :class="editForm.errors.title && 'border-red-500'"
-                                           :disabled="editForm.processing"
+                                    <Input
+                                        id="edit-title"
+                                        v-model="editForm.title"
+                                        type="text"
+                                        required
+                                        maxlength="255"
+                                        :class="editForm.errors.title && 'border-red-500'"
+                                        :disabled="editForm.processing"
                                     />
                                     <p class="text-xs text-muted-foreground">{{ editForm.title.length }}/255</p>
                                     <InputError :message="editForm.errors.title" />
@@ -291,11 +295,16 @@ const restoreBounty = (bounty: Bounty) => {
                                 <!-- Description Edit -->
                                 <div class="space-y-1">
                                     <Label for="edit-description">Description *</Label>
-                                    <textarea id="edit-description" v-model="editForm.description" required maxlength="2000" rows="4"
-                                              placeholder="Detailed description of what needs to be done..."
-                                              class="flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 resize-y"
-                                              :class="editForm.errors.description && 'border-red-500 focus-visible:ring-red-500'"
-                                              :disabled="editForm.processing"
+                                    <textarea
+                                        id="edit-description"
+                                        v-model="editForm.description"
+                                        required
+                                        maxlength="2000"
+                                        rows="4"
+                                        placeholder="Detailed description of what needs to be done..."
+                                        class="flex min-h-[60px] w-full resize-y rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                                        :class="editForm.errors.description && 'border-red-500 focus-visible:ring-red-500'"
+                                        :disabled="editForm.processing"
                                     />
                                     <p class="text-xs text-muted-foreground">{{ editForm.description.length }}/2000</p>
                                     <InputError :message="editForm.errors.description" />
@@ -305,9 +314,16 @@ const restoreBounty = (bounty: Bounty) => {
                                 <div class="space-y-1">
                                     <Label for="edit-reward">Reward (XP) *</Label>
                                     <div class="flex items-center gap-2">
-                                        <Input id="edit-reward" v-model.number="editForm.reward_xp" type="number" min="1" max="1000" required class="w-32"
-                                               :class="editForm.errors.reward_xp && 'border-red-500'"
-                                               :disabled="editForm.processing"
+                                        <Input
+                                            id="edit-reward"
+                                            v-model.number="editForm.reward_xp"
+                                            type="number"
+                                            min="1"
+                                            max="1000"
+                                            required
+                                            class="w-32"
+                                            :class="editForm.errors.reward_xp && 'border-red-500'"
+                                            :disabled="editForm.processing"
                                         />
                                         <span class="text-sm text-muted-foreground">XP (1-1000)</span>
                                     </div>
@@ -317,7 +333,7 @@ const restoreBounty = (bounty: Bounty) => {
                                 <!-- Connected Issue Info (Read-only in edit) -->
                                 <div class="space-y-1">
                                     <Label>Connected GitHub Issue</Label>
-                                    <div class="p-3 rounded-lg bg-gray-50 dark:bg-gray-900 border text-sm">
+                                    <div class="rounded-lg border bg-gray-50 p-3 text-sm dark:bg-gray-900">
                                         <div class="flex items-center gap-2">
                                             <ExternalLink class="h-3 w-3" />
                                             <a :href="bounty.issue.url" target="_blank" class="text-blue-600 hover:underline">
@@ -331,31 +347,42 @@ const restoreBounty = (bounty: Bounty) => {
                             <!-- View Mode -->
                             <div v-else>
                                 <!-- Title and Status -->
-                                <div class="flex items-center gap-3 flex-wrap">
-                                    <h3 class="font-medium text-lg" :class="{ 'text-gray-500': bounty.deleted_at }">
+                                <div class="flex flex-wrap items-center gap-3">
+                                    <h3 class="text-lg font-medium" :class="{ 'text-gray-500': bounty.deleted_at }">
                                         {{ bounty.title }}
                                     </h3>
-                                    <Badge v-if="bounty.deleted_at" variant="secondary" class="text-xs">
-                                        Archived
-                                    </Badge>
+                                    <Badge v-if="bounty.deleted_at" variant="secondary" class="text-xs"> Archived </Badge>
                                     <Badge v-else :class="getStatusColor(bounty.status)" class="text-xs">
                                         {{ getStatusDisplayText(bounty.status) }}
                                     </Badge>
                                 </div>
 
                                 <!-- Description -->
-                                <p v-if="bounty.description" class="text-muted-foreground line-clamp-2" :class="{ 'text-gray-400': bounty.deleted_at }">
+                                <p
+                                    v-if="bounty.description"
+                                    class="line-clamp-2 text-muted-foreground"
+                                    :class="{ 'text-gray-400': bounty.deleted_at }"
+                                >
                                     {{ bounty.description }}
                                 </p>
 
                                 <!-- Repository and Issue Links -->
                                 <div class="flex items-center gap-4 text-sm">
-                                    <a :href="bounty.issue.repo.url" target="_blank" rel="noopener noreferrer"
-                                       class="text-blue-600 hover:underline flex items-center gap-1">
+                                    <a
+                                        :href="bounty.issue.repo.url"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="flex items-center gap-1 text-blue-600 hover:underline"
+                                    >
                                         <ExternalLink class="h-3 w-3" />
                                         Repository
                                     </a>
-                                    <a :href="bounty.issue.url" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline flex items-center gap-1">
+                                    <a
+                                        :href="bounty.issue.url"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="flex items-center gap-1 text-blue-600 hover:underline"
+                                    >
                                         <ExternalLink class="h-3 w-3" />
                                         Issue
                                     </a>
@@ -389,7 +416,7 @@ const restoreBounty = (bounty: Bounty) => {
                         </div>
 
                         <!-- Action Buttons -->
-                        <div v-if="props.canEditBounties" class="flex gap-2 flex-shrink-0">
+                        <div v-if="props.canEditBounties" class="flex flex-shrink-0 gap-2">
                             <!-- Archived Bounty Actions -->
                             <template v-if="bounty.deleted_at">
                                 <Button
@@ -408,7 +435,12 @@ const restoreBounty = (bounty: Bounty) => {
                             <template v-else>
                                 <!-- Edit Mode Buttons -->
                                 <div v-if="editingBounty === bounty.id" class="flex gap-2">
-                                    <Button @click="saveEdit(bounty)" :disabled="editForm.processing || !hasChanges(bounty)" size="sm" class="min-w-[80px]">
+                                    <Button
+                                        @click="saveEdit(bounty)"
+                                        :disabled="editForm.processing || !hasChanges(bounty)"
+                                        size="sm"
+                                        class="min-w-[80px]"
+                                    >
                                         <span v-if="editForm.processing" class="flex items-center gap-1">
                                             <Loader2 class="h-3 w-3 animate-spin" />
                                             Saving
@@ -434,7 +466,7 @@ const restoreBounty = (bounty: Bounty) => {
                                         :disabled="deleteForm.processing"
                                         variant="outline"
                                         size="sm"
-                                        class="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                        class="text-red-600 hover:bg-red-50 hover:text-red-700"
                                     >
                                         <EyeOff class="h-3 w-3" />
                                         Archive
@@ -446,16 +478,23 @@ const restoreBounty = (bounty: Bounty) => {
                 </div>
 
                 <!-- Pagination -->
-                <div v-if="props.bounties.last_page > 1" class="flex justify-center mt-6">
+                <div v-if="props.bounties.last_page > 1" class="mt-6 flex justify-center">
                     <div class="flex items-center gap-2">
-                        <Link v-if="props.bounties.current_page > 1" :href="route('profile.show', { page: props.bounties.current_page - 1 })" class="px-3 py-2 text-sm border rounded hover:bg-accent">
+                        <Link
+                            v-if="props.bounties.current_page > 1"
+                            :href="route('profile.show', { page: props.bounties.current_page - 1 })"
+                            class="rounded border px-3 py-2 text-sm hover:bg-accent"
+                        >
                             Previous
                         </Link>
-                        <span class="text-sm text-muted-foreground px-3">
+                        <span class="px-3 text-sm text-muted-foreground">
                             Page {{ props.bounties.current_page }} of {{ props.bounties.last_page }}
                         </span>
-                        <Link v-if="props.bounties.current_page < props.bounties.last_page" :href="route('profile.show', { page: props.bounties.current_page + 1 })"
-                              class="px-3 py-2 text-sm border rounded hover:bg-accent">
+                        <Link
+                            v-if="props.bounties.current_page < props.bounties.last_page"
+                            :href="route('profile.show', { page: props.bounties.current_page + 1 })"
+                            class="rounded border px-3 py-2 text-sm hover:bg-accent"
+                        >
                             Next
                         </Link>
                     </div>
@@ -463,14 +502,18 @@ const restoreBounty = (bounty: Bounty) => {
             </div>
 
             <!-- Empty State -->
-            <div v-else class="text-center py-12">
-                <Archive v-if="showDeletedBounties" class="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                <Target v-else class="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                <h3 class="text-lg font-semibold mb-2">
+            <div v-else class="py-12 text-center">
+                <Archive v-if="showDeletedBounties" class="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+                <Target v-else class="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+                <h3 class="mb-2 text-lg font-semibold">
                     {{ showDeletedBounties ? 'No archived bounties' : 'No active bounties yet' }}
                 </h3>
                 <p class="text-muted-foreground">
-                    {{ showDeletedBounties ? 'Your archived bounties will appear here.' : 'Create your first bounty above to start incentivizing contributions to your projects.' }}
+                    {{
+                        showDeletedBounties
+                            ? 'Your archived bounties will appear here.'
+                            : 'Create your first bounty above to start incentivizing contributions to your projects.'
+                    }}
                 </p>
             </div>
         </CardContent>

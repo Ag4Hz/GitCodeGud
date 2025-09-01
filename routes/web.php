@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\BountyController;
 use App\Http\Controllers\FollowerController;
 use App\Http\Controllers\ProfileController;
@@ -29,11 +30,13 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::post('/profile/sync-github-skills', [GitHubSkillController::class, 'sync'])
+    Route::post('/profile/sync-github-skills', [ProfileController::class, 'handleGitHubSkillsSync'])
         ->name('profile.sync-github-skills');
 });
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth'])->group(function () {
     Route::resource('bounties', BountyController::class)->except(['create']);
+
     Route::patch('/bounties/{id}/restore', [BountyController::class, 'restore'])
         ->where('id', '[0-9]+')
         ->name('bounties.restore');
@@ -42,9 +45,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('bounties.popular');
 });
 
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::get('/admin', [AdminController::class, 'index'])->name('admin.index');
+    Route::post('/admin/thresholds', [AdminController::class, 'updateThresholds'])->name('admin.thresholds.update');
+    Route::post('/admin/skill-weights', [AdminController::class, 'updateSkillWeights'])->name('admin.skill-weights.update');
+    Route::post('/admin/xp-settings', [AdminController::class, 'updateXPSettings'])->name('admin.xp-settings.update');
+    Route::post('/admin/settings/batch-update', [AdminController::class, 'updateAllSettings'])->name('admin.settings.batch-update');
+});
+
 Route::middleware('auth')->group(function () {
-    Route::get('/leaderboard', [LeaderboardController::class, 'index'])
-        ->name('leaderboard');
+    Route::get('/leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard');
 });
 
 require __DIR__.'/settings.php';
