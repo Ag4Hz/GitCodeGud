@@ -7,8 +7,6 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GitHubSkillController;
-use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -30,13 +28,11 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::post('/profile/sync-github-skills', [GitHubSkillController::class, 'sync'])
-    Route::post('/profile/sync-github-skills', [ProfileController::class, 'handleGitHubSkillsSync'])
         ->name('profile.sync-github-skills');
 });
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('bounties', BountyController::class)->except(['create']);
-
     Route::patch('/bounties/{id}/restore', [BountyController::class, 'restore'])
         ->where('id', '[0-9]+')
         ->name('bounties.restore');
@@ -45,7 +41,7 @@ Route::middleware(['auth'])->group(function () {
         ->name('bounties.popular');
 });
 
-Route::middleware(['auth', 'admin'])->group(function () {
+Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::get('/admin', [AdminController::class, 'index'])->name('admin.index');
     Route::post('/admin/thresholds', [AdminController::class, 'updateThresholds'])->name('admin.thresholds.update');
     Route::post('/admin/skill-weights', [AdminController::class, 'updateSkillWeights'])->name('admin.skill-weights.update');
