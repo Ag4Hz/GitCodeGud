@@ -30,37 +30,45 @@ class BountyController extends Controller
 
         return Inertia::render('bounties/Index', $bountySearchData);
     }
-
-    public function store(BountyStoreRequest $request): RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validated();
-        $repoInfo = GitHubApiService::parseGitHubUrl($validated['repo_url']);
+            $validated = $request->validate([
+                'title' => 'required|string|max:255',
+                'description' => 'nullable|string',
+                'reward_xp' => 'required|integer|min:1|max:1000',
+                'repo_url' => 'required|url',
+                'issue_url' => 'required|url',
+            ]);
 
-        $repo = Repo::where('git_id', $repoInfo['full_name'])->firstOrFail();
+            $repoInfo = GitHubApiService::parseGitHubUrl($validated['repo_url']);
+            $repo = Repo::where('git_id', $repoInfo['full_name'])->first();
 
-        $issue = Issue::firstOrCreate(
-            ['url' => $validated['issue_url'], 'repo_id' => $repo->id],
-            ['description' => $validated['description'] ?? '']
-        );
+            if (!$repo) {
+                $repo = Repo::create([
+                    'git_id' => $repoInfo['full_name'],
+                    'name' => $repoInfo['name'],
+                    'url' => $validated['repo_url'],
+                    'user_id' => $request->user()->id,
+                ]);
+            }
 
-        $user = $request->user();
-        $githubApi = new GitHubApiService($user);
-        $repoLanguages = $githubApi->hasValidToken()
-            ? $githubApi->getRepositoryLanguages($repoInfo['full_name'])
-            : [];
+            $issue = Issue::firstOrCreate(
+                ['url' => $validated['issue_url'], 'repo_id' => $repo->id],
+                ['description' => $validated['description'] ?? '']
+            );
 
-        Bounty::create([
-            'issue_id' => $issue->id,
-            'title' => $validated['title'],
-            'description' => $validated['description'] ?? '',
-            'reward_xp' => $validated['reward_xp'],
-            'languages' => collect($repoLanguages)->sortDesc()->keys()->toArray(),
-            'status' => 'open',
-        ]);
+            $bounty = Bounty::create([
+                'issue_id' => $issue->id,
+                'title' => $validated['title'],
+                'description' => $validated['description'] ?? '',
+                'reward_xp' => $validated['reward_xp'],
+                'languages' => [],
+                'status' => 'open',
+            ]);
 
-        return redirect()
-            ->route('profile.show')
-            ->with('success', 'Bounty created successfully!');
+            return redirect()
+                ->route('profile.show')
+                ->with('success', 'Bounty created successfully!');
     }
 
     public function show(Bounty $bounty, Request $request): Response
