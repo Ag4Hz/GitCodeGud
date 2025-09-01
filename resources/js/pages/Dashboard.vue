@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import PopularBountiesPanel from '@/components/PopularBountiesPanel.vue';
+import { Eye } from 'lucide-vue-next';
 import UserSearch from '@/components/UserSearch.vue';
 import { contactLinks } from '@/composables/contactLinks';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -15,18 +17,13 @@ import { Head, router } from '@inertiajs/vue3';
 import { Calendar, ChevronDown, DollarSign, Eye, Loader2, Search, Target } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
 
-type User = { id: number; nickname: string; avatar: string; name: string };
-
 type PageProps = AppPageProps<{
     bounties?: BountyPagination;
     availableLanguages?: string[];
     filters?: {
-        search?: string;
         bounty_search?: string;
         language?: string;
     };
-    userFilters?: { search?: string };
-    users?: { data?: User[] };
     popularBounties?: PopularBounty[];
     trendingBounties?: PopularBounty[];
 }>;
@@ -39,8 +36,6 @@ const props = withDefaults(defineProps<PageProps>(), {
     bounties: () => ({ data: [], total: 0, current_page: 1, last_page: 1 }),
     availableLanguages: () => [],
     filters: () => ({ search: '', language: '' }),
-    userFilters: () => ({ search: '' }),
-    users: () => ({ data: [] }),
     popularBounties: () => [],
     trendingBounties: () => [],
 });
@@ -197,9 +192,6 @@ const hasActiveBountyFilters = computed(() => {
     <AppLayout :breadcrumbs="breadcrumbs">
         <div>
             <!-- User Search at the top -->
-            <div class="relative mx-auto mt-10 mb-16 w-full max-w-md">
-                <UserSearch :filters="props.userFilters" :results="props.users" />
-            </div>
 
             <!-- Bounty Search and Grid Section -->
             <div class="mb-96 flex h-full flex-1 flex-col gap-6 rounded-xl p-4">

@@ -11,7 +11,7 @@ class LeaderboardService
 {
     public function getLeaderboard(?int $page = null, ?int $perPage = null): LengthAwarePaginator
     {
-        $perPage = $perPage ?? config('leaderboard.per_page', 7);
+        $perPage = $perPage ?? config('leaderboard.per_page', 10);
         $page = $page ?? (Paginator::resolveCurrentPage() ?: 1);
         $start = ($page - 1) * $perPage;
 
