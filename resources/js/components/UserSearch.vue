@@ -42,7 +42,7 @@ watch(search, () => {
         <Combobox v-model="selectedUser" nullable>
             <div class="relative">
                 <MagnifyingGlassIcon
-                    class="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-gray-400 dark:text-gray-500"
+                    class="pointer-events-none absolute top-1/2 left-4 z-10 h-5 w-5 -translate-y-1/2 text-gray-400 dark:text-gray-500"
                     aria-hidden="true"
                 />
                 <ComboboxInput
@@ -61,9 +61,11 @@ watch(search, () => {
                         <UserRow :user="user" :active="active" />
                     </ComboboxOption>
                 </template>
-                <template v-else>
-                    <div class="px-3 py-2 text-gray-500 dark:text-gray-300">No buddies found</div>
-                </template>
+                <div
+                    class="flex min-h-[44px] items-center px-3 py-2 text-sm text-gray-500 sm:px-4 sm:py-3 sm:text-base md:px-6 md:py-4 md:text-base dark:text-gray-300"
+                >
+                    No buddies found
+                </div>
             </ComboboxOptions>
         </Combobox>
     </div>
