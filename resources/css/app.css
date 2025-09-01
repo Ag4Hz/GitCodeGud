@@ -167,8 +167,7 @@
 }
 
 body {
-    min-height: 100vh;
-    background: linear-gradient(135deg, #e8f4ff 0%, #a7e7b9 100%);
+    background: linear-gradient(135deg, #e8f4ff 0%, #89e3a3 100%);
 }
 
 .dark body {

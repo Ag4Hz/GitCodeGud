@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { Head, Link, usePage, router } from '@inertiajs/vue3';
+import Pagination from '@/components/Pagination.vue';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import Pagination from '@/components/Pagination.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem, type User } from '@/types';
 import { type Bounty } from '@/types/bounty';
-import { Calendar, DollarSign, ExternalLink, Target, User as UserIcon, GitBranch, Users, Tag, Code, MessageSquare } from 'lucide-vue-next';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { Calendar, Code, DollarSign, ExternalLink, GitBranch, MessageSquare, Tag, Target, User as UserIcon, Users } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 
 interface BountyWithDetails extends Bounty {
@@ -106,7 +106,7 @@ const getRepositoryName = (repoUrl: string | undefined): string => {
 
     try {
         const url = new URL(repoUrl);
-        const pathParts = url.pathname.split('/').filter(part => part);
+        const pathParts = url.pathname.split('/').filter((part) => part);
         if (pathParts.length >= 2) {
             return `${pathParts[0]}/${pathParts[1]}`;
         }
@@ -139,9 +139,7 @@ const ownerInfo = computed(() => {
 });
 
 const canUserSubmit = computed(() => {
-    return currentUser &&
-        props.bounty.status === 'open' &&
-        currentUser.id !== ownerInfo.value.id;
+    return currentUser && props.bounty.status === 'open' && currentUser.id !== ownerInfo.value.id;
 });
 
 const refreshComments = () => {
@@ -167,7 +165,7 @@ const shouldShowPagination = computed(() => {
     <AppLayout :breadcrumbs="breadcrumbItems">
         <Head :title="bounty.title" />
 
-        <div class="max-w-4xl mx-auto space-y-6">
+        <div class="mx-auto max-w-4xl space-y-6">
             <!-- Main Bounty Card -->
             <Card>
                 <CardHeader>
@@ -200,42 +198,42 @@ const shouldShowPagination = computed(() => {
                 <CardContent class="space-y-6">
                     <!-- Description -->
                     <div>
-                        <h3 class="text-lg font-semibold mb-3 flex items-center gap-2">
+                        <h3 class="mb-3 flex items-center gap-2 text-lg font-semibold">
                             <Target class="h-5 w-5" />
                             Bounty Description
                         </h3>
                         <div class="prose prose-sm max-w-none">
-                            <div class="bg-gray-50 dark:bg-gray-900 border rounded-lg p-4">
-                                <p v-if="bounty.description && bounty.description.trim()"
-                                   class="text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                            <div class="rounded-lg border bg-gray-50 p-4 dark:bg-gray-900">
+                                <p
+                                    v-if="bounty.description && bounty.description.trim()"
+                                    class="leading-relaxed whitespace-pre-wrap text-muted-foreground"
+                                >
                                     {{ bounty.description }}
                                 </p>
-                                <p v-else class="text-muted-foreground italic">
-                                    No description provided for this bounty.
-                                </p>
+                                <p v-else class="text-muted-foreground italic">No description provided for this bounty.</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Repository and Issue Links -->
                     <div>
-                        <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <h3 class="mb-4 flex items-center gap-2 text-lg font-semibold">
                             <GitBranch class="h-5 w-5" />
                             Repository & Issue
                         </h3>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                             <!-- Repository Link -->
-                            <Card class="group hover:shadow-lg transition-all duration-300 border-l-4 border-l-blue-500">
+                            <Card class="group border-l-4 border-l-blue-500 transition-all duration-300 hover:shadow-lg">
                                 <CardContent class="p-6">
                                     <div class="space-y-4">
                                         <div class="flex items-start gap-3">
-                                            <div class="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                                            <div class="rounded-lg bg-blue-100 p-2 dark:bg-blue-900">
                                                 <GitBranch class="h-5 w-5 text-blue-600 dark:text-blue-400" />
                                             </div>
-                                            <div class="flex-1 min-w-0">
-                                                <h4 class="font-semibold text-lg mb-1">Repository</h4>
-                                                <p class="text-sm text-muted-foreground font-mono truncate">
+                                            <div class="min-w-0 flex-1">
+                                                <h4 class="mb-1 text-lg font-semibold">Repository</h4>
+                                                <p class="truncate font-mono text-sm text-muted-foreground">
                                                     {{ getRepositoryName(bounty.issue?.repo?.url || '') }}
                                                 </p>
                                             </div>
@@ -246,12 +244,15 @@ const shouldShowPagination = computed(() => {
                                             :href="bounty.issue?.repo?.url || '#'"
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            class="flex items-center justify-center gap-2 w-full px-4 py-3 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 group-hover:scale-105"
+                                            class="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-3 text-sm font-medium text-white transition-all duration-200 group-hover:scale-105 hover:bg-blue-700"
                                         >
                                             <ExternalLink class="h-4 w-4" />
                                             View Repository
                                         </a>
-                                        <div v-else class="flex items-center justify-center gap-2 w-full px-4 py-3 text-sm bg-gray-100 dark:bg-gray-800 text-gray-500 rounded-lg">
+                                        <div
+                                            v-else
+                                            class="flex w-full items-center justify-center gap-2 rounded-lg bg-gray-100 px-4 py-3 text-sm text-gray-500 dark:bg-gray-800"
+                                        >
                                             <span>Invalid Repository URL</span>
                                         </div>
                                     </div>
@@ -259,18 +260,16 @@ const shouldShowPagination = computed(() => {
                             </Card>
 
                             <!-- Issue Link -->
-                            <Card class="group hover:shadow-lg transition-all duration-300 border-l-4 border-l-green-500">
+                            <Card class="group border-l-4 border-l-green-500 transition-all duration-300 hover:shadow-lg">
                                 <CardContent class="p-6">
                                     <div class="space-y-4">
                                         <div class="flex items-start gap-3">
-                                            <div class="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
+                                            <div class="rounded-lg bg-green-100 p-2 dark:bg-green-900">
                                                 <Target class="h-5 w-5 text-green-600 dark:text-green-400" />
                                             </div>
-                                            <div class="flex-1 min-w-0">
-                                                <h4 class="font-semibold text-lg mb-1">GitHub Issue</h4>
-                                                <p class="text-sm text-muted-foreground">
-                                                    View the specific issue to resolve
-                                                </p>
+                                            <div class="min-w-0 flex-1">
+                                                <h4 class="mb-1 text-lg font-semibold">GitHub Issue</h4>
+                                                <p class="text-sm text-muted-foreground">View the specific issue to resolve</p>
                                             </div>
                                         </div>
 
@@ -279,12 +278,15 @@ const shouldShowPagination = computed(() => {
                                             :href="bounty.issue?.url || '#'"
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            class="flex items-center justify-center gap-2 w-full px-4 py-3 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 group-hover:scale-105"
+                                            class="flex w-full items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-3 text-sm font-medium text-white transition-all duration-200 group-hover:scale-105 hover:bg-green-700"
                                         >
                                             <ExternalLink class="h-4 w-4" />
                                             View Issue
                                         </a>
-                                        <div v-else class="flex items-center justify-center gap-2 w-full px-4 py-3 text-sm bg-gray-100 dark:bg-gray-800 text-gray-500 rounded-lg">
+                                        <div
+                                            v-else
+                                            class="flex w-full items-center justify-center gap-2 rounded-lg bg-gray-100 px-4 py-3 text-sm text-gray-500 dark:bg-gray-800"
+                                        >
                                             <span>Invalid Issue URL</span>
                                         </div>
                                     </div>
@@ -295,7 +297,7 @@ const shouldShowPagination = computed(() => {
 
                     <!-- Owner Information -->
                     <div>
-                        <h3 class="text-lg font-semibold mb-3 flex items-center gap-2">
+                        <h3 class="mb-3 flex items-center gap-2 text-lg font-semibold">
                             <UserIcon class="h-5 w-5" />
                             Bounty Owner
                         </h3>
@@ -304,10 +306,7 @@ const shouldShowPagination = computed(() => {
                             <CardContent class="p-4">
                                 <div class="flex items-center gap-4">
                                     <Avatar class="h-12 w-12">
-                                        <AvatarImage
-                                            :src="ownerInfo.avatar || ''"
-                                            :alt="ownerInfo.name"
-                                        />
+                                        <AvatarImage :src="ownerInfo.avatar || ''" :alt="ownerInfo.name" />
                                         <AvatarFallback class="text-lg">
                                             {{ ownerInfo.name.charAt(0).toUpperCase() }}
                                         </AvatarFallback>
@@ -316,9 +315,7 @@ const shouldShowPagination = computed(() => {
                                     <div class="flex-1">
                                         <div class="flex items-center gap-2">
                                             <h4 class="font-semibold">{{ ownerInfo.name }}</h4>
-                                            <Badge variant="outline" class="text-xs">
-                                                @{{ ownerInfo.nickname }}
-                                            </Badge>
+                                            <Badge variant="outline" class="text-xs"> @{{ ownerInfo.nickname }} </Badge>
                                         </div>
                                         <p class="text-sm text-muted-foreground">Repository Owner</p>
                                     </div>
@@ -337,26 +334,21 @@ const shouldShowPagination = computed(() => {
 
                     <!-- Technical Details -->
                     <div>
-                        <h3 class="text-lg font-semibold mb-3 flex items-center gap-2">
+                        <h3 class="mb-3 flex items-center gap-2 text-lg font-semibold">
                             <Tag class="h-5 w-5" />
                             Technical Details
                         </h3>
 
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                             <!-- Languages -->
                             <Card>
                                 <CardContent class="p-4">
-                                    <div class="flex items-center gap-2 mb-2">
+                                    <div class="mb-2 flex items-center gap-2">
                                         <Code class="h-4 w-4" />
                                         <span class="font-medium">Languages</span>
                                     </div>
                                     <div class="flex flex-wrap gap-1">
-                                        <Badge
-                                            v-for="language in bounty.languages"
-                                            :key="language"
-                                            variant="secondary"
-                                            class="text-xs"
-                                        >
+                                        <Badge v-for="language in bounty.languages" :key="language" variant="secondary" class="text-xs">
                                             {{ language }}
                                         </Badge>
                                         <div v-if="!bounty.languages || bounty.languages.length === 0" class="text-sm text-muted-foreground">
@@ -369,7 +361,7 @@ const shouldShowPagination = computed(() => {
                             <!-- Created Date -->
                             <Card>
                                 <CardContent class="p-4">
-                                    <div class="flex items-center gap-2 mb-2">
+                                    <div class="mb-2 flex items-center gap-2">
                                         <Calendar class="h-4 w-4" />
                                         <span class="font-medium">Created</span>
                                     </div>
@@ -380,7 +372,7 @@ const shouldShowPagination = computed(() => {
                             <!-- Submissions Count -->
                             <Card>
                                 <CardContent class="p-4">
-                                    <div class="flex items-center gap-2 mb-2">
+                                    <div class="mb-2 flex items-center gap-2">
                                         <Users class="h-4 w-4" />
                                         <span class="font-medium">Submissions</span>
                                     </div>
@@ -392,34 +384,32 @@ const shouldShowPagination = computed(() => {
 
                     <!-- GitHub Comments Section -->
                     <div>
-                        <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <h3 class="mb-4 flex items-center gap-2 text-lg font-semibold">
                             <MessageSquare class="h-5 w-5" />
                             GitHub Comments
-                            <span v-if="comments?.total && comments.total > 0" class="text-sm text-muted-foreground">
-                                ({{ comments.total }})
-                            </span>
+                            <span v-if="comments?.total && comments.total > 0" class="text-sm text-muted-foreground"> ({{ comments.total }}) </span>
                         </h3>
 
                         <!-- Loading State -->
                         <div v-if="loadingComments" class="flex items-center justify-center py-8">
                             <div class="flex items-center gap-2 text-muted-foreground">
-                                <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+                                <div class="h-4 w-4 animate-spin rounded-full border-b-2 border-current"></div>
                                 <span>Loading comments...</span>
                             </div>
                         </div>
 
                         <!-- No Comments -->
-                        <div v-else-if="!hasComments" class="text-center py-8">
+                        <div v-else-if="!hasComments" class="py-8 text-center">
                             <Card>
                                 <CardContent class="p-6">
-                                    <MessageSquare class="mx-auto h-12 w-12 text-muted-foreground mb-3" />
+                                    <MessageSquare class="mx-auto mb-3 h-12 w-12 text-muted-foreground" />
                                     <p class="text-muted-foreground">No comments yet on this GitHub issue.</p>
                                     <a
                                         v-if="isValidGitHubUrl(bounty.issue?.url || '')"
                                         :href="bounty.issue?.url || '#'"
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        class="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline mt-2"
+                                        class="mt-2 inline-flex items-center gap-1 text-sm text-blue-600 hover:underline"
                                     >
                                         <ExternalLink class="h-3 w-3" />
                                         Add a comment on GitHub
@@ -430,32 +420,23 @@ const shouldShowPagination = computed(() => {
 
                         <!-- Comments List -->
                         <div v-else class="space-y-4">
-                            <Card
-                                v-for="comment in comments?.data || []"
-                                :key="comment.id"
-                                class="hover:shadow-md transition-shadow"
-                            >
+                            <Card v-for="comment in comments?.data || []" :key="comment.id" class="transition-shadow hover:shadow-md">
                                 <CardContent class="p-4">
                                     <div class="flex items-start gap-3">
                                         <!-- User Avatar -->
                                         <Avatar class="h-10 w-10 flex-shrink-0">
-                                            <AvatarImage
-                                                :src="comment.user?.avatar_url || ''"
-                                                :alt="comment.user?.login || 'User'"
-                                            />
+                                            <AvatarImage :src="comment.user?.avatar_url || ''" :alt="comment.user?.login || 'User'" />
                                             <AvatarFallback>
                                                 {{ (comment.user?.login || 'U').charAt(0).toUpperCase() }}
                                             </AvatarFallback>
                                         </Avatar>
 
                                         <!-- Comment Content -->
-                                        <div class="flex-1 min-w-0">
+                                        <div class="min-w-0 flex-1">
                                             <!-- Comment Header -->
-                                            <div class="flex items-center gap-2 mb-2">
-                                                <span class="font-semibold text-sm">{{ comment.user?.login || 'Unknown User' }}</span>
-                                                <Badge variant="outline" class="text-xs">
-                                                    GitHub User
-                                                </Badge>
+                                            <div class="mb-2 flex items-center gap-2">
+                                                <span class="text-sm font-semibold">{{ comment.user?.login || 'Unknown User' }}</span>
+                                                <Badge variant="outline" class="text-xs"> GitHub User </Badge>
                                                 <span class="text-xs text-muted-foreground">
                                                     {{ formatDate(comment.created_at) }}
                                                 </span>
@@ -463,7 +444,7 @@ const shouldShowPagination = computed(() => {
                                                     :href="comment.html_url"
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    class="ml-auto text-xs text-blue-600 hover:underline flex items-center gap-1"
+                                                    class="ml-auto flex items-center gap-1 text-xs text-blue-600 hover:underline"
                                                 >
                                                     <ExternalLink class="h-3 w-3" />
                                                     View on GitHub
@@ -472,21 +453,19 @@ const shouldShowPagination = computed(() => {
 
                                             <!-- Comment Body -->
                                             <div class="prose prose-sm max-w-none">
-                                                <div class="bg-gray-50 dark:bg-gray-900 border rounded-lg p-3">
-                                                    <p class="text-sm leading-relaxed whitespace-pre-wrap break-words">
+                                                <div class="rounded-lg border bg-gray-50 p-3 dark:bg-gray-900">
+                                                    <p class="text-sm leading-relaxed break-words whitespace-pre-wrap">
                                                         {{ comment.body || 'No content' }}
                                                     </p>
                                                 </div>
                                             </div>
 
                                             <!-- Comment Actions -->
-                                            <div class="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                                            <div class="mt-2 flex items-center gap-4 text-xs text-muted-foreground">
                                                 <span v-if="comment.updated_at !== comment.created_at">
                                                     Edited {{ formatDate(comment.updated_at) }}
                                                 </span>
-                                                <span v-if="comment.reactions?.total_count > 0">
-                                                    {{ comment.reactions.total_count }} reactions
-                                                </span>
+                                                <span v-if="comment.reactions?.total_count > 0"> {{ comment.reactions.total_count }} reactions </span>
                                             </div>
                                         </div>
                                     </div>
@@ -499,8 +478,14 @@ const shouldShowPagination = computed(() => {
                             </div>
 
                             <!-- Refresh Button -->
-                            <div class="text-center pt-4">
-                                <Button @click="refreshComments" variant="outline" size="sm" class="flex items-center gap-2 mx-auto" :disabled="loadingComments">
+                            <div class="pt-4 text-center">
+                                <Button
+                                    @click="refreshComments"
+                                    variant="outline"
+                                    size="sm"
+                                    class="mx-auto flex items-center gap-2"
+                                    :disabled="loadingComments"
+                                >
                                     <MessageSquare class="h-4 w-4" />
                                     Refresh Comments
                                 </Button>
@@ -510,17 +495,13 @@ const shouldShowPagination = computed(() => {
 
                     <!-- Submissions List (if any exist) -->
                     <div v-if="bounty.submissions && bounty.submissions.length > 0">
-                        <h3 class="text-lg font-semibold mb-3 flex items-center gap-2">
+                        <h3 class="mb-3 flex items-center gap-2 text-lg font-semibold">
                             <Users class="h-5 w-5" />
                             Submissions ({{ bounty.submissions.length }})
                         </h3>
 
                         <div class="space-y-3">
-                            <Card
-                                v-for="submission in bounty.submissions"
-                                :key="submission.id"
-                                class="hover:shadow-md transition-shadow"
-                            >
+                            <Card v-for="submission in bounty.submissions" :key="submission.id" class="transition-shadow hover:shadow-md">
                                 <CardContent class="p-4">
                                     <div class="flex items-center justify-between">
                                         <div class="flex items-center gap-3">
@@ -541,10 +522,7 @@ const shouldShowPagination = computed(() => {
                                         </div>
 
                                         <div class="flex items-center gap-3">
-                                            <Badge
-                                                :variant="submission.status === 'accepted' ? 'default' : 'secondary'"
-                                                class="text-xs"
-                                            >
+                                            <Badge :variant="submission.status === 'accepted' ? 'default' : 'secondary'" class="text-xs">
                                                 {{ submission.status.toUpperCase() }}
                                             </Badge>
                                             <span class="text-sm text-muted-foreground">
@@ -562,9 +540,7 @@ const shouldShowPagination = computed(() => {
             <!-- Back to Dashboard -->
             <div class="flex justify-center">
                 <Link href="/dashboard">
-                    <Button variant="outline" class="flex items-center gap-2">
-                        ← Back to Dashboard
-                    </Button>
+                    <Button variant="outline" class="flex items-center gap-2"> ← Back to Dashboard </Button>
                 </Link>
             </div>
         </div>

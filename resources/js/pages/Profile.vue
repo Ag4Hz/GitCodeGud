@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import BountyManagement from '@/components/BountyManagement.vue';
+import FollowModal from '@/components/FollowModal.vue';
 import InputError from '@/components/InputError.vue';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -15,7 +16,6 @@ import { type BountyPagination } from '@/types/bounty';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { AlertCircle, Code, Database, Github, Plus, Settings, Star, Target, Trophy, Zap } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
-import FollowModal from "@/components/FollowModal.vue"
 
 interface UserWithXP extends Omit<User, 'skills'> {
     total_xp: number;
@@ -40,14 +40,14 @@ interface Props {
     isFollowing?: boolean;
     profileUserId: number;
     followings: {
-        data: { id: number; nickname: string }[]
-        next_page_url: string | null
-    }
+        data: { id: number; nickname: string }[];
+        next_page_url: string | null;
+    };
     followers: {
-        data: { id: number; nickname: string }[]
-        next_page_url: string | null
-        avatar: string | null
-    }
+        data: { id: number; nickname: string }[];
+        next_page_url: string | null;
+        avatar: string | null;
+    };
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -204,7 +204,9 @@ function follow() {
         {},
         {
             preserveScroll: true,
-            onFinish: () => { followingBusy.value = false; },
+            onFinish: () => {
+                followingBusy.value = false;
+            },
             onSuccess: () => {
                 router.reload({ only: ['followers', 'followings', 'user'] });
             },
@@ -215,16 +217,15 @@ function follow() {
 function unfollow() {
     if (followingBusy.value) return;
     followingBusy.value = true;
-    router.delete(
-        route('users.unfollow', props.user.id),
-        {
-            preserveScroll: true,
-            onFinish: () => { followingBusy.value = false; },
-            onSuccess: () => {
-                router.reload({ only: ['followers', 'followings', 'user']});
-            },
+    router.delete(route('users.unfollow', props.user.id), {
+        preserveScroll: true,
+        onFinish: () => {
+            followingBusy.value = false;
         },
-    );
+        onSuccess: () => {
+            router.reload({ only: ['followers', 'followings', 'user'] });
+        },
+    });
 }
 </script>
 
@@ -273,7 +274,6 @@ function unfollow() {
 
                                     <FollowModal prop-name="followers" title="Followers" :count="user.followers_count" />
                                     <FollowModal prop-name="followings" title="Followings" :count="user.followings_count" />
-
                                 </div>
                             </div>
 
