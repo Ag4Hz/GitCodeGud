@@ -11,6 +11,7 @@ use App\Services\BountySearchService;
 use App\Services\GitHubApiService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -62,11 +63,44 @@ class BountyController extends Controller
             ->with('success', 'Bounty created successfully!');
     }
 
-    public function show(Bounty $bounty): Response
+    public function show(Bounty $bounty, Request $request): Response
     {
         return Inertia::render('bounties/Show', [
-            'bounty' => $bounty->load(['issue.repo', 'submissions.user']),
+            'bounty' => $bounty->load(['issue.repo.user', 'submissions.user']),
+            'comments' => Inertia::merge(fn() => $this->getPaginatedComments($bounty, $request)),
         ]);
+    }
+
+    private function getPaginatedComments(Bounty $bounty, Request $request): array
+    {
+        $user = $request->user();
+        if (!$user) return [];
+
+        $githubApi = new GitHubApiService($user);
+        if (!$githubApi->hasValidToken() || !$bounty->issue?->url) {
+            return [];
+        }
+
+        $allComments = $githubApi->getIssueCommentsByUrl($bounty->issue->url);
+        if (empty($allComments)) return [];
+
+        $perPage = $request->get('per_page', 10);
+        $currentPage = $request->get('page', 1);
+
+        $comments = collect($allComments);
+
+        $paginatedComments = new \Illuminate\Pagination\LengthAwarePaginator(
+            $comments->forPage($currentPage, $perPage),
+            $comments->count(),
+            $perPage,
+            $currentPage,
+            [
+                'path' => $request->url(),
+                'pageName' => 'page',
+            ]
+        );
+
+        return $paginatedComments->withQueryString()->toArray();
     }
 
     public function edit(Bounty $bounty): Response
@@ -84,10 +118,10 @@ class BountyController extends Controller
         $validated = $request->validated();
 
         $bounty->update([
-                'title' => $validated['title'],
-                'description' => $validated['description'],
-                'reward_xp' => $validated['reward_xp'],
-            ]);
+            'title' => $validated['title'],
+            'description' => $validated['description'],
+            'reward_xp' => $validated['reward_xp'],
+        ]);
 
         return redirect()
             ->route('profile.show')
@@ -116,17 +150,5 @@ class BountyController extends Controller
         return redirect()
             ->route('profile.show')
             ->with('success', 'Bounty restored successfully!');
-    }
-
-    private function getRepositoryLanguages($user, string $repoFullName): array
-    {
-        $githubApi = new GitHubApiService($user);
-
-        if (!$githubApi->hasValidToken()) {
-            return [];
-        }
-
-        $languageStats = $githubApi->getRepositoryLanguages($repoFullName);
-        return collect($languageStats)->sortDesc()->keys()->toArray();
     }
 }

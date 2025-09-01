@@ -5,8 +5,6 @@ use App\Http\Controllers\FollowerController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\DashboardController;
-use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -28,7 +26,7 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
-    Route::post('/profile/sync-github-skills', [ProfileController::class, 'syncGitHubSkills'])
+    Route::post('/profile/sync-github-skills', [ProfileController::class, 'handleGitHubSkillsSync'])
         ->name('profile.sync-github-skills');
 });
 
@@ -40,8 +38,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
-    Route::get('/leaderboard', [LeaderboardController::class, 'index'])
-        ->name('leaderboard');
+    Route::get('/leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard');
 });
 
 require __DIR__.'/settings.php';
