@@ -2,12 +2,10 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\BountyController;
+use App\Http\Controllers\FollowerController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\UserController;
 use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\DashboardController;
-use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -22,10 +20,14 @@ Route::middleware('auth')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::get('/users/{user}', [ProfileController::class, 'show'])->name('users.show');
+
+    Route::post('/users/{user}/follow', [FollowerController::class, 'store'])->name('users.follow');
+    Route::delete('/users/{user}/follow', [FollowerController::class, 'destroy'])->name('users.unfollow');
+
 });
 
 Route::middleware('auth')->group(function () {
-    Route::post('/profile/sync-github-skills', [ProfileController::class, 'syncGitHubSkills'])
+    Route::post('/profile/sync-github-skills', [ProfileController::class, 'handleGitHubSkillsSync'])
         ->name('profile.sync-github-skills');
 });
 
@@ -46,8 +48,7 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
-    Route::get('/leaderboard', [LeaderboardController::class, 'index'])
-        ->name('leaderboard');
+    Route::get('/leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard');
 });
 
 require __DIR__.'/settings.php';
