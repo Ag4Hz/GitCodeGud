@@ -1,19 +1,19 @@
 <script setup lang="ts">
-import { Head, router, useForm } from '@inertiajs/vue3';
+import BountyManagement from '@/components/BountyManagement.vue';
+import InputError from '@/components/InputError.vue';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import InputError from '@/components/InputError.vue';
-import BountyManagement from '@/components/BountyManagement.vue';
 import { useInitials } from '@/composables/useInitials';
 import { useXP } from '@/composables/useXP';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem, type User } from '@/types';
 import { type BountyPagination } from '@/types/bounty';
-import { Trophy, Zap, Star, Target, Code, Database, Settings, Plus, AlertCircle, Github } from 'lucide-vue-next';
+import { Head, router, useForm } from '@inertiajs/vue3';
+import { AlertCircle, Code, Database, Github, Plus, Settings, Star, Target, Trophy, Zap, Users, UserCheck } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 
 interface UserWithXP extends Omit<User, 'skills'> {
@@ -28,20 +28,24 @@ interface UserWithXP extends Omit<User, 'skills'> {
         xp: number;
         level: number;
     }>;
+    followers_count: number;
+    followings_count: number;
 }
 
 interface Props {
     user: UserWithXP;
     bounties?: BountyPagination;
     isOwner?: boolean;
+    isFollowing?: boolean;
+    profileUserId: number;
 }
 
 const props = withDefaults(defineProps<Props>(), {
     bounties: () => ({ data: [], total: 0, current_page: 1, last_page: 1 }),
+    isFollowing: false,
 });
 
 const isOwner = computed(() => props.isOwner);
-
 
 const { getInitials } = useInitials();
 const { formatXP } = useXP();
@@ -49,12 +53,13 @@ const { formatXP } = useXP();
 const syncing = ref(false);
 const showCreateForm = ref(false);
 const activeTab = ref('bounties');
+const followingBusy = ref(false);
 
 const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
-      {
+    {
         title: isOwner.value ? 'My Profile' : `${props.user.name}'s Profile`,
-        href: isOwner.value ? '/profile' : `/profile/${props.user.id}`,
-      },
+        href: isOwner.value ? '/profile' : `/users/${props.user.id}`,
+    },
 ]);
 
 const bountyForm = useForm({
@@ -176,6 +181,30 @@ const switchTab = (tab: string) => {
         showCreateForm.value = false;
     }
 };
+function follow() {
+    if (followingBusy.value) return;
+    followingBusy.value = true;
+    router.post(
+        route('users.follow', props.user.id),
+        {},
+        {
+            preserveScroll: true,
+            onFinish: () => { followingBusy.value = false; },
+        },
+    );
+}
+
+function unfollow() {
+    if (followingBusy.value) return;
+    followingBusy.value = true;
+    router.delete(
+        route('users.unfollow', props.user.id),
+        {
+            preserveScroll: true,
+            onFinish: () => { followingBusy.value = false; },
+        },
+    );
+}
 </script>
 
 <template>
@@ -220,7 +249,41 @@ const switchTab = (tab: string) => {
                                         <Zap class="h-4 w-4 text-blue-500" />
                                         {{ formatXP(user.total_xp) }} XP
                                     </div>
+                                    <div class="flex items-center gap-1 text-sm font-medium">
+                                        <Users class="h-4 w-4 text-green-700" />
+                                        {{ user.followers_count }} Followers
+                                    </div>
+
+                                    <div class="flex items-center gap-1 text-sm font-medium">
+                                        <UserCheck class="h-4 w-4 text-green-700" />
+                                        {{ user.followings_count }} Following
+                                    </div>
+
                                 </div>
+                            </div>
+
+                            <div v-if="!isOwner" class="mt-3 flex items-center gap-2">
+                                <Button
+                                    v-if="!isFollowing"
+                                    type="button"
+                                    class="rounded-md bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600"
+                                    :loading="followingBusy"
+                                    :disabled="followingBusy"
+                                    @click="follow"
+                                >
+                                    Follow
+                                </Button>
+
+                                <Button
+                                    v-else
+                                    type="button"
+                                    class="rounded-md bg-gray-200 px-3 py-1.5 text-sm font-medium text-gray-900 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"
+                                    :loading="followingBusy"
+                                    :disabled="followingBusy"
+                                    @click="unfollow"
+                                >
+                                    Unfollow
+                                </Button>
                             </div>
                         </div>
                     </CardHeader>
