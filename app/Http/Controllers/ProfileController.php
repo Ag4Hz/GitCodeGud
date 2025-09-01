@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Helpers\XPHelper;
 use App\Http\Resources\BountyResource;
 use App\Models\User;
-use App\Services\UserBountyService;
+use App\Services\UserBountyService as UBS;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -13,7 +13,7 @@ use Inertia\Response;
 class ProfileController extends Controller
 {
     public function __construct(
-        private UserBountyService $userBountyService
+        private UBS $userBountyService
     ) {}
 
     public function show(Request $request, ?User $user = null): Response
