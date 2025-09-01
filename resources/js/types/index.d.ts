@@ -29,6 +29,7 @@ export interface User {
     role: string;
     id: number;
     name: string;
+    nickname: string;
     email: string;
     description?: string;
     avatar?: string;
