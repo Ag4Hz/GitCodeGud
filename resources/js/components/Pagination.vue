@@ -18,6 +18,9 @@ const props = defineProps<{
             v-for="(link, index) in props.links"
             :key="index"
             :href="link?.url ?? '#'"
+            :only="['leaderboardUsers']"
+            preserve-state
+            preserve-scroll
             class="rounded border px-3 py-1 text-sm transition-colors"
             :class="[
         link.active
