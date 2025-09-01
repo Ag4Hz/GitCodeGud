@@ -31,11 +31,16 @@ class LevelThreshold extends Model
     {
         static::query()->delete();
 
+        $data = [];
         foreach ($thresholds as $index => $xpRequired) {
-            static::create([
+            $data[] = [
                 'level' => $index + 1,
                 'xp_required' => $xpRequired,
-            ]);
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
         }
+
+        static::insert($data);
     }
 }
