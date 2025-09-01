@@ -35,11 +35,6 @@ class BountySearchService
     {
         return $query->when($request->filled('language'), function ($q) use ($request) {
             $language = $request->get('language');
-
-            if (config('database.default') === 'pgsql') {
-                return $q->whereRaw("languages::jsonb ? ?", [$language]);
-            }
-
             return $q->whereJsonContains('languages', $language);
         });
     }

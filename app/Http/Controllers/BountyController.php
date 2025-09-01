@@ -50,9 +50,8 @@ class BountyController extends Controller
         if ($user) {
             $cacheKey = "user_{$user->id}_viewed_bounty_{$bounty->id}";
 
-            if (!cache()->has($cacheKey)) {
+            if (\Illuminate\Support\Facades\Cache::add($cacheKey, true, now()->addDay())) {
                 $bounty->increment('views');
-                cache()->put($cacheKey, true, now()->addDay());
             }
         } else {
             $sessionKey = 'viewed_bounties';

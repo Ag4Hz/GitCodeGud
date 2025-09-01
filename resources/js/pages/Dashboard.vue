@@ -48,10 +48,10 @@ const props = withDefaults(defineProps<PageProps>(), {
 });
 
 const searchBountyQuery = computed(() => {
-    return props.filters?.search || '';
+    return props.filters?.search ?? '';
 });
 const selectedBountyLanguage = computed(() => {
-    return props.filters?.language || '';
+    return props.filters?.language ?? '';
 });
 
 const isBountySearching = ref(false);
