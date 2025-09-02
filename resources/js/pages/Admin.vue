@@ -167,7 +167,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const { success: showSuccess, error: showError, toasts, removeToast } = useToast();
+const { success: showSuccess, error: showError } = useToast();
 
 const sortedLevelThresholds = computed(() => {
     return Object.entries(props.xpConfig.level_thresholds).sort(([a], [b]) => Number(a) - Number(b));

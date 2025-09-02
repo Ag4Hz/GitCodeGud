@@ -20,7 +20,7 @@ import { Head, router, useForm } from '@inertiajs/vue3';
 import { AlertCircle, Code, Database, Github, Plus, Settings, Star, Target, Trophy, Zap } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 
-const { success: showSuccess, error: showError, toasts, removeToast } = useToast();
+const { success: showSuccess, error: showError } = useToast();
 
 interface UserWithXP extends Omit<User, 'skills'> {
     total_xp: number;
