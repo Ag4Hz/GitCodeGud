@@ -123,6 +123,8 @@ class AdminController extends Controller
             ", $bindings);
         }
 
+        $this->clearAllCaches();
+
         return back()->with('success', 'Skill weights updated successfully!');
     }
 
