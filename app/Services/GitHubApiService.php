@@ -165,4 +165,27 @@ class GitHubApiService
         $repoFullName = $issueInfo['owner'] . '/' . $issueInfo['name'];
         return $this->getIssueComments($repoFullName, $issueInfo['issue_number']);
     }
+    public static function isValidGitHubPullRequestUrl(string $url): bool
+    {
+        return self::parseGitHubPullRequestUrl($url) !== null;
+    }
+
+    public function getPullRequest(string $repoFullName, int $prNumber): array
+    {
+        $response = $this->createClient()->get("/repos/{$repoFullName}/pulls/{$prNumber}");
+        return $this->handleSimpleResponse($response);
+    }
+
+    public function isPullRequestOpen(string $repoFullName, int $prNumber): bool
+    {
+        $response = $this->createClient()->get("/repos/{$repoFullName}/pulls/{$prNumber}");
+        $data = $this->handleSimpleResponse($response);
+
+        return isset($data['state']) && $data['state'] === 'open';
+    }
+    public function getPullRequestComments(string $repoFullName, int $prNumber): array
+    {
+        $response = $this->createClient()->get("/repos/{$repoFullName}/pulls/{$prNumber}/comments");
+        return $this->handleSimpleResponse($response);
+    }
 }
