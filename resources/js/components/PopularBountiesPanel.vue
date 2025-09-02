@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import { router } from '@inertiajs/vue3';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TrendingUp, Eye, Target, DollarSign, Calendar } from 'lucide-vue-next';
+import { router } from '@inertiajs/vue3';
+import { Calendar, DollarSign, Eye, Target, TrendingUp } from 'lucide-vue-next';
+import { computed } from 'vue';
 
 enum BountyStatus {
     OPEN = 'open',
-    CLOSED = 'closed'
+    CLOSED = 'closed',
 }
 
 interface Bounty {
@@ -38,7 +38,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
     bounties: () => [],
-    title: 'Popular Bounties'
+    title: 'Popular Bounties',
 });
 
 const formatDate = (dateString: string) => {
@@ -64,11 +64,8 @@ const navigateToBounty = (bounty: Bounty) => {
 };
 
 const sortedBounties = computed(() => {
-    return [...props.bounties]
-        .sort((a, b) => (b.popularity_score ?? 0) - (a.popularity_score ?? 0))
-        .slice(0, 8);
+    return [...props.bounties].sort((a, b) => (b.popularity_score ?? 0) - (a.popularity_score ?? 0)).slice(0, 8);
 });
-
 </script>
 
 <template>
@@ -80,7 +77,7 @@ const sortedBounties = computed(() => {
             </CardTitle>
         </CardHeader>
 
-        <CardContent class="p-4 space-y-0">
+        <CardContent class="space-y-0 p-4">
             <div class="max-h-96 overflow-y-auto pr-2">
                 <div class="space-y-2">
                     <div
@@ -91,31 +88,30 @@ const sortedBounties = computed(() => {
                     >
                         <div class="flex items-start justify-between gap-3">
                             <!-- Rank and Content -->
-                            <div class="flex items-start gap-3 flex-1 min-w-0">
+                            <div class="flex min-w-0 flex-1 items-start gap-3">
                                 <!-- Popularity Rank -->
-                                <div class="flex h-6 w-6 items-center justify-center rounded-full bg-orange-100 text-xs font-bold text-orange-800 dark:bg-orange-900 dark:text-orange-200 flex-shrink-0">
+                                <div
+                                    class="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-orange-100 text-xs font-bold text-orange-800 dark:bg-orange-900 dark:text-orange-200"
+                                >
                                     {{ index + 1 }}
                                 </div>
 
                                 <!-- Bounty Info -->
-                                <div class="flex-1 min-w-0 space-y-1">
-                                    <div class="flex items-center gap-2 flex-wrap">
-                                        <h4 class="font-medium text-sm line-clamp-1 group-hover:text-blue-600 transition-colors dark:group-hover:text-blue-400">
+                                <div class="min-w-0 flex-1 space-y-1">
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <h4
+                                            class="line-clamp-1 text-sm font-medium transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400"
+                                        >
                                             {{ bounty.title }}
                                         </h4>
-                                        <span :class="`px-2 py-1 text-xs rounded-md flex-shrink-0 ${getStatusColor(bounty.status)}`">
+                                        <span :class="`flex-shrink-0 rounded-md px-2 py-1 text-xs ${getStatusColor(bounty.status)}`">
                                             {{ bounty.status.toUpperCase() }}
                                         </span>
                                     </div>
 
                                     <!-- Languages-->
                                     <div v-if="bounty.languages && bounty.languages.length > 0" class="flex flex-wrap gap-1">
-                                        <Badge
-                                            v-for="language in bounty.languages.slice(0, 2)"
-                                            :key="language"
-                                            variant="outline"
-                                            class="text-xs"
-                                        >
+                                        <Badge v-for="language in bounty.languages.slice(0, 2)" :key="language" variant="outline" class="text-xs">
                                             {{ language }}
                                         </Badge>
                                         <span v-if="bounty.languages.length > 2" class="text-xs text-gray-500 dark:text-gray-400">
@@ -146,13 +142,9 @@ const sortedBounties = computed(() => {
                             </div>
 
                             <!-- Popularity Score -->
-                            <div class="flex flex-col items-end text-right flex-shrink-0">
-                                <div class="text-xs font-medium text-orange-600 dark:text-orange-400">
-                                    {{ bounty.popularity_score ?? 0 }} pts
-                                </div>
-                                <div class="text-xs text-gray-500 dark:text-gray-400">
-                                    popularity
-                                </div>
+                            <div class="flex flex-shrink-0 flex-col items-end text-right">
+                                <div class="text-xs font-medium text-orange-600 dark:text-orange-400">{{ bounty.popularity_score ?? 0 }} pts</div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">popularity</div>
                             </div>
                         </div>
                     </div>
@@ -161,7 +153,7 @@ const sortedBounties = computed(() => {
 
             <!-- Empty State -->
             <div v-if="props.bounties.length === 0" class="py-8 text-center text-gray-500 dark:text-gray-400">
-                <TrendingUp class="mx-auto h-8 w-8 opacity-50 mb-2" />
+                <TrendingUp class="mx-auto mb-2 h-8 w-8 opacity-50" />
                 <p class="text-sm">No popular bounties yet</p>
             </div>
         </CardContent>
