@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useForm } from '@inertiajs/vue3'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -65,6 +66,11 @@ function submit() {
                             </Badge>
                         </div>
                     </CardHeader>
+                    <CardContent v-if="bounty.description" class="pt-0">
+                        <div class="bg-gray-50 rounded-lg p-4 dark:bg-gray-800">
+                            <p class="text-sm text-gray-700 dark:text-gray-300">{{ bounty.description }}</p>
+                        </div>
+                    </CardContent>
                 </Card>
 
                 <!-- Submission Form -->
@@ -97,6 +103,24 @@ function submit() {
                                 </div>
                             </div>
 
+                            <!-- Submit Buttons -->
+                            <div class="flex gap-4 pt-6 border-t border-gray-200 dark:border-gray-700">
+                                <Button
+                                    type="submit"
+                                    :disabled="form.processing"
+                                    class="flex items-center gap-2 bg-black hover:bg-gray-800 text-white border-0 transition-colors duration-200 disabled:opacity-50 dark:bg-white dark:hover:bg-gray-100 dark:text-black"
+                                >
+                                    <Target class="h-4 w-4" />
+                                    {{ form.processing ? 'Submitting...' : 'Submit Solution' }}
+                                </Button>
+
+                                <a
+                                    :href="`/bounties/${bounty.id}`"
+                                    class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors duration-200 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+                                >
+                                    Cancel
+                                </a>
+                            </div>
                         </form>
                     </CardContent>
                 </Card>
