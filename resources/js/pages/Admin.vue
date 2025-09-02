@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import Heading from '@/components/Heading.vue';
 import Icon from '@/components/Icon.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, useForm } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { ChartArea, Settings } from 'lucide-vue-next';
+import { computed, h, ref } from 'vue';
+import ApexCharts from 'vue3-apexcharts';
 
 interface XPStats {
     total_users: number;
@@ -51,6 +52,70 @@ const props = withDefaults(defineProps<Props>(), {
         level_thresholds: { 1: 0 },
     }),
 });
+
+// Level distribution data
+const distributionData = computed(() => Object.entries(props.xpStats.level_distribution || {}).map(([level, users]) => ({ level, users })));
+
+// Chart series
+const chartSeries = computed(() => [
+    {
+        name: 'Users',
+        data: distributionData.value.map((d) => ({
+            x: `Level ${d.level}`,
+            y: d.users,
+        })),
+    },
+]);
+
+// Chart options
+const isDark = ref(document.documentElement.classList.contains('dark'));
+const chartOptions = computed(() => {
+    return {
+        chart: {
+            toolbar: { show: false },
+            zoom: { enabled: false },
+            foreColor: isDark.value ? '#f9f9f9' : '#111827',
+            background: 'transparent',
+        },
+        xaxis: {
+            categories: distributionData.value?.map((d) => `Level ${d.level}`) || [],
+            title: { text: 'Level' },
+            labels: { style: { colors: isDark.value ? '#f9f9f9' : '#374151' } },
+        },
+        yaxis: {
+            title: { text: 'Users' },
+            labels: { style: { colors: isDark.value ? '#f9f9f9' : '#374151' } },
+        },
+        legend: {
+            labels: { colors: isDark.value ? '#f9f9f9' : '#374151' },
+        },
+        plotOptions: {
+            bar: { borderRadius: 6 },
+        },
+        tooltip: {
+            theme: isDark.value ? 'dark' : 'light',
+            y: { formatter: (val) => `${val} users` },
+        },
+        dataLabels: { enabled: false },
+    };
+});
+
+// Render function
+const renderChart = () => {
+    if (!distributionData.value || distributionData.value.length === 0) {
+        return h('div', { class: 'py-4 text-center text-muted-foreground' }, [
+            h(Icon, { name: 'cube', class: 'mx-auto mb-2 h-6 w-6 opacity-50' }),
+            h('p', { class: 'text-xs' }, 'No users with XP yet'),
+        ]);
+    }
+
+    return h(ApexCharts, {
+        type: 'bar',
+        height: 300,
+        options: chartOptions.value,
+        series: chartSeries.value,
+    });
+};
 
 // Global editing state
 const hasAnyChanges = ref(false);
@@ -99,9 +164,6 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const sortedLevels = computed(() => {
-    return Object.entries(props.xpStats.level_distribution).sort(([a], [b]) => Number(a) - Number(b));
-});
 const sortedLevelThresholds = computed(() => {
     return Object.entries(props.xpConfig.level_thresholds).sort(([a], [b]) => Number(a) - Number(b));
 });
@@ -287,6 +349,18 @@ const cancelAllChanges = () => {
     cancelEditingSkillWeights();
     hasAnyChanges.value = false;
 };
+
+enum AdminTab {
+    Statistics = 'statistics',
+    XPSettings = 'xp_settings',
+}
+enum XPSettingsTab {
+    Base = 'base',
+    Thresholds = 'thresholds',
+    Skills = 'skills',
+}
+const activeTab = ref<AdminTab>(AdminTab.Statistics);
+const xpSettingsTab = ref<XPSettingsTab>(XPSettingsTab.Base);
 </script>
 
 <template>
@@ -295,24 +369,35 @@ const cancelAllChanges = () => {
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="px-4 py-6">
             <div class="mx-auto max-w-6xl space-y-6">
-                <!-- Header -->
-                <Card>
-                    <CardHeader>
-                        <CardTitle class="flex items-center gap-2">
-                            <Icon name="chart-bar" class="h-6 w-6" />
-                            <Heading title="Admin Dashboard" />
-                        </CardTitle>
-                        <p class="text-sm text-muted-foreground">Monitor XP distribution and user statistics</p>
-                    </CardHeader>
-                </Card>
+                <div class="mb-4 flex gap-2 border-b">
+                    <Button
+                        variant="ghost"
+                        class="rounded border-b-2 border-transparent px-3 py-2 font-medium"
+                        :class="{ 'border-primary text-primary': activeTab === AdminTab.Statistics }"
+                        @click="activeTab = AdminTab.Statistics"
+                    >
+                        <ChartArea />
+                        Statistics
+                    </Button>
+
+                    <Button
+                        variant="ghost"
+                        class="rounded border-b-2 border-transparent px-3 py-2 font-medium"
+                        :class="{ 'border-primary text-primary': activeTab === AdminTab.XPSettings }"
+                        @click="activeTab = AdminTab.XPSettings"
+                    >
+                        <Settings />
+                        XP Settings
+                    </Button>
+                </div>
 
                 <!-- Batch Save Controls -->
                 <div v-if="hasAnyChanges" class="sticky top-4 z-10">
-                    <Card class="border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950">
+                    <Card class="border-red-200 bg-orange-50 dark:border-red-800 dark:bg-red-950">
                         <CardContent class="flex items-center justify-between gap-4 py-4">
                             <div class="flex items-center gap-2">
-                                <Icon name="alert-circle" class="h-5 w-5 text-orange-600" />
-                                <span class="font-medium text-orange-800 dark:text-orange-200">You have unsaved changes</span>
+                                <Icon name="alert-circle" class="h-5 w-5 text-red-600" />
+                                <span class="font-medium text-red-800 dark:text-red-200">You have unsaved changes</span>
                             </div>
                             <div class="flex gap-2">
                                 <Button variant="outline" size="sm" @click="cancelAllChanges" :disabled="batchForm.processing">
@@ -329,9 +414,9 @@ const cancelAllChanges = () => {
                 </div>
 
                 <!-- XP Statistics -->
-                <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                <div v-if="activeTab === AdminTab.Statistics" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                     <!-- Total Users -->
-                    <Card>
+                    <Card class="bg-gray-50/80 backdrop-blur md:sticky md:top-0 md:z-10 dark:bg-black/30">
                         <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle class="text-sm font-medium">Total Users</CardTitle>
                             <Icon name="users" class="h-4 w-4 text-muted-foreground" />
@@ -343,7 +428,7 @@ const cancelAllChanges = () => {
                     </Card>
 
                     <!-- Total XP Distributed -->
-                    <Card>
+                    <Card class="bg-gray-50/80 backdrop-blur md:sticky md:top-0 md:z-10 dark:bg-black/30">
                         <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle class="text-sm font-medium">Total XP Distributed</CardTitle>
                             <Icon name="zap" class="h-4 w-4 text-muted-foreground" />
@@ -355,7 +440,7 @@ const cancelAllChanges = () => {
                     </Card>
 
                     <!-- Highest XP -->
-                    <Card>
+                    <Card class="bg-gray-50/80 backdrop-blur md:sticky md:top-0 md:z-10 dark:bg-black/30">
                         <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle class="text-sm font-medium">Highest XP</CardTitle>
                             <Icon name="star" class="h-4 w-4 text-muted-foreground" />
@@ -367,33 +452,14 @@ const cancelAllChanges = () => {
                     </Card>
 
                     <!-- Level Distribution -->
-                    <Card>
+                    <Card class="w-full bg-gray-50/80 backdrop-blur md:sticky md:top-0 md:z-10 md:col-span-2 lg:col-span-3 dark:bg-black/30">
                         <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle class="text-sm font-medium">Level Distribution</CardTitle>
                             <Icon name="list" class="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div
-                                class="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-muted-foreground/20 hover:scrollbar-thumb-muted-foreground/40 max-h-32 overflow-y-auto"
-                            >
-                                <div v-if="Object.keys(props.xpStats.level_distribution).length > 0" class="space-y-2 pr-2">
-                                    <div v-for="[level, count] in sortedLevels" :key="level" class="flex items-center justify-between text-sm">
-                                        <span class="flex items-center gap-2">
-                                            <Badge variant="outline" class="flex h-6 w-8 items-center justify-center p-0 text-xs font-semibold">
-                                                {{ level }}
-                                            </Badge>
-                                            <span>Level {{ level }}</span>
-                                        </span>
-                                        <Badge variant="secondary" class="font-medium">
-                                            {{ count }}
-                                        </Badge>
-                                    </div>
-                                </div>
-
-                                <div v-else class="py-4 text-center text-muted-foreground">
-                                    <Icon name="cube" class="mx-auto mb-2 h-6 w-6 opacity-50" />
-                                    <p class="text-xs">No users with XP yet</p>
-                                </div>
+                            <div class="h-80 w-full">
+                                <component :is="renderChart" />
                             </div>
                         </CardContent>
                     </Card>
@@ -401,9 +467,36 @@ const cancelAllChanges = () => {
 
                 <!-- Fine tuning -->
                 <!-- XP Configuration -->
-                <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <div v-if="activeTab === AdminTab.XPSettings" class="space-y-6">
                     <!-- XP Settings -->
-                    <Card>
+                    <div class="mb-4 flex gap-2 border-b">
+                        <Button
+                            variant="ghost"
+                            class="rounded border-b-2 border-transparent px-3 py-2 font-medium"
+                            :class="{ 'border-primary text-primary': xpSettingsTab === XPSettingsTab.Base }"
+                            @click="xpSettingsTab = XPSettingsTab.Base"
+                        >
+                            Base Settings
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            class="rounded border-b-2 border-transparent px-3 py-2 font-medium"
+                            :class="{ 'border-primary text-primary': xpSettingsTab === XPSettingsTab.Thresholds }"
+                            @click="xpSettingsTab = XPSettingsTab.Thresholds"
+                        >
+                            Thresholds
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            class="rounded border-b-2 border-transparent px-3 py-2 font-medium"
+                            :class="{ 'border-primary text-primary': xpSettingsTab === XPSettingsTab.Skills }"
+                            @click="xpSettingsTab = XPSettingsTab.Skills"
+                        >
+                            Skill Weights
+                        </Button>
+                    </div>
+
+                    <Card v-if="xpSettingsTab === XPSettingsTab.Base" class="bg-gray-50/80 backdrop-blur md:sticky md:top-0 md:z-10 dark:bg-black/30">
                         <CardHeader>
                             <CardTitle class="flex items-center gap-2 text-base">
                                 <Icon name="settings" class="h-5 w-5" />
@@ -502,7 +595,10 @@ const cancelAllChanges = () => {
                     </Card>
 
                     <!-- Level Thresholds -->
-                    <Card>
+                    <Card
+                        v-if="xpSettingsTab === XPSettingsTab.Thresholds"
+                        class="bg-gray-50/80 backdrop-blur md:sticky md:top-0 md:z-10 dark:bg-black/30"
+                    >
                         <CardHeader>
                             <CardTitle class="flex items-center gap-2 text-base">
                                 <Icon name="trending-up" class="h-5 w-5" />
@@ -511,7 +607,7 @@ const cancelAllChanges = () => {
                         </CardHeader>
                         <CardContent class="space-y-4">
                             <div
-                                class="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-muted-foreground/20 hover:scrollbar-thumb-muted-foreground/40 max-h-48 overflow-y-auto"
+                                class="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-muted-foreground/20 hover:scrollbar-thumb-muted-foreground/40 max-h-72 overflow-y-auto"
                             >
                                 <!-- Display Mode -->
                                 <div v-if="!editingThresholds" class="space-y-2 pr-2">
@@ -604,7 +700,10 @@ const cancelAllChanges = () => {
                     </Card>
 
                     <!-- Skill Weights -->
-                    <Card>
+                    <Card
+                        v-if="xpSettingsTab === XPSettingsTab.Skills"
+                        class="bg-gray-50/80 backdrop-blur md:sticky md:top-0 md:z-10 dark:bg-black/30"
+                    >
                         <CardHeader>
                             <CardTitle class="flex items-center gap-2 text-base">
                                 <Icon name="code" class="h-5 w-5" />
@@ -613,7 +712,7 @@ const cancelAllChanges = () => {
                         </CardHeader>
                         <CardContent class="space-y-4">
                             <div
-                                class="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-muted-foreground/20 hover:scrollbar-thumb-muted-foreground/40 max-h-48 overflow-y-auto"
+                                class="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-muted-foreground/20 hover:scrollbar-thumb-muted-foreground/40 max-h-72 overflow-y-auto"
                             >
                                 <!-- Display Mode -->
                                 <div v-if="!editingSkillWeights" class="space-y-2 pr-2">
