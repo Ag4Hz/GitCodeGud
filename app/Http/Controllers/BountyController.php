@@ -75,14 +75,25 @@ class BountyController extends Controller
     {
         $this->trackBountyView($request, $bounty);
 
-        $bountyData = $bounty->load(['issue.repo', 'submissions.user'])
-            ->loadCount('submissions');
+        $user = $request->user();
+        $userSubmission = null;
+        $canUserSubmit = false;
+
+        if ($user) {
+            $userSubmission = $bounty->submissions()
+                ->where('user_id', $user->id)
+                ->first();
+
+            $canUserSubmit = $user->can('create', [\App\Models\Submission::class, $bounty]);
+        }
 
         return Inertia::render('bounties/Show', [
-            'bounty' => $bountyData,
+            'bounty' => $bounty->load(['issue.repo', 'submissions.user'])->loadCount('submissions'),
             'popularityScore' => ($bounty->views ?? 0) + ($bountyData->submissions_count ?? 0),
             'comments' => Inertia::merge(fn() => $this->getPaginatedComments($bounty, $request)),
-        ]);
+            'canUserSubmit' => $canUserSubmit,
+            'userSubmission' => $userSubmission,
+            ]);
     }
 
     private function trackBountyView(Request $request, Bounty $bounty): void

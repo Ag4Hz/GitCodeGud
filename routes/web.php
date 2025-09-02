@@ -35,9 +35,7 @@ Route::middleware('auth')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::get('/bounties/{bounty}/submit', [SubmissionController::class, 'create'])->name('submissions.create');
     Route::post('/submissions', [SubmissionController::class, 'store'])->name('submissions.store');
-    Route::get('/submissions/{submission}', [SubmissionController::class, 'show'])->name('submissions.show');
     Route::get('/bounties/{bounty}/submissions', [SubmissionController::class, 'indexForBounty'])->name('bounties.submissions');
-    Route::patch('/submissions/{submission}/status', [SubmissionController::class, 'updateStatus'])->name('submissions.update-status');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
