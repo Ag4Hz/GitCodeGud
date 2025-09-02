@@ -373,7 +373,7 @@ const xpSettingsTab = ref<XPSettingsTab>(XPSettingsTab.Base);
                     <Button
                         variant="ghost"
                         class="rounded border-b-2 border-transparent px-3 py-2 font-medium"
-                        :class="{ 'border-primary text-primary': activeTab === 'statistics' }"
+                        :class="{ 'border-primary text-primary': activeTab === AdminTab.Statistics }"
                         @click="activeTab = AdminTab.Statistics"
                     >
                         <ChartArea />
@@ -383,7 +383,7 @@ const xpSettingsTab = ref<XPSettingsTab>(XPSettingsTab.Base);
                     <Button
                         variant="ghost"
                         class="rounded border-b-2 border-transparent px-3 py-2 font-medium"
-                        :class="{ 'border-primary text-primary': activeTab === 'xp_settings' }"
+                        :class="{ 'border-primary text-primary': activeTab === AdminTab.XPSettings }"
                         @click="activeTab = AdminTab.XPSettings"
                     >
                         <Settings />
@@ -414,7 +414,7 @@ const xpSettingsTab = ref<XPSettingsTab>(XPSettingsTab.Base);
                 </div>
 
                 <!-- XP Statistics -->
-                <div v-if="activeTab === 'statistics'" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <div v-if="activeTab === AdminTab.Statistics" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                     <!-- Total Users -->
                     <Card class="bg-gray-50/80 backdrop-blur md:sticky md:top-0 md:z-10 dark:bg-black/30">
                         <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -467,13 +467,13 @@ const xpSettingsTab = ref<XPSettingsTab>(XPSettingsTab.Base);
 
                 <!-- Fine tuning -->
                 <!-- XP Configuration -->
-                <div v-if="activeTab === 'xp_settings'" class="space-y-6">
+                <div v-if="activeTab === AdminTab.XPSettings" class="space-y-6">
                     <!-- XP Settings -->
                     <div class="mb-4 flex gap-2 border-b">
                         <Button
                             variant="ghost"
                             class="rounded border-b-2 border-transparent px-3 py-2 font-medium"
-                            :class="{ 'border-primary text-primary': xpSettingsTab === 'base' }"
+                            :class="{ 'border-primary text-primary': xpSettingsTab === XPSettingsTab.Base }"
                             @click="xpSettingsTab = XPSettingsTab.Base"
                         >
                             Base Settings
@@ -481,7 +481,7 @@ const xpSettingsTab = ref<XPSettingsTab>(XPSettingsTab.Base);
                         <Button
                             variant="ghost"
                             class="rounded border-b-2 border-transparent px-3 py-2 font-medium"
-                            :class="{ 'border-primary text-primary': xpSettingsTab === 'thresholds' }"
+                            :class="{ 'border-primary text-primary': xpSettingsTab === XPSettingsTab.Thresholds }"
                             @click="xpSettingsTab = XPSettingsTab.Thresholds"
                         >
                             Thresholds
@@ -489,14 +489,14 @@ const xpSettingsTab = ref<XPSettingsTab>(XPSettingsTab.Base);
                         <Button
                             variant="ghost"
                             class="rounded border-b-2 border-transparent px-3 py-2 font-medium"
-                            :class="{ 'border-primary text-primary': xpSettingsTab === 'skills' }"
+                            :class="{ 'border-primary text-primary': xpSettingsTab === XPSettingsTab.Skills }"
                             @click="xpSettingsTab = XPSettingsTab.Skills"
                         >
                             Skill Weights
                         </Button>
                     </div>
 
-                    <Card v-if="xpSettingsTab === 'base'" class="bg-gray-50/80 backdrop-blur md:sticky md:top-0 md:z-10 dark:bg-black/30">
+                    <Card v-if="xpSettingsTab === XPSettingsTab.Base" class="bg-gray-50/80 backdrop-blur md:sticky md:top-0 md:z-10 dark:bg-black/30">
                         <CardHeader>
                             <CardTitle class="flex items-center gap-2 text-base">
                                 <Icon name="settings" class="h-5 w-5" />
@@ -595,7 +595,7 @@ const xpSettingsTab = ref<XPSettingsTab>(XPSettingsTab.Base);
                     </Card>
 
                     <!-- Level Thresholds -->
-                    <Card v-if="xpSettingsTab === 'thresholds'" class="bg-gray-50/80 backdrop-blur md:sticky md:top-0 md:z-10 dark:bg-black/30">
+                    <Card v-if="xpSettingsTab === XPSettingsTab.Thresholds" class="bg-gray-50/80 backdrop-blur md:sticky md:top-0 md:z-10 dark:bg-black/30">
                         <CardHeader>
                             <CardTitle class="flex items-center gap-2 text-base">
                                 <Icon name="trending-up" class="h-5 w-5" />
@@ -697,7 +697,7 @@ const xpSettingsTab = ref<XPSettingsTab>(XPSettingsTab.Base);
                     </Card>
 
                     <!-- Skill Weights -->
-                    <Card v-if="xpSettingsTab === 'skills'" class="bg-gray-50/80 backdrop-blur md:sticky md:top-0 md:z-10 dark:bg-black/30">
+                    <Card v-if="xpSettingsTab === XPSettingsTab.Skills" class="bg-gray-50/80 backdrop-blur md:sticky md:top-0 md:z-10 dark:bg-black/30">
                         <CardHeader>
                             <CardTitle class="flex items-center gap-2 text-base">
                                 <Icon name="code" class="h-5 w-5" />
