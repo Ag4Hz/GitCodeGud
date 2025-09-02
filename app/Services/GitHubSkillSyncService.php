@@ -14,7 +14,6 @@ class GitHubSkillSyncService
 
     public function syncUserSkillsFromGitHub(User $user): bool
     {
-        try {
             $this->githubApi = new GitHubApiService($user);
             if (!$this->githubApi->hasValidToken()) {
                 return false;
@@ -33,9 +32,6 @@ class GitHubSkillSyncService
 
             $this->updateUserSkills($user, $languageStats);
             return true;
-        } catch (\Exception $e) {
-            return false;
-        }
     }
 
     private function getLanguageStatsFromRepos(array $repositories): array
