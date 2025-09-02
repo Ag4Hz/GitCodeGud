@@ -3,14 +3,14 @@ import Icon from '@/components/Icon.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/composables/useToast';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
+import { getRandomErrorMessage, getRandomSuccessMessage } from '@/utils/toastMessages';
 import { Head, useForm } from '@inertiajs/vue3';
 import { ChartArea, Settings } from 'lucide-vue-next';
 import { computed, h, ref } from 'vue';
 import ApexCharts from 'vue3-apexcharts';
-import { getRandomErrorMessage, getRandomSuccessMessage } from '@/utils/toastMessages';
-import { useToast } from '@/composables/useToast';
 
 interface XPStats {
     total_users: number;
@@ -839,16 +839,16 @@ const xpSettingsTab = ref<XPSettingsTab>(XPSettingsTab.Base);
         </div>
 
         <!-- Toast Notifications -->
-        <div class="fixed content-center left-1/2 top-20 z-50 flex -translate-x-1/2 flex-col gap-2">
+        <div class="fixed top-20 left-1/2 z-50 flex -translate-x-1/2 flex-col content-center gap-2">
             <div
                 v-for="toast in toasts"
                 :key="toast.id"
-                class="flex items-center justify-between rounded-lg px-4 py-2 shadow-md text-white"
+                class="flex items-center justify-between rounded-lg px-4 py-2 text-white shadow-md"
                 :class="{
-                  'bg-green-500': toast.type === 'success',
-                  'bg-red-500': toast.type === 'error',
-                  'bg-blue-500': toast.type === 'info',
-                  'bg-yellow-500': toast.type === 'warning',
+                    'bg-green-500': toast.type === 'success',
+                    'bg-red-500': toast.type === 'error',
+                    'bg-blue-500': toast.type === 'info',
+                    'bg-yellow-500': toast.type === 'warning',
                 }"
             >
                 <span>{{ toast.message }}</span>
