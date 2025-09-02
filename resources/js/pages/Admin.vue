@@ -350,8 +350,17 @@ const cancelAllChanges = () => {
     hasAnyChanges.value = false;
 };
 
-const activeTab = ref<'statistics' | 'xp_settings'>(`statistics`);
-const xpSettingsTab = ref<'base' | 'thresholds' | 'skills'>(`base`);
+enum AdminTab {
+    Statistics = 'statistics',
+    XPSettings = 'xp_settings',
+}
+enum XPSettingsTab {
+    Base = 'base',
+    Thresholds = 'thresholds',
+    Skills = 'skills',
+}
+const activeTab = ref<AdminTab>(AdminTab.Statistics);
+const xpSettingsTab = ref<XPSettingsTab>(XPSettingsTab.Base);
 </script>
 
 <template>
@@ -365,7 +374,7 @@ const xpSettingsTab = ref<'base' | 'thresholds' | 'skills'>(`base`);
                         variant="ghost"
                         class="rounded border-b-2 border-transparent px-3 py-2 font-medium"
                         :class="{ 'border-primary text-primary': activeTab === 'statistics' }"
-                        @click="activeTab = 'statistics'"
+                        @click="activeTab = AdminTab.Statistics"
                     >
                         <ChartArea />
                         Statistics
@@ -375,7 +384,7 @@ const xpSettingsTab = ref<'base' | 'thresholds' | 'skills'>(`base`);
                         variant="ghost"
                         class="rounded border-b-2 border-transparent px-3 py-2 font-medium"
                         :class="{ 'border-primary text-primary': activeTab === 'xp_settings' }"
-                        @click="activeTab = 'xp_settings'"
+                        @click="activeTab = AdminTab.XPSettings"
                     >
                         <Settings />
                         XP Settings
@@ -465,7 +474,7 @@ const xpSettingsTab = ref<'base' | 'thresholds' | 'skills'>(`base`);
                             variant="ghost"
                             class="rounded border-b-2 border-transparent px-3 py-2 font-medium"
                             :class="{ 'border-primary text-primary': xpSettingsTab === 'base' }"
-                            @click="xpSettingsTab = 'base'"
+                            @click="xpSettingsTab = XPSettingsTab.Base"
                         >
                             Base Settings
                         </Button>
@@ -473,7 +482,7 @@ const xpSettingsTab = ref<'base' | 'thresholds' | 'skills'>(`base`);
                             variant="ghost"
                             class="rounded border-b-2 border-transparent px-3 py-2 font-medium"
                             :class="{ 'border-primary text-primary': xpSettingsTab === 'thresholds' }"
-                            @click="xpSettingsTab = 'thresholds'"
+                            @click="xpSettingsTab = XPSettingsTab.Thresholds"
                         >
                             Thresholds
                         </Button>
@@ -481,7 +490,7 @@ const xpSettingsTab = ref<'base' | 'thresholds' | 'skills'>(`base`);
                             variant="ghost"
                             class="rounded border-b-2 border-transparent px-3 py-2 font-medium"
                             :class="{ 'border-primary text-primary': xpSettingsTab === 'skills' }"
-                            @click="xpSettingsTab = 'skills'"
+                            @click="xpSettingsTab = XPSettingsTab.Skills"
                         >
                             Skill Weights
                         </Button>
