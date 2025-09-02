@@ -43,25 +43,30 @@ class SubmissionStoreRequest extends FormRequest
         $prUrl = $this->input('pr_url');
         $bountyId = $this->input('bounty_id');
 
+        // 1. Validate PR URL format using GitHubApiService
         if (!GitHubApiService::isValidGitHubPullRequestUrl($prUrl)) {
             $validator->errors()->add('pr_url', 'Please enter a valid GitHub Pull Request URL (e.g., https://github.com/user/repo/pull/123).');
             return;
         }
 
+        // 2. Get bounty and validate PR belongs to the same repo
         $bounty = Bounty::with('issue.repo')->find($bountyId);
         if (!$bounty) {
             $validator->errors()->add('bounty_id', 'Invalid bounty.');
             return;
         }
 
+        // 3. Parse PR URL to get repo information
         $prInfo = GitHubApiService::parseGitHubPullRequestUrl($prUrl);
         $expectedRepoFullName = GitHubApiService::parseGitHubUrl($bounty->issue->repo->url)['full_name'];
 
+        // 4. Validate PR references the correct repository
         if ($prInfo['repo_full_name'] !== $expectedRepoFullName) {
             $validator->errors()->add('pr_url', "The Pull Request must belong to the bounty repository: {$expectedRepoFullName}");
             return;
         }
 
+        // 5. Check for duplicate submissions for this bounty by the same user
         $existingSubmission = $bounty->submissions()
             ->where('user_id', auth()->id())
             ->exists();
@@ -71,6 +76,7 @@ class SubmissionStoreRequest extends FormRequest
             return;
         }
 
+        // 6. Validate PR exists and is accessible
         $user = $this->user();
         if ($user && $user->oauth_provider_token) {
             $githubApi = new GitHubApiService($user);
