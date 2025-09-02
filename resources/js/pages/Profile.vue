@@ -2,6 +2,7 @@
 import BountyManagement from '@/components/BountyManagement.vue';
 import FollowModal from '@/components/FollowModal.vue';
 import InputError from '@/components/InputError.vue';
+import Toast from '@/components/Toast.vue';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -9,15 +10,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useInitials } from '@/composables/useInitials';
+import { useToast } from '@/composables/useToast';
 import { useXP } from '@/composables/useXP';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem, type User } from '@/types';
 import { type BountyPagination } from '@/types/bounty';
+import { getRandomErrorMessage, getRandomSuccessMessage } from '@/utils/toastMessages';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { AlertCircle, Code, Database, Github, Plus, Settings, Star, Target, Trophy, Zap } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
-import { useToast } from '@/composables/useToast';
-import { getRandomSuccessMessage, getRandomErrorMessage } from '@/utils/toastMessages';
 
 const { success: showSuccess, error: showError, toasts, removeToast } = useToast();
 
@@ -657,21 +658,6 @@ function unfollow() {
         </div>
 
         <!-- Toast Notifications -->
-        <div class="fixed top-20 left-1/2 z-50 flex -translate-x-1/2 flex-col content-center gap-2">
-            <div
-                v-for="toast in toasts"
-                :key="toast.id"
-                class="flex items-center justify-between rounded-lg px-4 py-2 text-white shadow-md"
-                :class="{
-                    'bg-green-500': toast.type === 'success',
-                    'bg-red-500': toast.type === 'error',
-                    'bg-blue-500': toast.type === 'info',
-                    'bg-yellow-500': toast.type === 'warning',
-                }"
-            >
-                <span>{{ toast.message }}</span>
-                <button class="ml-4 text-white" @click="removeToast(toast.id)">✕</button>
-            </div>
-        </div>
+        <Toast />
     </AppLayout>
 </template>
