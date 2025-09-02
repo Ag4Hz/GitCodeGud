@@ -1,9 +1,9 @@
 <script setup lang="ts">
+import UserRow from '@/components/UserRow.vue';
 import { Combobox, ComboboxInput, ComboboxOption, ComboboxOptions } from '@headlessui/vue';
 import { MagnifyingGlassIcon } from '@heroicons/vue/24/solid';
 import { router } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
-import UserRow from '@/components/UserRow.vue';
 
 type User = { id: number; nickname: string; avatar: string; name: string };
 
@@ -64,7 +64,6 @@ watch(search, () => {
                 <template v-else>
                     <div class="px-3 py-2 text-gray-500 dark:text-gray-300">No buddies found</div>
                 </template>
-
             </ComboboxOptions>
         </Combobox>
     </div>
