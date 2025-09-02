@@ -9,6 +9,8 @@ import { Head, useForm } from '@inertiajs/vue3';
 import { ChartArea, Settings } from 'lucide-vue-next';
 import { computed, h, ref } from 'vue';
 import ApexCharts from 'vue3-apexcharts';
+import { getRandomErrorMessage, getRandomSuccessMessage } from '@/utils/toastMessages';
+import { useToast } from '@/composables/useToast';
 
 interface XPStats {
     total_users: number;
@@ -164,6 +166,8 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
+const { success: showSuccess, error: showError, toasts, removeToast } = useToast();
+
 const sortedLevelThresholds = computed(() => {
     return Object.entries(props.xpConfig.level_thresholds).sort(([a], [b]) => Number(a) - Number(b));
 });
@@ -191,6 +195,10 @@ const saveXPSettings = () => {
         onSuccess: () => {
             editingXPSettings.value = false;
             editingXPField.value = null;
+            showSuccess(getRandomSuccessMessage('en'));
+        },
+        onError: () => {
+            showError(getRandomErrorMessage('en'));
         },
     });
 };
@@ -234,6 +242,10 @@ const saveThresholds = () => {
         onSuccess: () => {
             editingThresholds.value = false;
             editingIndex.value = null;
+            showSuccess(getRandomSuccessMessage('en'));
+        },
+        onError: () => {
+            showError(getRandomErrorMessage('en'));
         },
     });
 };
@@ -281,6 +293,10 @@ const saveSkillWeights = () => {
         onSuccess: () => {
             editingSkillWeights.value = false;
             editingSkillIndex.value = null;
+            showSuccess(getRandomSuccessMessage('en'));
+        },
+        onError: () => {
+            showError(getRandomErrorMessage('en'));
         },
     });
 };
@@ -338,7 +354,11 @@ const saveAllChanges = () => {
             editingXPField.value = null;
             editingIndex.value = null;
             editingSkillIndex.value = null;
+            showSuccess(getRandomSuccessMessage('en'));
             updateHasChanges();
+        },
+        onError: () => {
+            showError(getRandomErrorMessage('en'));
         },
     });
 };
@@ -815,6 +835,24 @@ const xpSettingsTab = ref<XPSettingsTab>(XPSettingsTab.Base);
                         </CardContent>
                     </Card>
                 </div>
+            </div>
+        </div>
+
+        <!-- Toast Notifications -->
+        <div class="fixed content-center left-1/2 top-20 z-50 flex -translate-x-1/2 flex-col gap-2">
+            <div
+                v-for="toast in toasts"
+                :key="toast.id"
+                class="flex items-center justify-between rounded-lg px-4 py-2 shadow-md text-white"
+                :class="{
+                  'bg-green-500': toast.type === 'success',
+                  'bg-red-500': toast.type === 'error',
+                  'bg-blue-500': toast.type === 'info',
+                  'bg-yellow-500': toast.type === 'warning',
+                }"
+            >
+                <span>{{ toast.message }}</span>
+                <button class="ml-4 text-white" @click="removeToast(toast.id)">✕</button>
             </div>
         </div>
     </AppLayout>
