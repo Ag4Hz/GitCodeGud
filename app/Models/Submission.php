@@ -16,7 +16,8 @@ class Submission extends Model
     protected $fillable = [
         'bounty_id',
         'user_id',
-        'status'
+        'status',
+        'pr_url',
     ];
 
     protected function casts(): array
@@ -34,5 +35,61 @@ class Submission extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+    public function getPrNumberAttribute(): ?int
+    {
+        if (!$this->pr_url) {
+            return null;
+        }
+
+        $prInfo = \App\Services\GitHubApiService::parseGitHubPullRequestUrl($this->pr_url);
+        return $prInfo['pr_number'] ?? null;
+    }
+
+    /**
+     * Get the repository full name from the PR URL
+     */
+    public function getRepoFullNameAttribute(): ?string
+    {
+        if (!$this->pr_url) {
+            return null;
+        }
+
+        $prInfo = \App\Services\GitHubApiService::parseGitHubPullRequestUrl($this->pr_url);
+        return $prInfo['repo_full_name'] ?? null;
+    }
+
+    /**
+     * Get the repository owner from the PR URL
+     */
+    public function getRepoOwnerAttribute(): ?string
+    {
+        if (!$this->pr_url) {
+            return null;
+        }
+
+        $prInfo = \App\Services\GitHubApiService::parseGitHubPullRequestUrl($this->pr_url);
+        return $prInfo['owner'] ?? null;
+    }
+
+    /**
+     * Get the repository name from the PR URL
+     */
+    public function getRepoNameAttribute(): ?string
+    {
+        if (!$this->pr_url) {
+            return null;
+        }
+
+        $prInfo = \App\Services\GitHubApiService::parseGitHubPullRequestUrl($this->pr_url);
+        return $prInfo['name'] ?? null;
+    }
+
+    /**
+     * Check if the PR URL is valid
+     */
+    public function hasValidPrUrl(): bool
+    {
+        return $this->pr_url && \App\Services\GitHubApiService::isValidGitHubPullRequestUrl($this->pr_url);
     }
 }
