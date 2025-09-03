@@ -31,16 +31,16 @@ class SkillUserSeeder extends Seeder
         foreach ($users as $user) {
             if (rand(1, 100) <= 10) continue;
 
-            // 🎯 Assign each user a total XP cap bucket
+            // Assign each user a total XP cap bucket
             $roll = rand(1, 100);
             if ($roll <= 20) {
-                $userCap = rand(50_000, 150_000);   // weak (20%)
+                $userCap = rand(50000, 150000);   // weak (20%)
             } elseif ($roll <= 60) {
-                $userCap = rand(150_000, 350_000);  // mid (40%)
+                $userCap = rand(150000, 350000);  // mid (40%)
             } elseif ($roll <= 90) {
-                $userCap = rand(350_000, 550_000);  // strong (30%)
+                $userCap = rand(350000, 550000);  // strong (30%)
             } else {
-                $userCap = rand(550_000, 750_000);  // elite (10%)
+                $userCap = rand(550000, 750000);  // elite (10%)
             }
 
             $usedXp = 0;
