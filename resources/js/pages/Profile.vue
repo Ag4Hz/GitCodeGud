@@ -15,6 +15,7 @@ import { Head, router } from '@inertiajs/vue3';
 import { Code, Database, Settings, Star, Target, Trophy, Zap } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 import ReviewList from '@/components/ReviewList.vue';
+import { type ReviewsPayload } from '@/types/review'
 
 const { success: showSuccess, error: showError } = useToast();
 
@@ -48,8 +49,7 @@ interface Props {
         next_page_url: string | null;
         avatar: string | null;
     };
-    reviews: { data: any[], current_page: number, last_page: number, next_page_url: string|null, prev_page_url: string|null }
-
+    reviews: ReviewsPayload
 }
 
 const props = withDefaults(defineProps<Props>(), {
