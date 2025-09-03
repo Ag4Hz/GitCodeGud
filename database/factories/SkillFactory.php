@@ -17,7 +17,7 @@ class SkillFactory extends Factory
     public function definition(): array
     {
         $skills = [
-            'PHP', 'Javascript', 'Python', 'Java', 'C#', 'C++', 'Vue.js', 'React', 'Laravel', 'MongoDB', 'Linux', 'Git',
+            'PHP', 'JavaScript', 'Python', 'Java', 'C#', 'C++', 'Vue', 'React', 'Laravel', 'MongoDB', 'Linux',
         ];
         return [
             'skill_name' => fake()->unique()->randomElement($skills),

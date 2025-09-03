@@ -9,6 +9,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
+            BountySeeder::class,
             UserSeeder::class,
             SkillSeeder::class,
             BadgeSeeder::class,
@@ -21,9 +22,6 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $this->call([
-            RepoSeeder::class,
-            IssueSeeder::class,
-            BountySeeder::class,
             SubmissionSeeder::class,
             FollowerSeeder::class,
         ]);
