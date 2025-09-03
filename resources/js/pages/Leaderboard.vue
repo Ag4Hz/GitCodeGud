@@ -1,32 +1,58 @@
 <script setup lang="ts">
+import LanguageFilter from '@/components/LanguageFilter.vue';
 import LeaderboardTable from '@/components/LeaderboardTable.vue';
 import Pagination from '@/components/Pagination.vue';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import UserSearch from '@/components/UserSearch.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 
-type User = { id: number; nickname: string; avatar: string; name: string };
-type PaginationLink = { url: string | null; label: string; active: boolean };
-type LeaderboardUsers = { data: User[]; links: PaginationLink[] };
+type Dir = 'asc' | 'desc';
+
+type User = { id: number; nickname: string; avatar: string; name: string; xp: number; skill_xp: number; level: number; rank: number };
+type LeaderboardUsers = { data: User[]; links: any[] };
 type UsersSearchPayload = { data?: User[] };
 
 type PageProps = {
     userFilters?: { search?: string };
     users?: UsersSearchPayload;
-    leaderboardUsers: LeaderboardUsers
-    sort: { dir: string };
+    leaderboardUsers: LeaderboardUsers;
+    sort?: { dir?: Dir };
+    filters?: { language?: string };
+    availableLanguages?: string[];
+    selected?: { dir?: Dir; skill_id?: number | null };
 };
 
-const props = defineProps<PageProps>();
-const sortDir = ref<string>(props.sort.dir);
+const props = withDefaults(defineProps<PageProps>(), {
+    userFilters: () => ({ search: '' }),
+    users: () => ({ data: [] }),
+    sort: () => ({ dir: 'desc' as Dir }),
+    filters: () => ({ language: '' }),
+    availableLanguages: () => [],
+});
 
-const changeSort = (dir: string) => {
-    const next = dir === 'asc' || dir === 'desc' ? dir : 'desc';
-    sortDir.value = next;
+const sortDir = ref<Dir>(props.sort.dir ?? 'desc');
+const localSelectedLanguage = ref<string>(props.filters.language ?? '');
+
+watch(localSelectedLanguage, (val) => {
     router.reload({
-        data: { dir: next },
+        data: {
+            language: val || undefined,
+            dir: sortDir.value,
+            skill_id: props.selected?.skill_id ?? undefined,
+        },
+    });
+});
+
+const changeSort = (dir: Dir) => {
+    sortDir.value = dir;
+    router.reload({
+        data: {
+            dir,
+            language: localSelectedLanguage.value || undefined,
+            skill_id: props.selected?.skill_id ?? undefined,
+        },
         preserveUrl: true,
     });
 };
@@ -52,19 +78,27 @@ const changeSort = (dir: string) => {
                 Welcome to the battleground where developers rise and legends are made.
             </p>
 
-            <div class="mb-6 flex justify-end">
-                <DropdownMenu>
-                    <DropdownMenuTrigger class="rounded-md border px-3 py-2 text-sm font-medium shadow-sm hover:bg-gray-100 dark:hover:bg-gray-800">
-                        Sort: {{ sortDir }}
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" class="bg-white dark:bg-gray-900">
-                        <DropdownMenuItem @click="changeSort('asc')">Asc</DropdownMenuItem>
-                        <DropdownMenuItem @click="changeSort('desc')">Desc</DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+            <div class="mb-6 flex items-center justify-between gap-4">
+                <div class="sm:w-48">
+                    <LanguageFilter v-model="localSelectedLanguage" :languages="availableLanguages" placeholder="All Languages" />
+                </div>
+
+                <div>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger
+                            class="rounded-md border px-3 py-2 text-sm font-medium shadow-sm hover:bg-gray-100 dark:hover:bg-gray-800"
+                        >
+                            Sort: {{ sortDir }}
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" class="bg-white dark:bg-gray-900">
+                            <DropdownMenuItem @click="changeSort('asc')">Ascending</DropdownMenuItem>
+                            <DropdownMenuItem @click="changeSort('desc')">Descending</DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
             </div>
 
-            <LeaderboardTable :users="props.leaderboardUsers" />
+            <LeaderboardTable :users="props.leaderboardUsers" :selected-language="props.filters?.language || ''" />
             <Pagination :links="props.leaderboardUsers.links" />
         </div>
     </AppLayout>
