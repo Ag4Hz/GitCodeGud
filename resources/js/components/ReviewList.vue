@@ -1,7 +1,10 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3'
-import UserRow from '@/components/UserRow.vue'
-import { type ReviewsPayload } from '@/types/review'
+import UserRow from '@/components/UserRow.vue';
+import { useInfiniteScroll } from '@/composables/useInfiniteScroll';
+import { useIntersect } from '@/composables/useIntersect';
+import { type ReviewsPayload } from '@/types/review';
+import { router } from '@inertiajs/vue3';
+import { ref } from 'vue';
 
 withDefaults(defineProps<{ reviews: ReviewsPayload }>(), {
     reviews: () => ({
@@ -9,33 +12,24 @@ withDefaults(defineProps<{ reviews: ReviewsPayload }>(), {
         current_page: 1,
         last_page: 1,
         next_page_url: null,
-        prev_page_url: null
-    })
-})
+        prev_page_url: null,
+    }),
+});
 
-const goToProfile = (user: { id: number }) => {
-    window.location.href = `/users/${user.id}`
-}
+const { items, loadMoreItems } = useInfiniteScroll('reviews');
+const landmark = ref<HTMLElement | null>(null);
+const goToProfile = (user: { id: number }) => router.visit(`/users/${user.id}`);
+
+useIntersect(landmark, loadMoreItems, { rootMargin: '0px 0px 150px 0px' });
 </script>
-
-
 
 <template>
     <div class="space-y-4">
-        <div v-if="!reviews.data?.length" class="text-sm text-gray-500 dark:text-gray-400">
-            No reviews yet.
-        </div>
+        <div v-if="!items.length" class="text-sm text-gray-500 dark:text-gray-400">No reviews yet.</div>
 
-        <div
-            v-for="review in reviews.data"
-            :key="review.id"
-            class="rounded-xl border border-gray-200 bg-white/50 p-4 dark:border-white/10 dark:bg-white/5"
-        >
+        <div v-for="review in items" :key="review.id" class="rounded-xl border border-gray-200 bg-white/50 p-4 dark:border-white/10 dark:bg-white/5">
             <div @click="goToProfile(review.reviewer)" class="cursor-pointer">
-                <UserRow
-                    :user="review.reviewer"
-                    class="!px-0 !py-0 !rounded-none hover:!bg-transparent dark:hover:!bg-transparent"
-                />
+                <UserRow :user="review.reviewer" class="!rounded-none !px-0 !py-0 hover:!bg-transparent dark:hover:!bg-transparent" />
             </div>
 
             <p v-if="review.comment" class="mt-2 text-sm text-gray-700 dark:text-gray-300">
@@ -47,28 +41,6 @@ const goToProfile = (user: { id: number }) => {
             </div>
         </div>
 
-        <div v-if="reviews.last_page > 1" class="flex items-center justify-center gap-4 pt-2">
-            <Link
-                v-if="reviews.prev_page_url"
-                :href="reviews.prev_page_url"
-                preserve-scroll
-                class="text-sm underline hover:no-underline"
-            >
-                Previous
-            </Link>
-
-            <span class="text-sm text-gray-600 dark:text-gray-300">
-                Page {{ reviews.current_page }} of {{ reviews.last_page }}
-            </span>
-
-            <Link
-                v-if="reviews.next_page_url"
-                :href="reviews.next_page_url"
-                preserve-scroll
-                class="text-sm underline hover:no-underline"
-            >
-                Next
-            </Link>
-        </div>
+        <div ref="landmark" aria-hidden="true"></div>
     </div>
 </template>
