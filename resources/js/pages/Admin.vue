@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/composables/useToast';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
-import { getRandomErrorMessage, getRandomSuccessMessage } from '@/utils/toastMessages';
+import { getAdminMessage } from '@/utils/toastMessages';
 import { Head, useForm } from '@inertiajs/vue3';
 import { ChartArea, Settings } from 'lucide-vue-next';
 import { computed, h, ref } from 'vue';
@@ -196,10 +196,10 @@ const saveXPSettings = () => {
         onSuccess: () => {
             editingXPSettings.value = false;
             editingXPField.value = null;
-            showSuccess(getRandomSuccessMessage('en'));
+            showSuccess(getAdminMessage('success', 'base', 'en'));
         },
         onError: () => {
-            showError(getRandomErrorMessage('en'));
+            showError(getAdminMessage('error', 'base', 'en'));
         },
     });
 };
@@ -243,10 +243,10 @@ const saveThresholds = () => {
         onSuccess: () => {
             editingThresholds.value = false;
             editingIndex.value = null;
-            showSuccess(getRandomSuccessMessage('en'));
+            showSuccess(getAdminMessage('success', 'threshold', 'en'));
         },
         onError: () => {
-            showError(getRandomErrorMessage('en'));
+            showError(getAdminMessage('error', 'threshold', 'en'));
         },
     });
 };
@@ -294,10 +294,10 @@ const saveSkillWeights = () => {
         onSuccess: () => {
             editingSkillWeights.value = false;
             editingSkillIndex.value = null;
-            showSuccess(getRandomSuccessMessage('en'));
+            showSuccess(getAdminMessage('success', 'skill_weights', 'en'));
         },
         onError: () => {
-            showError(getRandomErrorMessage('en'));
+            showError(getAdminMessage('error', 'skill_weights', 'en'));
         },
     });
 };
@@ -355,11 +355,11 @@ const saveAllChanges = () => {
             editingXPField.value = null;
             editingIndex.value = null;
             editingSkillIndex.value = null;
-            showSuccess(getRandomSuccessMessage('en'));
+            showSuccess(getAdminMessage('success', 'batch_update', 'en'));
             updateHasChanges();
         },
         onError: () => {
-            showError(getRandomErrorMessage('en'));
+            showError(getAdminMessage('error', 'batch_update', 'en'));
         },
     });
 };

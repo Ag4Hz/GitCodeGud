@@ -1,39 +1,80 @@
-const successMessages: { [key: string]: string[] } = {
-    en: ['All done, like a boss! 😎', "Success! You're on fire! 🔥", 'Boom! Task completed! 💥', 'Nailed it! 🎯', 'Mission accomplished! 🚀'],
-    hu: ['Kész, mint a rakéta! 🚀', 'Siker! Te vagy a legjobb! 🌟', 'Bumm! Feladat teljesítve! 💥', 'Elintézve! 🎯', 'Küldetés teljesítve! 🚀'],
-    de: ['Geschafft, wie ein Boss! 😎', 'Erfolg! Du bist der Hammer! 🔥', 'Bumm! Aufgabe erledigt! 💥', 'Volltreffer! 🎯', 'Mission erfüllt! 🚀'],
+type Locale = 'en';
+type AdminMessage = {
+    [key in Locale]: {
+        success: { [action: string]: string };
+        error: { [action: string]: string };
+    };
+};
+type BountyMessage = {
+    [key in Locale]: {
+        success: { [action: string]: string };
+        error: { [action: string]: string };
+    };
+};
+type XPSyncMessage = {
+    [key in Locale]: {
+        success: { [action: string]: string };
+        error: { [action: string]: string };
+    };
 };
 
-const errorMessages: { [key: string]: string[] } = {
-    en: [
-        'Oops! Something went wrong. 😬',
-        'Uh-oh! Try again later. ⏳',
-        'Yikes! An error occurred. ⚠️',
-        "Well, that didn't work. 🤷‍♂️",
-        'Error 404: Fun not found. 🚫',
-    ],
-    hu: [
-        'Hoppá! Valami hiba történt. 😬',
-        'Jaj! Próbáld újra később. ⏳',
-        'Hűha! Hiba történt. ⚠️',
-        'Nos, ez nem sikerült. 🤷‍♂️',
-        'Hiba 404: Szórakozás nem található. 🚫',
-    ],
-    de: [
-        'Ups! Etwas ist schief gelaufen. 😬',
-        'Oh oh! Versuche es später noch einmal. ⏳',
-        'Hoppla! Ein Fehler ist aufgetreten. ⚠️',
-        'Nun, das hat nicht funktioniert. 🤷‍♂️',
-        'Fehler 404: Spaß nicht gefunden. 🚫',
-    ],
+const adminMessages: AdminMessage = {
+    en: {
+        success: {
+            base: 'Base settings updated successfully.',
+            threshold: 'Threshold settings updated successfully.',
+            skill_weights: 'Skill weights updated successfully.',
+            batch_update: 'All settings updated successfully.',
+        },
+        error: {
+            base: 'Failed to update base settings.',
+            threshold: 'Failed to update threshold settings.',
+            skill_weights: 'Failed to update skill weights.',
+            batch_update: 'Failed to update all settings.',
+        },
+    },
 };
 
-export function getRandomSuccessMessage(locale: string): string {
-    const messages = successMessages[locale] || successMessages['en'];
-    return messages[Math.floor(Math.random() * messages.length)];
+const bountyMessages: BountyMessage = {
+    en: {
+        success: {
+            create: 'Bounty created successfully.',
+            update: 'Bounty updated successfully.',
+            delete: 'Bounty deleted successfully.',
+            claim: 'Bounty claimed successfully.',
+            unclaim: 'Bounty unclaimed successfully.',
+            complete: 'Bounty marked as complete successfully.',
+        },
+        error: {
+            create: 'Failed to create bounty.',
+            update: 'Failed to update bounty.',
+            delete: 'Failed to delete bounty.',
+            claim: 'Failed to claim bounty.',
+            unclaim: 'Failed to unclaim bounty.',
+            complete: 'Failed to mark bounty as complete.',
+        },
+    },
+};
+
+const xpSyncMessages: XPSyncMessage = {
+    en: {
+        success: {
+            sync: 'XP synchronized successfully.',
+        },
+        error: {
+            sync: 'Failed to synchronize XP.',
+        },
+    },
+};
+
+export function getAdminMessage(type: 'success' | 'error', action: string, locale: Locale = 'en'): string {
+    return adminMessages[locale]?.[type]?.[action] || 'Operation completed.';
 }
 
-export function getRandomErrorMessage(locale: string): string {
-    const messages = errorMessages[locale] || errorMessages['en'];
-    return messages[Math.floor(Math.random() * messages.length)];
+export function getBountyMessage(type: 'success' | 'error', action: string, locale: Locale = 'en'): string {
+    return bountyMessages[locale]?.[type]?.[action] || 'Operation completed.';
+}
+
+export function getXPSyncMessage(type: 'success' | 'error', action: string, locale: Locale = 'en'): string {
+    return xpSyncMessages[locale]?.[type]?.[action] || 'Operation completed.';
 }

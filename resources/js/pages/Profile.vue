@@ -15,7 +15,7 @@ import { useXP } from '@/composables/useXP';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem, type User } from '@/types';
 import { type BountyPagination } from '@/types/bounty';
-import { getRandomErrorMessage, getRandomSuccessMessage } from '@/utils/toastMessages';
+import { getBountyMessage, getXPSyncMessage } from '@/utils/toastMessages';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { AlertCircle, Code, Database, Github, Plus, Settings, Star, Target, Trophy, Zap } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
@@ -166,10 +166,10 @@ const syncGitHubSkills = () => {
         {
             onFinish: () => (syncing.value = false),
             onSuccess: () => {
-                showSuccess(getRandomSuccessMessage('en'));
+                showSuccess(getXPSyncMessage('success', 'sync', 'en'));
             },
             onError: () => {
-                showError(getRandomErrorMessage('en'));
+                showError(getXPSyncMessage('error', 'sync', 'en'));
             },
         },
     );
@@ -188,11 +188,11 @@ const submitBounty = () => {
         onSuccess: () => {
             showCreateForm.value = false;
             bountyForm.reset();
-            showSuccess(getRandomSuccessMessage('en'));
+            showSuccess(getBountyMessage('success', 'create', 'en'));
         },
         onError: (errors) => {
             console.log('Validation errors:', errors);
-            showError(getRandomErrorMessage('en'));
+            showError(getBountyMessage('error', 'create', 'en'));
         },
     });
 };
