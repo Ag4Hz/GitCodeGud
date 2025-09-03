@@ -41,6 +41,7 @@ watch(localSelectedLanguage, (val) => {
             language: val || undefined,
             dir: sortDir.value,
             skill_id: props.selected?.skill_id ?? undefined,
+            page: 1,
         },
     });
 });
@@ -52,8 +53,8 @@ const changeSort = (dir: Dir) => {
             dir,
             language: localSelectedLanguage.value || undefined,
             skill_id: props.selected?.skill_id ?? undefined,
+            page: 1,
         },
-        preserveUrl: true,
     });
 };
 </script>

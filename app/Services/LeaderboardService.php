@@ -6,16 +6,17 @@ use App\Models\User;
 use App\Models\Skill;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Query\Builder;
 
 class LeaderboardService
 {
+    public bool $languageWithoutSkill = false;
     public function getLeaderboardPageData(Request $request): array
     {
         $filters = $this->extractFilters($request);
         $sortDirection = $this->extractSortDirection($request);
-
         $skillId = $this->resolveSkillId($filters['language']);
-        $leaderboardUsers = $this->getLeaderboardUsers($sortDirection, $skillId, $filters['language']);
+        $leaderboardUsers = $this->getLeaderboard($sortDirection, $skillId, $filters['language']);
 
         $bountyData = $this->getBountyData($request);
         $userData = $this->getUserSearchData($filters['user_search']);
@@ -37,20 +38,11 @@ class LeaderboardService
         ];
     }
 
-    private function getLeaderboardUsers(string $direction, ?int $skillId, string $language): LengthAwarePaginator
-    {
-        if ($language && !$skillId) {
-            return $this->getEmptyPaginator();
-        }
-
-        return $this->getLeaderboard($direction, $skillId);
-    }
-
-    public function getLeaderboard(string $direction = 'desc', ?int $skillId = null): LengthAwarePaginator
+    public function getLeaderboard(string $direction = 'desc', ?int $skillId = null, ?string $language,): LengthAwarePaginator
     {
         $direction = $this->validateDirection($direction);
 
-        $query = $this->buildLeaderboardQuery($skillId, $direction);
+        $query = $this->buildLeaderboardQuery($skillId, $direction, $language);
 
         $paginator = $query
             ->paginate(10)
@@ -86,20 +78,21 @@ class LeaderboardService
         return UserService::searchUser($listedUsers);
     }
 
-    private function buildLeaderboardQuery(?int $skillId, string $direction)
+    private function buildLeaderboardQuery(?int $skillId, ?string $direction, ?string $language)
     {
         $query = User::query()->select('users.*');
-
         if ($skillId) {
             $query
                 ->join('user_skills', 'user_skills.user_id', '=', 'users.id')
                 ->where('user_skills.skill_id', $skillId)
+                ->when($language && !$skillId, function (Builder $query){
+                    $query->whereNotNull('user_skills.xp');
+                })
                 ->addSelect('user_skills.xp as skill_xp')
                 ->orderBy('user_skills.xp', $direction);
         } else {
             $query->orderBy('users.xp', $direction);
         }
-
         $query->orderBy('users.id');
 
         return $query;
@@ -131,15 +124,6 @@ class LeaderboardService
             ->where('skill_name', $language)
             ->value('id');
     }
-
-    private function getEmptyPaginator(): LengthAwarePaginator
-    {
-        return User::query()
-            ->whereNull('id')
-            ->paginate(10)
-            ->withQueryString();
-    }
-
     private function validateDirection(string $direction): string
     {
         return strtolower($direction) === 'asc' ? 'asc' : 'desc';
