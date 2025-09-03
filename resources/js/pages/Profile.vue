@@ -14,6 +14,7 @@ import { getXPSyncMessage } from '@/utils/toastMessages';
 import { Head, router } from '@inertiajs/vue3';
 import { Code, Database, Settings, Star, Target, Trophy, Zap } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
+import ReviewList from '@/components/ReviewList.vue';
 
 const { success: showSuccess, error: showError } = useToast();
 
@@ -47,12 +48,16 @@ interface Props {
         next_page_url: string | null;
         avatar: string | null;
     };
+    reviews: { data: any[], current_page: number, last_page: number, next_page_url: string|null, prev_page_url: string|null }
+
 }
 
 const props = withDefaults(defineProps<Props>(), {
     isFollowing: false,
     followers: Object,
+    reviews: () => ({ data: [], current_page: 1, last_page: 1, next_page_url: null, prev_page_url: null }),
 });
+
 
 const isOwner = computed(() => props.isOwner);
 
@@ -368,6 +373,7 @@ function unfollow() {
                         </CardContent>
                     </Card>
                 </div>
+                <ReviewList :reviews="props.reviews" />
             </div>
         </div>
 

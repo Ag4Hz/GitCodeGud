@@ -32,6 +32,12 @@ class ProfileController extends Controller
         $this->followStatsService->attachCounts($user);
 
         $bounties = $this->userBountyService->getUserBountiesWithDeleted($user);
+
+        $reviews = $user->reviewsReceived()
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+
         return Inertia::render('Profile', [
             'user' => array_merge(
                 XPHelper::getUserWithXP($user),
@@ -45,6 +51,7 @@ class ProfileController extends Controller
             'bounties' => BountyResource::collection($bounties),
             'isFollowing' => auth()->check()? auth()->user()->isFollowing($user): false,
             'isOwner' => $request->user() && $request->user()->id === $user->id,
+            'reviews'    => $reviews,
         ]);
     }
     public function syncGitHubSkills(Request $request): bool
