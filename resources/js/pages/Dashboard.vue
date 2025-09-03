@@ -1,29 +1,31 @@
 <script setup lang="ts">
 import NavFooter from '@/components/NavFooter.vue';
-import PopularBountiesPanel from '@/components/PopularBountiesPanel.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import PopularBountiesPanel from '@/components/PopularBountiesPanel.vue';
 import { Eye } from 'lucide-vue-next';
-import UserSearch from '@/components/UserSearch.vue';
 import { contactLinks } from '@/composables/contactLinks';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { AppPageProps, BreadcrumbItem } from '@/types';
 import { BountyStatus, type Bounty, type BountyPagination } from '@/types/bounty';
 import { Head, router } from '@inertiajs/vue3';
-import { Calendar, ChevronDown, DollarSign, Eye, Loader2, Search, Target } from 'lucide-vue-next';
+import { Calendar, DollarSign, Loader2, Search, Target } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
 import  LanguageFilter from '@/components/LanguageFilter.vue';
+type User = { id: number; nickname: string; avatar: string; name: string };
 
 type PageProps = AppPageProps<{
     bounties?: BountyPagination;
     availableLanguages?: string[];
     filters?: {
+        search?: string;
         bounty_search?: string;
         language?: string;
     };
+    userFilters?: { search?: string };
+    users?: { data?: User[] };
     popularBounties?: PopularBounty[];
     trendingBounties?: PopularBounty[];
 }>;
@@ -36,6 +38,8 @@ const props = withDefaults(defineProps<PageProps>(), {
     bounties: () => ({ data: [], total: 0, current_page: 1, last_page: 1 }),
     availableLanguages: () => [],
     filters: () => ({ search: '', language: '' }),
+    userFilters: () => ({ search: '' }),
+    users: () => ({ data: [] }),
     popularBounties: () => [],
     trendingBounties: () => [],
 });
