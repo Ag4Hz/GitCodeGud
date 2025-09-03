@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Services\GitHubApiService;
 use Database\Factories\SubmissionFactory;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,7 +13,6 @@ class Submission extends Model
 {
     /** @use HasFactory<SubmissionFactory> */
     use HasFactory;
-
 
     protected $fillable = [
         'bounty_id',
@@ -36,60 +37,61 @@ class Submission extends Model
     {
         return $this->belongsTo(User::class);
     }
-    public function getPrNumberAttribute(): ?int
+
+    protected function prNumber(): Attribute
     {
-        if (!$this->pr_url) {
-            return null;
-        }
+        return Attribute::make(
+            get: function (): ?int {
+                if (!$this->pr_url) {
+                    return null;
+                }
 
-        $prInfo = \App\Services\GitHubApiService::parseGitHubPullRequestUrl($this->pr_url);
-        return $prInfo['pr_number'] ?? null;
+                $prInfo = GitHubApiService::parseGitHubPullRequestUrl($this->pr_url);
+                return $prInfo['pr_number'] ?? null;
+            }
+        );
     }
-
-    /**
-     * Get the repository full name from the PR URL
-     */
-    public function getRepoFullNameAttribute(): ?string
+    protected function repoFullName(): Attribute
     {
-        if (!$this->pr_url) {
-            return null;
-        }
+        return Attribute::make(
+            get: function (): ?string {
+                if (!$this->pr_url) {
+                    return null;
+                }
 
-        $prInfo = \App\Services\GitHubApiService::parseGitHubPullRequestUrl($this->pr_url);
-        return $prInfo['repo_full_name'] ?? null;
+                $prInfo = GitHubApiService::parseGitHubPullRequestUrl($this->pr_url);
+                return $prInfo['repo_full_name'] ?? null;
+            }
+        );
     }
-
-    /**
-     * Get the repository owner from the PR URL
-     */
-    public function getRepoOwnerAttribute(): ?string
+    protected function repoOwner(): Attribute
     {
-        if (!$this->pr_url) {
-            return null;
-        }
+        return Attribute::make(
+            get: function (): ?string {
+                if (!$this->pr_url) {
+                    return null;
+                }
 
-        $prInfo = \App\Services\GitHubApiService::parseGitHubPullRequestUrl($this->pr_url);
-        return $prInfo['owner'] ?? null;
+                $prInfo = GitHubApiService::parseGitHubPullRequestUrl($this->pr_url);
+                return $prInfo['owner'] ?? null;
+            }
+        );
     }
-
-    /**
-     * Get the repository name from the PR URL
-     */
-    public function getRepoNameAttribute(): ?string
+    protected function repoName(): Attribute
     {
-        if (!$this->pr_url) {
-            return null;
-        }
+        return Attribute::make(
+            get: function (): ?string {
+                if (!$this->pr_url) {
+                    return null;
+                }
 
-        $prInfo = \App\Services\GitHubApiService::parseGitHubPullRequestUrl($this->pr_url);
-        return $prInfo['name'] ?? null;
+                $prInfo = GitHubApiService::parseGitHubPullRequestUrl($this->pr_url);
+                return $prInfo['name'] ?? null;
+            }
+        );
     }
-
-    /**
-     * Check if the PR URL is valid
-     */
     public function hasValidPrUrl(): bool
     {
-        return $this->pr_url && \App\Services\GitHubApiService::isValidGitHubPullRequestUrl($this->pr_url);
+        return $this->pr_url && GitHubApiService::isValidGitHubPullRequestUrl($this->pr_url);
     }
 }
