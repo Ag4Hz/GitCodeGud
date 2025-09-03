@@ -4,7 +4,6 @@ import PopularBountiesPanel from '@/components/PopularBountiesPanel.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import PopularBountiesPanel from '@/components/PopularBountiesPanel.vue';
 import { Eye } from 'lucide-vue-next';
@@ -16,6 +15,7 @@ import { BountyStatus, type Bounty, type BountyPagination } from '@/types/bounty
 import { Head, router } from '@inertiajs/vue3';
 import { Calendar, ChevronDown, DollarSign, Eye, Loader2, Search, Target } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
+import  LanguageFilter from '@/components/LanguageFilter.vue';
 
 type PageProps = AppPageProps<{
     bounties?: BountyPagination;
@@ -259,27 +259,11 @@ const hasActiveBountyFilters = computed(() => {
 
                             <!-- Language Filter -->
                             <div class="sm:w-48">
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger as-child>
-                                        <Button variant="outline" class="w-full justify-between">
-                                            {{ localSelectedLanguage || 'All Languages' }}
-                                            <ChevronDown class="h-4 w-4 opacity-50" />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent class="w-48">
-                                        <DropdownMenuItem @click="localSelectedLanguage = ''" :class="{ 'bg-accent': !localSelectedLanguage }">
-                                            All Languages
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem
-                                            v-for="language in availableLanguages"
-                                            :key="language"
-                                            @click="localSelectedLanguage = language"
-                                            :class="{ 'bg-accent': localSelectedLanguage === language }"
-                                        >
-                                            {{ language }}
-                                        </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
+                                <LanguageFilter
+                                    v-model="localSelectedLanguage"
+                                    :languages="availableLanguages"
+                                    placeholder="All Languages"
+                                />
                             </div>
 
                             <!-- Clear Filters Button -->
