@@ -14,7 +14,7 @@
     <header class="mx-auto w-full max-w-7xl px-6 pt-6 sm:pt-10 lg:col-span-2 lg:col-start-1 lg:row-start-1 lg:px-8">
         <a href="#">
             <span class="sr-only">GitCodeGud</span>
-            <img src="http://127.0.0.1:5173/resources/assets/title.svg" alt="Logo title"
+            <img src="/assets/images/title.svg" alt="Logo title"
                  class="h-10 w-auto sm:h-12">
         </a>
     </header>
