@@ -13,6 +13,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -30,9 +31,25 @@ class BountyController extends Controller
         return Inertia::render('bounties/Index', $bountySearchData);
     }
 
-    public function store(BountyStoreRequest $request): RedirectResponse
+    public function create(Request $request): Response
     {
-        $validated = $request->validated();
+        $userBounties = Bounty::with(['issue.repo'])
+            ->whereHas('issue.repo', function ($query) use ($request) {
+                $query->where('user_id', $request->user()->id);
+            })
+            ->withTrashed()
+            ->latest()
+            ->paginate(10);
+
+        return Inertia::render('bounties/CreateBounty', [
+            'bounties' => $userBounties,
+        ]);
+    }
+
+    public function store(BountyStoreRequest $request)
+    {
+        $validated = $request->getValidatedDataForStore();
+
         $repoInfo = GitHubApiService::parseGitHubUrl($validated['repo_url']);
 
         $repo = Repo::where('git_id', $repoInfo['full_name'])->first();
@@ -67,8 +84,9 @@ class BountyController extends Controller
         ]);
 
         return redirect()
-            ->route('profile.show')
-            ->with('success', 'Bounty created successfully!');
+            ->route('bounties.create')
+            ->with('success', 'Bounty created successfully!')
+            ->with('refresh', true);
     }
 
     public function show(Request $request, Bounty $bounty): Response
@@ -87,23 +105,10 @@ class BountyController extends Controller
 
     private function trackBountyView(Request $request, Bounty $bounty): void
     {
-        $user = $request->user();
-
-        if ($user) {
-            $cacheKey = "user_{$user->id}_viewed_bounty_{$bounty->id}";
-
-            if (\Illuminate\Support\Facades\Cache::add($cacheKey, true, now()->addDay())) {
-                $bounty->increment('views');
-            }
-        } else {
-            $sessionKey = 'viewed_bounties';
-            $viewedBounties = session()->get($sessionKey, []);
-
-            if (!in_array($bounty->id, $viewedBounties)) {
-                $bounty->increment('views');
-                $viewedBounties[] = $bounty->id;
-                session()->put($sessionKey, $viewedBounties);
-            }
+        $sessionKey = 'bounty_viewed_' . $bounty->id;
+        if (!$request->session()->has($sessionKey)) {
+            $bounty->increment('views');
+            $request->session()->put($sessionKey, true);
         }
     }
 
@@ -160,7 +165,7 @@ class BountyController extends Controller
         ]);
 
         return redirect()
-            ->route('profile.show')
+            ->route('bounties.create')
             ->with('success', 'Bounty updated successfully!');
     }
 
@@ -172,7 +177,7 @@ class BountyController extends Controller
         $bounty->delete();
 
         return redirect()
-            ->route('profile.show')
+            ->route('bounties.create')
             ->with('success', 'Bounty archived successfully! You can restore it from your archived bounties.');
     }
 
@@ -184,7 +189,122 @@ class BountyController extends Controller
         $bounty->restore();
 
         return redirect()
-            ->route('profile.show')
+            ->route('bounties.create')
             ->with('success', 'Bounty restored successfully!');
     }
+
+    public function searchRepositories(Request $request): Response
+    {
+        $user = $request->user();
+        $query = $request->input('query', '');
+        $page = $request->input('page', 1);
+        $perPage = 10;
+
+        $repositories = [];
+
+        if ($user && $user->oauth_provider_token) {
+            $githubApi = new GitHubApiService($user);
+            $allRepositories = $githubApi->getUserRepositories([
+                'type' => 'owner',
+                'sort' => 'updated',
+                'per_page' => $perPage,
+                'page' => $page
+            ]);
+
+            if (!empty($query)) {
+                $allRepositories = array_filter($allRepositories, function($repo) use ($query) {
+                    return stripos($repo['name'], $query) !== false ||
+                        stripos($repo['full_name'], $query) !== false ||
+                        (isset($repo['description']) && stripos($repo['description'], $query) !== false);
+                });
+            }
+
+            $repositories = array_map(function($repo) {
+                return [
+                    'id' => $repo['id'],
+                    'name' => $repo['name'],
+                    'full_name' => $repo['full_name'],
+                    'description' => $repo['description'] ?? '',
+                    'url' => $repo['html_url'],
+                    'language' => $repo['language'] ?? 'Unknown',
+                    'updated_at' => $repo['updated_at'],
+                    'open_issues_count' => $repo['open_issues_count'] ?? 0,
+                ];
+            }, array_values($allRepositories));
+        }
+
+        return Inertia::render('bounties/CreateBounty', [
+            'repositories' => $repositories,
+            'query' => $query,
+            'total' => count($repositories),
+            'page' => $page,
+            'hasMore' => count($repositories) >= $perPage,
+        ]);
+    }
+
+    public function getRepositoryIssues(Request $request, string $owner, string $repo): Response
+    {
+        $user = $request->user();
+        $repoFullName = $owner . '/' . $repo;
+        $page = $request->input('page', 1);
+        $perPage = 10;
+
+        $issues = [];
+
+        if ($user && $user->oauth_provider_token) {
+            $client = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $user->oauth_provider_token,
+                'Accept' => 'application/vnd.github.v3+json',
+                'User-Agent' => 'GitCodeGud-App',
+            ])->baseUrl('https://api.github.com');
+
+            $response = $client->get("/repos/{$repoFullName}/issues", [
+                'state' => 'open',
+                'per_page' => $perPage,
+                'page' => $page,
+                'sort' => 'updated',
+                'direction' => 'desc'
+            ]);
+
+            if ($response->successful()) {
+                $allIssues = $response->json();
+                $allIssues = array_filter($allIssues, function($issue) {
+                    return !isset($issue['pull_request']);
+                });
+
+                $issues = array_map(function($issue) {
+                    return [
+                        'id' => $issue['id'],
+                        'number' => $issue['number'],
+                        'title' => $issue['title'],
+                        'body' => $issue['body'] ?? '',
+                        'url' => $issue['html_url'],
+                        'state' => $issue['state'],
+                        'created_at' => $issue['created_at'],
+                        'updated_at' => $issue['updated_at'],
+                        'user' => [
+                            'login' => $issue['user']['login'],
+                            'avatar_url' => $issue['user']['avatar_url']
+                        ],
+                        'labels' => array_map(function($label) {
+                            return [
+                                'name' => $label['name'],
+                                'color' => $label['color']
+                            ];
+                        }, $issue['labels'] ?? []),
+                        'comments' => $issue['comments'] ?? 0,
+                    ];
+                }, array_values($allIssues));
+            }
+        }
+
+        return Inertia::render('bounties/CreateBounty', [
+            'issues' => $issues,
+            'repository' => $repoFullName,
+            'total' => count($issues),
+            'page' => $page,
+            'hasMore' => count($issues) >= $perPage,
+        ]);
+    }
+
 }

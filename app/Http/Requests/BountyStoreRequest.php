@@ -15,85 +15,99 @@ class BountyStoreRequest extends FormRequest
         if (!auth()->check()) {
             return false;
         }
-        $user = $this->user();
-        $repoUrl = $this->input('repo_url');
 
-        return $user->can('createForRepository', [Bounty::class, $repoUrl]);
+        $user = $this->user();
+        $githubApi = new GitHubApiService($user);
+        if (!$githubApi->hasValidToken()) {
+            return false;
+        }
+
+        if ($this->filled('repository_full_name')) {
+            $repositoryFullName = $this->input('repository_full_name');
+            $repoUrl = 'https://github.com/' . $repositoryFullName;
+
+            return $user->can('createForRepository', [Bounty::class, $repoUrl]);
+        }
+        return false;
     }
 
     public function rules(): array
     {
-        return [
+        $rules = [
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:2000'],
             'reward_xp' => ['required', 'integer', 'min:1', 'max:1000'],
-            'repo_url' => ['required', 'url'],
-            'issue_url' => ['required', 'url'],
         ];
+
+        if ($this->filled('repository_full_name') && $this->filled('issue_number')) {
+            $rules['repository_full_name'] = ['required', 'string'];
+            $rules['issue_number'] = ['required', 'integer', 'min:1'];
+        }
+
+        return $rules;
     }
 
-    /**
-     * Configure the validator instance.
-     */
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator) {
-            $this->validateGitHubUrls($validator);
+
+            if ($this->filled('repository_full_name') && $this->filled('issue_number')) {
+                $this->validateSelectedRepositoryAndIssue($validator);
+            }
         });
     }
 
-    private function validateGitHubUrls(Validator $validator): void
+    private function validateSelectedRepositoryAndIssue(Validator $validator): void
     {
-        $repoUrl = $this->input('repo_url');
-        $issueUrl = $this->input('issue_url');
+        $repositoryFullName = $this->input('repository_full_name');
+        $issueNumber = $this->input('issue_number');
 
-        // 1. Validate repo URL format using GitHubApiService
-        if (!GitHubApiService::isValidGitHubUrl($repoUrl)) {
-            $validator->errors()->add('repo_url', 'Please enter a valid GitHub repository URL.');
+        if (!$repositoryFullName || !$issueNumber) {
+            $validator->errors()->add('repository_full_name', 'Please select both a repository and an issue.');
             return;
         }
 
-        // 2. Validate issue URL format using GitHubApiService
-        if (!GitHubApiService::isValidGitHubIssueUrl($issueUrl)) {
-            $validator->errors()->add('issue_url', 'Please enter a valid GitHub issue URL.');
-            return;
-        }
+        $issueUrl = "https://github.com/{$repositoryFullName}/issues/{$issueNumber}";
 
-        // 3. Parse URLs using GitHubApiService
-        $repoInfo = GitHubApiService::parseGitHubUrl($repoUrl);
-        $issueInfo = GitHubApiService::parseGitHubIssueUrl($issueUrl);
-
-        // 4. Check if issue belongs to the same repository
-        if ($repoInfo['full_name'] !== $issueInfo['repo_full_name']) {
-            $validator->errors()->add('issue_url', 'The issue must belong to the specified repository.');
-            return;
-        }
-
-        // 5. Check if bounty already exists for this issue URL
         $existingIssue = Issue::where('url', $issueUrl)->first();
         if ($existingIssue) {
-            $existingBounty = Bounty::where('issue_id', $existingIssue->id)->exists();
+            $existingBounty = Bounty::withTrashed()->where('issue_id', $existingIssue->id)->first();
             if ($existingBounty) {
-                $validator->errors()->add('issue_url', 'A bounty already exists for this GitHub issue. Each issue can only have one bounty.');
+                if ($existingBounty->trashed()) {
+                    $validator->errors()->add('issue_number', 'An archived bounty already exists for this issue. Please restore the existing bounty instead of creating a new one.');
+                } else {
+                    $validator->errors()->add('issue_number', 'A bounty already exists for this issue. Each issue can only have one bounty.');
+                }
                 return;
             }
         }
+
         $user = $this->user();
         $githubApi = new GitHubApiService($user);
 
         if (!$githubApi->hasValidToken()) {
-            $validator->errors()->add('issue_url', 'GitHub API access is required to validate issues.');
+            $validator->errors()->add('repository_full_name', 'GitHub API access is required to validate issues.');
             return;
         }
 
-        try {
-            $isOpen = $githubApi->isIssueOpen($issueInfo['repo_full_name'], $issueInfo['issue_number']);
+        $isOpen = $githubApi->isIssueOpen($repositoryFullName, $issueNumber);
 
-            if (!$isOpen) {
-                $validator->errors()->add('issue_url', 'Only open GitHub issues can be used for bounties.');
-            }
-        } catch (\Exception $e) {
-            $validator->errors()->add('issue_url', 'Could not verify issue status. Please ensure the issue exists and you have access to it.');
+        if (!$isOpen) {
+            $validator->errors()->add('issue_number', 'Only open GitHub issues can be used for bounties.');
         }
+    }
+
+    public function getValidatedDataForStore(): array
+    {
+        $validated = $this->validated();
+
+        if (isset($validated['repository_full_name']) && isset($validated['issue_number'])) {
+            $validated['repo_url'] = "https://github.com/{$validated['repository_full_name']}";
+            $validated['issue_url'] = "https://github.com/{$validated['repository_full_name']}/issues/{$validated['issue_number']}";
+
+            unset($validated['repository_full_name'], $validated['issue_number']);
+        }
+
+        return $validated;
     }
 }
