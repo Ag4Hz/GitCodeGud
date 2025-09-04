@@ -146,4 +146,17 @@ class AdminController extends Controller
         Cache::forget('admin_xp_stats');
         Cache::forget('admin_skill_weights');
     }
+
+    public function recalculateXp() {
+        try {
+            DB::statement('CALL recalculate_user_xp()');
+            $this->clearAllCaches();
+
+            return back()->with('success', 'XP settings updated successfully!');
+        } catch (\Exception $e) {
+            \Log::error('XP recalculation failed: ' . $e->getMessage());
+
+            return back()->withErrors('An error occurred while recalculating XP. Please try again later.');
+        }
+    }
 }
