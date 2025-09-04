@@ -52,13 +52,17 @@ export function useToast() {
     };
 
     // 👇 Add shorthand helpers
-    const success = (message: string, duration = 5000, sticky = false) => addToast({ type: 'success', message, duration, sticky });
+    const success = (message: string, duration = 5000, sticky = false) =>
+        addToast({ type: 'success', message, duration, sticky });
 
-    const error = (message: string, duration = 5000, sticky = false) => addToast({ type: 'error', message, duration, sticky });
+    const error = (message: string, duration = 5000, sticky = false) =>
+        addToast({ type: 'error', message, duration, sticky });
 
-    const info = (message: string, duration = 5000, sticky = false) => addToast({ type: 'info', message, duration, sticky });
+    const info = (message: string, duration = 5000, sticky = false) =>
+        addToast({ type: 'info', message, duration, sticky });
 
-    const warning = (message: string, duration = 5000, sticky = false) => addToast({ type: 'warning', message, duration, sticky });
+    const warning = (message: string, duration = 5000, sticky = false) =>
+        addToast({ type: 'warning', message, duration, sticky });
 
     return {
         toasts: state.toasts,
