@@ -62,6 +62,7 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::post('/admin/skill-weights', [AdminController::class, 'updateSkillWeights'])->name('admin.skill-weights.update');
     Route::post('/admin/xp-settings', [AdminController::class, 'updateXPSettings'])->name('admin.xp-settings.update');
     Route::post('/admin/settings/batch-update', [AdminController::class, 'updateAllSettings'])->name('admin.settings.batch-update');
+    Route::post('/admin/xp-settings/recalculate', [AdminController::class, 'recalculateXp'])->name('admin.xp-settings.recalculate');
 });
 
 Route::middleware('auth')->group(function () {
