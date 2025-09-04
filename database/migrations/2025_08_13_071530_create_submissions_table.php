@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('bounty_id')->constrained('bounties')->cascadeOnDelete();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->string('pr_url');
             $table->enum('status', ['pending','accepted','rejected'])->default('pending');
             $table->timestamps();
 

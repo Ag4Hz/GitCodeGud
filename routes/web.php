@@ -7,6 +7,8 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GitHubSkillController;
+use App\Http\Controllers\SubmissionController;
+use App\Http\Controllers\SubmissionStatusController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -29,6 +31,14 @@ Route::middleware('auth')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/profile/sync-github-skills', [GitHubSkillController::class, 'sync'])
         ->name('profile.sync-github-skills');
+});
+
+Route::middleware('auth')->group(function () {
+    Route::get('/bounties/{bounty}/submit', [SubmissionController::class, 'create'])->name('submissions.create');
+    Route::post('/submissions', [SubmissionController::class, 'store'])->name('submissions.store');
+    Route::get('/submissions/{submission}', [SubmissionController::class, 'show'])->name('submissions.show');
+    Route::get('/bounties/{bounty}/submissions', [BountyController::class, 'submissions'])->name('bounties.submissions');
+    Route::patch('/submissions/{submission}/status', [SubmissionStatusController::class, 'update'])->name('submissions.status.update');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
