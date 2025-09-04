@@ -21,6 +21,9 @@ class AppServiceProvider extends ServiceProvider
         Submission::class => SubmissionPolicy::class,
         ];
 
+    /**
+     * Bootstrap any application services.
+     */
     public function boot(): void
     {
         //
