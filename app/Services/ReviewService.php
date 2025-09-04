@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Review;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Submission;
@@ -34,6 +35,27 @@ class ReviewService
                     ->where('repos.user_id', '=', $firstUserId);
             })
             ->exists();
+    }
+
+    public function create(User $profileUser): bool
+    {
+        $viewerId = Auth::id();
+
+        if (!$viewerId || $viewerId === $profileUser->id) {
+            return false;
+        }
+
+        return $this->hasSubmissionBetweenUsers($viewerId, $profileUser->id);
+    }
+
+    public function createReview(int $revieweeId, string $comment): Review
+    {
+        return Review::create([
+            'user_id'     => Auth::id(),
+            'reviewee_id' => $revieweeId,
+            'comment'     => $comment,
+            'date'        => now(),
+        ]);
     }
 
     public function getUserReviews(User $user): LengthAwarePaginator

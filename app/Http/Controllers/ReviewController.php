@@ -5,18 +5,18 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreReviewRequest;
 use App\Models\Review;
 use Illuminate\Support\Facades\Auth;
+use App\Services\ReviewService;
 
 class ReviewController extends Controller
 {
-
+    public function __construct(
+        private ReviewService $reviewService,
+    ) {}
     public function store(StoreReviewRequest $request)
     {
-        Review::create([
-            'user_id'     => Auth::id(),
-            'reviewee_id' => $request->integer('reviewee_id'),
-            'comment'     => $request->string('comment'),
-            'date'        => now(),
-        ]);
+
+        $review = $this->reviewService->createReview($request->integer('reviewee_id'), $request->string('comment'));
+
 
         return redirect()
             ->route('users.show', $request->integer('reviewee_id'));
