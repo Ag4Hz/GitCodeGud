@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\User;
 use App\Models\Skill;
 use App\Models\SkillUser;
+use Illuminate\Support\Facades\DB;
 
 class GitHubSkillSyncService
 {
@@ -59,24 +60,31 @@ class GitHubSkillSyncService
 
     private function updateUserSkills(User $user, array $languageStats): void
     {
-        collect($languageStats)
-            ->each(function ($bytes, $language) use ($user) {
-                $skillType = $this->getSkillType($language);
+        // Get XP settings once per sync
+        $baseXp = (int) DB::table('general_settings')->where('key', 'base_xp')->value('value') ?? 100;
+        $bonusMultiplier = (float) DB::table('general_settings')->where('key', 'bonus_multiplier')->value('value') ?? 1.5;
 
-                $skill = Skill::firstOrCreate([
-                    'skill_name' => $language
-                ], [
-                    'type' => $skillType
-                ]);
+        collect($languageStats)->each(function ($bytes, $language) use ($user, $baseXp, $bonusMultiplier) {
+            $skillType = $this->getSkillType($language);
 
-                SkillUser::firstOrCreate([
+            $skill = Skill::firstOrCreate(
+                ['skill_name' => $language],
+                ['type' => $skillType, 'multiplier' => 1]
+            );
+
+            $initialXp = (int) round($baseXp * $bonusMultiplier * $skill->multiplier);
+
+            SkillUser::firstOrCreate(
+                [
                     'user_id' => $user->id,
                     'skill_id' => $skill->id,
-                ], [
-                    'xp' => 1,
-                    'level' => 1,
-                ]);
-            });
+                ],
+                [
+                    'xp' => $initialXp,
+                    'level' => (int) floor($initialXp / 1000),
+                ]
+            );
+        });
     }
 
     private function getSkillType(string $language): string
