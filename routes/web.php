@@ -69,5 +69,16 @@ Route::middleware('auth')->group(function () {
     Route::get('/leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard');
 });
 
+Route::get('/api/xp-settings/last-update', function () {
+    $general = DB::table('general_settings')->max('updated_at');
+    $thresholds = DB::table('level_thresholds')->max('updated_at');
+    $skills = DB::table('user_skills')->max('updated_at');
+
+    $latest = collect([$general, $thresholds, $skills])->filter()->max();
+
+    return response()->json(['updated_at' => $latest]);
+});
+
+
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
