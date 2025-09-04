@@ -62,8 +62,8 @@ class GitHubApiService
                 if (isset($matches[$index])) {
                     $value = trim($matches[$index]);
 
-                    if ($fieldName === 'name') {
-                        $value = rtrim($value, '.git');
+                    if ($fieldName === 'name' && str_ends_with($value, '.git')) {
+                        $value = substr($value, 0, -4);
                     }
 
                     $result[$fieldName] = $fieldName === 'issue_number' || $fieldName === 'pr_number'

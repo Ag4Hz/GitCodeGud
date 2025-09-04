@@ -28,6 +28,7 @@ class BountyPolicy
 
     public function createForRepository(User $user, string $repoUrl): bool
     {
+
         $githubApi = new GitHubApiService($user);
 
         if (!$githubApi->hasValidToken()) {
@@ -39,17 +40,12 @@ class BountyPolicy
             return false;
         }
 
-        try {
-            $gitId = $repoInfo['owner'] . '/' . $repoInfo['name'];
-            $repoData = $githubApi->getRepository($gitId);
+        $gitId = $repoInfo['owner'] . '/' . $repoInfo['name'];
+        $repoData = $githubApi->getRepository($gitId);
 
-            return isset($repoData['permissions']) &&
-                ($repoData['permissions']['admin'] || $repoData['permissions']['push']);
-        } catch (\Exception $e) {
-            return false;
-        }
+        return isset($repoData['permissions']) &&
+            ($repoData['permissions']['admin'] || $repoData['permissions']['push']);
     }
-
     public function update(User $user, Bounty $bounty): bool
     {
         if ($bounty->trashed()) {
@@ -73,6 +69,7 @@ class BountyPolicy
         }
         return $this->isOwner($user, $bounty);
     }
+
     /**
      * Check if user can submit to a bounty.
      */
@@ -93,6 +90,7 @@ class BountyPolicy
             $bounty->issue->repo &&
             $bounty->issue->repo->user_id === $user->id;
     }
+
     /**
      * Check if user can export bounty data.
      */

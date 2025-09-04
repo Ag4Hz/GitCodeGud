@@ -14,7 +14,7 @@ import { getInitials } from '@/composables/useInitials';
 import { useXP } from '@/composables/useXP';
 import type { BreadcrumbItem, NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
-import { LayoutGrid, Menu, Search, ShieldCheck } from 'lucide-vue-next';
+import { LayoutGrid, Menu, Plus, Search, ShieldCheck, Trophy } from 'lucide-vue-next';
 import { computed } from 'vue';
 
 interface Props {
@@ -51,6 +51,12 @@ const mainNavItems = computed((): NavItem[] => {
         {
             title: 'Leaderboard',
             href: '/leaderboard',
+            icon: Trophy,
+        },
+        {
+            title: 'Create Bounty',
+            href: '/bounties/create',
+            icon: Plus,
         },
     ];
 

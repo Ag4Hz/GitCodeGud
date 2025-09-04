@@ -8,6 +8,7 @@ use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GitHubSkillController;
 use Illuminate\Support\Facades\Route;
+
 use Inertia\Inertia;
 
 Route::get('/', function () {
@@ -32,13 +33,17 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/bounties/create', [BountyController::class, 'create'])->name('bounties.create');
     Route::resource('bounties', BountyController::class)->except(['create']);
     Route::patch('/bounties/{id}/restore', [BountyController::class, 'restore'])
         ->where('id', '[0-9]+')
         ->name('bounties.restore');
 
-    Route::get('/api/bounties/popular', [BountyController::class, 'popular'])
-        ->name('bounties.popular');
+    Route::get('/bounty/search-repositories', [BountyController::class, 'searchRepositories'])
+        ->name('bounty.search-repositories');
+
+    Route::get('/bounty/repositories/{owner}/{repo}/issues', [BountyController::class, 'getRepositoryIssues'])
+        ->name('bounty.repository-issues');
 });
 
 Route::middleware(['auth', 'verified', 'admin'])->group(function () {
