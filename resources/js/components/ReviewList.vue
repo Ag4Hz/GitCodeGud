@@ -5,6 +5,7 @@ import { useIntersect } from '@/composables/useIntersect';
 import { type ReviewsPayload } from '@/types/review';
 import { router } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import { useDateFormatter } from '@/composables/useDateFormatter';
 
 withDefaults(defineProps<{ reviews: ReviewsPayload }>(), {
     reviews: () => ({
@@ -18,6 +19,7 @@ withDefaults(defineProps<{ reviews: ReviewsPayload }>(), {
 
 const { items, loadMoreItems } = useInfiniteScroll('reviews');
 const landmark = ref<HTMLElement | null>(null);
+const { formatDate } = useDateFormatter();
 const goToProfile = (user: { id: number }) => router.visit(`/users/${user.id}`);
 
 useIntersect(landmark, loadMoreItems, { rootMargin: '0px 0px 150px 0px' });
@@ -37,7 +39,7 @@ useIntersect(landmark, loadMoreItems, { rootMargin: '0px 0px 150px 0px' });
             </p>
 
             <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                {{ new Date(review.created_at).toLocaleDateString() }}
+                {{ formatDate(review.created_at) }}
             </div>
         </div>
 
