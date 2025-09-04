@@ -23,9 +23,9 @@ class UpdateSkillWeightsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'skill_weights' => 'required|array',
-            'skill_weights.*.skill_name' => 'required|string|max:255',
-            'skill_weights.*.multiplier' => 'required|numeric|min:0.1|max:10'
+            'skillWeights' => 'required|array',
+            'skillWeights.*.skill_name' => 'required|string|max:255',
+            'skillWeights.*.multiplier' => 'required|numeric|min:0.1|max:10'
         ];
     }
 }
