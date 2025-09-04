@@ -34,7 +34,7 @@ async function checkXpUpdate() {
 
         if (data.updated_at && data.updated_at !== lastXpUpdate) {
             lastXpUpdate = data.updated_at;
-            showSuccess('XP settings have been updated! Progression may differ from now on.');
+            showSuccess('XP settings have been updated! Progression may differ from now on.', undefined, true);
         }
     } catch (e) {
         console.error('Failed to check XP update', e);

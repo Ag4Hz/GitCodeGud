@@ -5,6 +5,7 @@ export interface Toast {
     type: 'success' | 'error' | 'info' | 'warning';
     message: string;
     duration?: number;
+    sticky?: boolean;
 }
 interface ToastState {
     toasts: Toast[];
@@ -26,12 +27,13 @@ export function useToast() {
         const newToast: Toast = {
             id,
             duration: 5000,
+            sticky: false,
             ...toast,
         };
 
         state.toasts.push(newToast);
 
-        if (newToast.duration && newToast.duration > 0) {
+        if (!newToast.sticky && newToast.duration && newToast.duration > 0) {
             setTimeout(() => removeToast(id), newToast.duration);
         }
 
@@ -50,13 +52,17 @@ export function useToast() {
     };
 
     // 👇 Add shorthand helpers
-    const success = (message: string, duration = 5000) => addToast({ type: 'success', message, duration });
+    const success = (message: string, duration = 5000, sticky = false) =>
+        addToast({ type: 'success', message, duration, sticky });
 
-    const error = (message: string, duration = 5000) => addToast({ type: 'error', message, duration });
+    const error = (message: string, duration = 5000, sticky = false) =>
+        addToast({ type: 'error', message, duration, sticky });
 
-    const info = (message: string, duration = 5000) => addToast({ type: 'info', message, duration });
+    const info = (message: string, duration = 5000, sticky = false) =>
+        addToast({ type: 'info', message, duration, sticky });
 
-    const warning = (message: string, duration = 5000) => addToast({ type: 'warning', message, duration });
+    const warning = (message: string, duration = 5000, sticky = false) =>
+        addToast({ type: 'warning', message, duration, sticky });
 
     return {
         toasts: state.toasts,
