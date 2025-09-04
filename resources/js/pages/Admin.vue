@@ -500,8 +500,7 @@ const xpSettingsTab = ref<XPSettingsTab>(XPSettingsTab.Base);
                     </Card>
 
                     <!-- Normalize XP for every user -->
-                    <Button variant="destructive" class="bg-red-600 hover:bg-red-700 md:col-span-2 lg:col-span-1"
-                    @click="recalculateXp">
+                    <Button variant="destructive" class="bg-red-600 hover:bg-red-700 md:col-span-2 lg:col-span-1" @click="recalculateXp">
                         <FolderSync />
                         Normalize XP for All Users
                     </Button>
