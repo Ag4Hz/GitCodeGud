@@ -13,12 +13,51 @@ import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { AlertCircle, Github, Plus, CheckCircle } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
 
-interface Props {
-    bounties?: BountyPagination;
+interface Repository {
+    id: number;
+    name: string;
+    full_name: string;
+    description: string;
+    url: string;
+    language: string;
+    updated_at: string;
+    open_issues_count: number;
 }
 
-const { bounties } = withDefaults(defineProps<Props>(), {
+interface Issue {
+    id: number;
+    number: number;
+    title: string;
+    body: string;
+    url: string;
+    state: string;
+    created_at: string;
+    updated_at: string;
+    user: {
+        login: string;
+        avatar_url: string;
+    };
+    labels: Array<{
+        name: string;
+        color: string;
+    }>;
+    comments: number;
+}
+
+interface Props {
+    bounties?: BountyPagination;
+    repositories?: Repository[];
+    issues?: Issue[];
+    repositoryQuery?: string;
+    selectedRepository?: string;
+}
+
+const props = withDefaults(defineProps<Props>(), {
     bounties: () => ({ data: [], total: 0, current_page: 1, last_page: 1 }),
+    repositories: () => [],
+    issues: () => [],
+    repositoryQuery: '',
+    selectedRepository: '',
 });
 
 const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
@@ -139,7 +178,7 @@ watch(flashSuccess, (newValue) => {
                             <Plus class="h-5 w-5" />
                             Bounty Details
                         </CardTitle>
-                        <CardDescription> Fill out the details below to create your bounty </CardDescription>
+                        <CardDescription>Fill out the details below to create your bounty</CardDescription>
                     </CardHeader>
 
                     <CardContent>
@@ -222,7 +261,14 @@ watch(flashSuccess, (newValue) => {
                         </div>
 
                         <form @submit.prevent="submitBounty" class="space-y-6">
-                            <BountySearchForm ref="bountySearchFormRef" :form="bountyForm" @updateForm="updateBountyForm"
+                            <BountySearchForm
+                                ref="bountySearchFormRef"
+                                :form="bountyForm"
+                                :repositories="props.repositories"
+                                :issues="props.issues"
+                                :repository-query="props.repositoryQuery"
+                                :selected-repository="props.selectedRepository"
+                                @updateForm="updateBountyForm"
                             />
 
                             <!-- Title -->
@@ -292,7 +338,7 @@ watch(flashSuccess, (newValue) => {
 
                 <!-- My Bounties List -->
                 <div class="space-y-6">
-                    <BountyManagement :bounties="bounties" :canEditBounties="true" />
+                    <BountyManagement :bounties="props.bounties" :canEditBounties="true" />
                 </div>
             </div>
         </div>

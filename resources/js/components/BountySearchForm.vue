@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import InputError from '@/components/InputError.vue'
 import { Search, Loader2, X, AlertCircle, MessageCircle, Info } from 'lucide-vue-next'
-import { router } from '@inertiajs/vue3'
+import { router, usePage } from '@inertiajs/vue3'
 
 interface Repository {
     id: number
@@ -41,24 +41,30 @@ interface Issue {
 
 interface Props {
     form: any
+    repositories?: Repository[]
+    issues?: Issue[]
+    repositoryQuery?: string
+    selectedRepository?: string
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+    repositories: () => [],
+    issues: () => [],
+    repositoryQuery: '',
+    selectedRepository: '',
+})
+
 const emit = defineEmits<{
     updateForm: [field: string, value: any]
 }>()
 
+const page = usePage()
+
 const clearForm = () => {
-    selectedRepository.value = null
+    selectedRepo.value = null
     selectedIssue.value = null
     repositorySearchQuery.value = ''
     issueSearchQuery.value = ''
-    repositories.value = []
-    issues.value = []
-    repositoryCurrentPage.value = 1
-    repositoryHasMorePages.value = true
-    issueCurrentPage.value = 1
-    issueHasMorePages.value = true
     showRepositoryDropdown.value = false
     showIssueDropdown.value = false
 }
@@ -67,31 +73,29 @@ defineExpose({
     clearForm
 })
 
-
-const repositories = ref<Repository[]>([])
-const issues = ref<Issue[]>([])
-const repositorySearchQuery = ref('')
+const repositorySearchQuery = ref(props.repositoryQuery)
 const issueSearchQuery = ref('')
-const selectedRepository = ref<Repository | null>(null)
+const selectedRepo = ref<Repository | null>(null)
 const selectedIssue = ref<Issue | null>(null)
 const repositoryLoading = ref(false)
 const issueLoading = ref(false)
 const showRepositoryDropdown = ref(false)
 const showIssueDropdown = ref(false)
-const repositoryCurrentPage = ref(1)
-const repositoryHasMorePages = ref(true)
-const issueCurrentPage = ref(1)
-const issueHasMorePages = ref(true)
-
-const repositoryScrollContainer = ref<HTMLElement | null>(null)
-const issueScrollContainer = ref<HTMLElement | null>(null)
 
 let repositorySearchTimeout: number | null = null
 
+if (props.selectedRepository && props.repositories.length > 0) {
+    const found = props.repositories.find(repo => repo.full_name === props.selectedRepository)
+    if (found) {
+        selectedRepo.value = found
+        repositorySearchQuery.value = found.name
+    }
+}
+
 const filteredIssues = computed(() => {
-    if (!issueSearchQuery.value.trim()) return issues.value
+    if (!issueSearchQuery.value.trim()) return props.issues
     const query = issueSearchQuery.value.toLowerCase().trim()
-    return issues.value.filter(issue =>
+    return props.issues.filter(issue =>
         issue.title.toLowerCase().includes(query) ||
         issue.number.toString().includes(query) ||
         (issue.body && issue.body.toLowerCase().includes(query)) ||
@@ -109,149 +113,66 @@ const debouncedSearchRepositories = () => {
     }
 
     repositorySearchTimeout = setTimeout(() => {
-        searchRepositories(true)
-    }, 300)
+        searchRepositories()
+    }, 500)
 }
 
 const handleRepositoryFocus = () => {
-    if (repositories.value.length > 0) {
+    if (props.repositories.length > 0) {
         showRepositoryDropdown.value = true
     }
 }
 
-const handleRepositoryScroll = (event: Event) => {
-    const target = event.target as HTMLElement
-    const { scrollTop, scrollHeight, clientHeight } = target
-
-    if (scrollHeight - scrollTop - clientHeight < 50 &&
-        !repositoryLoading.value &&
-        repositoryHasMorePages.value) {
-        loadMoreRepositories()
-    }
-}
-
-const handleIssueScroll = (event: Event) => {
-    const target = event.target as HTMLElement
-    const { scrollTop, scrollHeight, clientHeight } = target
-
-    if (scrollHeight - scrollTop - clientHeight < 50 &&
-        !issueLoading.value &&
-        issueHasMorePages.value) {
-        loadMoreIssues()
-    }
-}
-
-const searchRepositories = async (reset: boolean = false) => {
+const searchRepositories = () => {
     if (!repositorySearchQuery.value.trim()) {
         showRepositoryDropdown.value = false
-        repositories.value = []
-        repositoryCurrentPage.value = 1
-        repositoryHasMorePages.value = true
         return
-    }
-
-    if (reset) {
-        repositories.value = []
-        repositoryCurrentPage.value = 1
-        repositoryHasMorePages.value = true
     }
 
     showRepositoryDropdown.value = true
     repositoryLoading.value = true
 
-    try {
-        router.visit(route('bounty.search-repositories'), {
-            method: 'get',
-            data: {
-                query: repositorySearchQuery.value,
-                page: repositoryCurrentPage.value
-            },
-            only: ['repositories'],
-            preserveState: true,
-            preserveScroll: true,
-            replace: true,
-            onSuccess: (page: any) => {
-                const newRepos = page.props.repositories || []
-
-                if (reset) {
-                    repositories.value = newRepos
-                } else {
-                    repositories.value = [...repositories.value, ...newRepos]
-                }
-
-                repositoryHasMorePages.value = newRepos.length >= 50
-            },
-            onFinish: () => {
-                repositoryLoading.value = false
-            }
-        })
-    } catch (error) {
-        console.error('Failed to search repositories:', error)
-        repositoryLoading.value = false
-    }
-}
-
-const loadMoreRepositories = async () => {
-    if (repositoryLoading.value || !repositoryHasMorePages.value) return
-
-    repositoryCurrentPage.value += 1
-    await searchRepositories(false)
-}
-
-const searchIssues = async (reset: boolean = false) => {
-    if (!selectedRepository.value) return
-
-    if (reset) {
-        issues.value = []
-        issueCurrentPage.value = 1
-        issueHasMorePages.value = true
-    }
-
-    showIssueDropdown.value = true
-    issueLoading.value = true
-
-    const [owner, repo] = selectedRepository.value.full_name.split('/')
-
-    router.visit(route('bounty.repository-issues', { owner, repo }), {
+    router.visit(route('bounty.search-repositories'), {
         method: 'get',
         data: {
-            page: issueCurrentPage.value
+            query: repositorySearchQuery.value,
         },
-        only: ['issues'],
         preserveState: true,
         preserveScroll: true,
         replace: true,
-        onSuccess: (page: any) => {
-            const newIssues = page.props.issues || []
-
-            if (reset) {
-                issues.value = newIssues
-            } else {
-                issues.value = [...issues.value, ...newIssues]
-            }
-            issueHasMorePages.value = newIssues.length >= 50
-        },
         onFinish: () => {
-            issueLoading.value = false
+            repositoryLoading.value = false
+            showRepositoryDropdown.value = true
         }
     })
 }
 
-const loadMoreIssues = async () => {
-    if (issueLoading.value || !issueHasMorePages.value) return
+const searchIssues = () => {
+    if (!selectedRepo.value) return
 
-    issueCurrentPage.value += 1
-    await searchIssues(false)
+    issueLoading.value = true
+    const [owner, repo] = selectedRepo.value.full_name.split('/')
+
+    router.visit(route('bounty.repository-issues', { owner, repo }), {
+        method: 'get',
+        preserveState: true,
+        preserveScroll: true,
+        replace: true,
+        onFinish: () => {
+            issueLoading.value = false
+            showIssueDropdown.value = true
+        }
+    })
 }
 
 const selectRepository = (repository: Repository) => {
-    selectedRepository.value = repository
+    selectedRepo.value = repository
     repositorySearchQuery.value = repository.name
     showRepositoryDropdown.value = false
 
     clearIssue()
     updateFormField('repository_full_name', repository.full_name)
-    searchIssues(true)
+    searchIssues()
 }
 
 const selectIssue = (issue: Issue) => {
@@ -273,22 +194,23 @@ const selectIssue = (issue: Issue) => {
 }
 
 const clearRepository = () => {
-    selectedRepository.value = null
+    selectedRepo.value = null
     repositorySearchQuery.value = ''
-    repositories.value = []
-    repositoryCurrentPage.value = 1
-    repositoryHasMorePages.value = true
     clearIssue()
     updateFormField('repository_full_name', '')
     showRepositoryDropdown.value = false
+
+    // Clear search results
+    router.visit(route('bounties.create'), {
+        preserveState: true,
+        preserveScroll: true,
+        replace: true,
+    })
 }
 
 const clearIssue = () => {
     selectedIssue.value = null
     issueSearchQuery.value = ''
-    issues.value = []
-    issueCurrentPage.value = 1
-    issueHasMorePages.value = true
     updateFormField('issue_number', '')
     showIssueDropdown.value = false
 }
@@ -328,17 +250,19 @@ watch(() => props.form.errors, (errors) => {
     }
 }, { deep: true })
 
-watch(issueSearchQuery, (newValue, oldValue) => {
-    console.log('issueSearchQuery changed from', oldValue, 'to', newValue)
-})
+// Watch for new repositories from backend
+watch(() => props.repositories, (newRepos) => {
+    if (newRepos.length > 0 && repositorySearchQuery.value.trim()) {
+        showRepositoryDropdown.value = true
+    }
+}, { immediate: true })
 
-watch(filteredIssues, (newValue) => {
-    console.log('filteredIssues updated, length:', newValue.length)
-})
-
-watch(showIssueDropdown, (newValue) => {
-    console.log('showIssueDropdown changed to:', newValue)
-})
+// Watch for new issues from backend
+watch(() => props.issues, (newIssues) => {
+    if (newIssues.length > 0 && selectedRepo.value) {
+        showIssueDropdown.value = true
+    }
+}, { immediate: true })
 </script>
 
 <template>
@@ -358,26 +282,21 @@ watch(showIssueDropdown, (newValue) => {
                     <Search class="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 </div>
 
-                <!-- Repository Dropdown with Infinite Scroll -->
+                <!-- Repository Dropdown -->
                 <div
-                    v-if="showRepositoryDropdown && (repositories.length > 0 || repositoryLoading)"
+                    v-if="showRepositoryDropdown && (props.repositories.length > 0 || repositoryLoading)"
                     class="absolute z-50 mt-1 w-full rounded-md border bg-popover shadow-lg"
                 >
-                    <div v-if="repositoryLoading && repositories.length === 0" class="p-3 text-center">
+                    <div v-if="repositoryLoading" class="p-3 text-center">
                         <Loader2 class="mx-auto h-4 w-4 animate-spin" />
                         <p class="text-sm text-muted-foreground">Loading repositories...</p>
                     </div>
-                    <div v-else-if="repositories.length === 0 && !repositoryLoading" class="p-3 text-center">
+                    <div v-else-if="props.repositories.length === 0" class="p-3 text-center">
                         <p class="text-sm text-muted-foreground">No repositories found</p>
                     </div>
-                    <div
-                        v-else
-                        class="max-h-60 overflow-y-auto"
-                        ref="repositoryScrollContainer"
-                        @scroll="handleRepositoryScroll"
-                    >
+                    <div v-else class="max-h-60 overflow-y-auto">
                         <button
-                            v-for="repo in repositories"
+                            v-for="repo in props.repositories"
                             :key="repo.id"
                             type="button"
                             class="flex w-full items-start gap-3 p-3 text-left hover:bg-accent transition-colors"
@@ -408,38 +327,27 @@ watch(showIssueDropdown, (newValue) => {
                                 </div>
                             </div>
                         </button>
-
-                        <!-- Loading more repositories -->
-                        <div v-if="repositoryLoading && repositories.length > 0" class="p-3 text-center">
-                            <Loader2 class="mx-auto h-4 w-4 animate-spin" />
-                            <p class="text-xs text-muted-foreground">Loading more repositories...</p>
-                        </div>
-
-                        <!-- End of results -->
-                        <div v-else-if="repositoryHasMorePages === false && repositories.length > 0" class="p-2 text-center">
-                            <p class="text-xs text-muted-foreground">No more repositories</p>
-                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Selected Repository Display -->
-            <div v-if="selectedRepository" class="rounded-lg border bg-accent/10 p-3">
+            <div v-if="selectedRepo" class="rounded-lg border bg-accent/10 p-3">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
                         <div
                             class="h-2 w-2 rounded-full bg-green-500"
-                            :title="selectedRepository.language"
+                            :title="selectedRepo.language"
                         ></div>
                         <div>
                             <div class="flex items-center gap-2">
-                                <span class="font-medium">{{ selectedRepository.name }}</span>
-                                <Badge v-if="selectedRepository.language" variant="secondary" class="text-xs">
-                                    {{ selectedRepository.language }}
+                                <span class="font-medium">{{ selectedRepo.name }}</span>
+                                <Badge v-if="selectedRepo.language" variant="secondary" class="text-xs">
+                                    {{ selectedRepo.language }}
                                 </Badge>
                             </div>
-                            <p v-if="selectedRepository.description" class="text-sm text-muted-foreground">
-                                {{ selectedRepository.description }}
+                            <p v-if="selectedRepo.description" class="text-sm text-muted-foreground">
+                                {{ selectedRepo.description }}
                             </p>
                         </div>
                     </div>
@@ -452,7 +360,7 @@ watch(showIssueDropdown, (newValue) => {
         </div>
 
         <!-- Issue Selection -->
-        <div v-if="selectedRepository" class="space-y-2">
+        <div v-if="selectedRepo" class="space-y-2">
             <Label>Select Issue *</Label>
             <div class="relative">
                 <div class="relative">
@@ -466,26 +374,21 @@ watch(showIssueDropdown, (newValue) => {
                     <Search class="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 </div>
 
-                <!-- Issues Dropdown with Infinite Scroll -->
+                <!-- Issues Dropdown -->
                 <div
                     v-if="showIssueDropdown && (filteredIssues.length > 0 || issueLoading)"
                     class="absolute z-40 mt-1 w-full rounded-md border bg-popover shadow-lg"
                 >
-                    <div v-if="issueLoading && issues.length === 0" class="p-3 text-center">
+                    <div v-if="issueLoading" class="p-3 text-center">
                         <Loader2 class="mx-auto h-4 w-4 animate-spin" />
                         <p class="text-sm text-muted-foreground">Loading issues...</p>
                     </div>
-                    <div v-else-if="filteredIssues.length === 0 && !issueLoading" class="p-3 text-center">
+                    <div v-else-if="filteredIssues.length === 0" class="p-3 text-center">
                         <p class="text-sm text-muted-foreground">
                             {{ issueSearchQuery.trim() ? 'No matching issues found' : 'No open issues found' }}
                         </p>
                     </div>
-                    <div
-                        v-else
-                        class="max-h-60 overflow-y-auto"
-                        ref="issueScrollContainer"
-                        @scroll="handleIssueScroll"
-                    >
+                    <div v-else class="max-h-60 overflow-y-auto">
                         <button
                             v-for="issue in filteredIssues"
                             :key="issue.id"
@@ -527,17 +430,6 @@ watch(showIssueDropdown, (newValue) => {
                                 </div>
                             </div>
                         </button>
-
-                        <!-- Loading more issues -->
-                        <div v-if="issueLoading && issues.length > 0" class="p-3 text-center">
-                            <Loader2 class="mx-auto h-4 w-4 animate-spin" />
-                            <p class="text-xs text-muted-foreground">Loading more issues...</p>
-                        </div>
-
-                        <!-- End of results -->
-                        <div v-else-if="issueHasMorePages === false && issues.length > 0" class="p-2 text-center">
-                            <p class="text-xs text-muted-foreground">No more issues</p>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -576,14 +468,14 @@ watch(showIssueDropdown, (newValue) => {
         </div>
 
         <!-- Quick Actions -->
-        <div v-if="selectedRepository && !selectedIssue && !issueLoading" class="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950">
+        <div v-if="selectedRepo && !selectedIssue && !issueLoading" class="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950">
             <div class="flex items-center gap-3">
                 <Info class="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
                 <div>
                     <h4 class="font-medium text-blue-800 dark:text-blue-200">Select an Issue</h4>
                     <p class="text-sm text-blue-700 dark:text-blue-300">
-                        Choose an open issue from <strong>{{ selectedRepository.name }}</strong> to create a bounty for.
-                        {{ issues.length > 0 ? `${issues.length} open issues available.` : 'No open issues found.' }}
+                        Choose an open issue from <strong>{{ selectedRepo.name }}</strong> to create a bounty for.
+                        {{ props.issues.length > 0 ? `${props.issues.length} open issues available.` : 'No open issues found.' }}
                     </p>
                 </div>
             </div>

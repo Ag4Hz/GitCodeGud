@@ -13,7 +13,6 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -41,12 +40,29 @@ class BountyController extends Controller
             ->latest()
             ->paginate(10);
 
+        $repositories = [];
+        $repositoryQuery = $request->input('repository_search', '');
+        if ($repositoryQuery) {
+            $repositories = $this->getRepositoryData($request)['repositories'];
+        }
+
+        $issues = [];
+        $selectedRepo = $request->input('selected_repository', '');
+        if ($selectedRepo) {
+            [$owner, $repo] = explode('/', $selectedRepo);
+            $issues = $this->getIssueData($request, $owner, $repo)['issues'];
+        }
+
         return Inertia::render('bounties/CreateBounty', [
             'bounties' => $userBounties,
+            'repositories' => $repositories,
+            'repositoryQuery' => $repositoryQuery,
+            'issues' => $issues,
+            'selectedRepository' => $selectedRepo,
         ]);
     }
 
-    public function store(BountyStoreRequest $request)
+    public function store(BountyStoreRequest $request): RedirectResponse
     {
         $validated = $request->getValidatedDataForStore();
 
@@ -193,10 +209,26 @@ class BountyController extends Controller
             ->with('success', 'Bounty restored successfully!');
     }
 
-    public function searchRepositories(Request $request): Response
+    public function searchRepositories(Request $request): RedirectResponse
+    {
+        return redirect()->route('bounties.create', [
+            'repository_search' => $request->input('query', ''),
+            'page' => $request->input('page', 1)
+        ]);
+    }
+
+    public function getRepositoryIssues(Request $request, string $owner, string $repo): RedirectResponse
+    {
+        return redirect()->route('bounties.create', [
+            'selected_repository' => $owner . '/' . $repo,
+            'issue_page' => $request->input('page', 1)
+        ]);
+    }
+
+    private function getRepositoryData(Request $request): array
     {
         $user = $request->user();
-        $query = $request->input('query', '');
+        $query = $request->input('repository_search', '');
         $page = $request->input('page', 1);
         $perPage = 10;
 
@@ -233,41 +265,36 @@ class BountyController extends Controller
             }, array_values($allRepositories));
         }
 
-        return Inertia::render('bounties/CreateBounty', [
+        return [
             'repositories' => $repositories,
             'query' => $query,
             'total' => count($repositories),
             'page' => $page,
             'hasMore' => count($repositories) >= $perPage,
-        ]);
+        ];
     }
 
-    public function getRepositoryIssues(Request $request, string $owner, string $repo): Response
+    private function getIssueData(Request $request, string $owner, string $repo): array
     {
         $user = $request->user();
         $repoFullName = $owner . '/' . $repo;
-        $page = $request->input('page', 1);
+        $page = $request->input('issue_page', 1);
         $perPage = 10;
 
         $issues = [];
 
         if ($user && $user->oauth_provider_token) {
-            $client = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $user->oauth_provider_token,
-                'Accept' => 'application/vnd.github.v3+json',
-                'User-Agent' => 'GitCodeGud-App',
-            ])->baseUrl('https://api.github.com');
+            $githubApi = new GitHubApiService($user);
 
-            $response = $client->get("/repos/{$repoFullName}/issues", [
-                'state' => 'open',
-                'per_page' => $perPage,
-                'page' => $page,
-                'sort' => 'updated',
-                'direction' => 'desc'
-            ]);
+            if (method_exists($githubApi, 'getRepositoryIssues')) {
+                $allIssues = $githubApi->getRepositoryIssues($repoFullName, [
+                    'state' => 'open',
+                    'per_page' => $perPage,
+                    'page' => $page,
+                    'sort' => 'updated',
+                    'direction' => 'desc'
+                ]);
 
-            if ($response->successful()) {
-                $allIssues = $response->json();
                 $allIssues = array_filter($allIssues, function($issue) {
                     return !isset($issue['pull_request']);
                 });
@@ -298,13 +325,12 @@ class BountyController extends Controller
             }
         }
 
-        return Inertia::render('bounties/CreateBounty', [
+        return [
             'issues' => $issues,
             'repository' => $repoFullName,
             'total' => count($issues),
             'page' => $page,
             'hasMore' => count($issues) >= $perPage,
-        ]);
+        ];
     }
-
 }

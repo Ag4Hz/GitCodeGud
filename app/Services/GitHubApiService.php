@@ -84,6 +84,19 @@ class GitHubApiService
         return null;
     }
 
+    public function getRepositoryIssues(string $repoFullName, array $params = []): array
+    {
+        $defaultParams = [
+            'state' => 'open',
+            'per_page' => 50,
+            'sort' => 'updated',
+            'direction' => 'desc'
+        ];
+
+        $response = $this->createClient()->get("/repos/{$repoFullName}/issues", array_merge($defaultParams, $params));
+        return $this->handleSimpleResponse($response);
+    }
+
     public static function parseGitHubUrl(string $url): ?array
     {
         $fieldMapping = [1 => 'owner', 2 => 'name'];
