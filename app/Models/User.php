@@ -38,6 +38,8 @@ class User extends Authenticatable
         'oauth_provider_refresh_token'
     ];
 
+    protected $appends = ['avatar'];
+
     public static function count(): int
     {
         return self::query()->count();
