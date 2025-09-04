@@ -30,9 +30,8 @@ class ProfileController extends Controller
         if (!$user) {
             $user = $request->user();
         }
-
         $this->followStatsService->attachCounts($user);
-
+        $canReview = $this->reviewService->canUserReview($user);
         $bounties = $this->userBountyService->getUserBountiesWithDeleted($user);
 
         return Inertia::render('Profile', [
@@ -49,6 +48,7 @@ class ProfileController extends Controller
             'isFollowing' => auth()->check()? auth()->user()->isFollowing($user): false,
             'isOwner' => $request->user() && $request->user()->id === $user->id,
             'reviews'    => $this->reviewService->getUserReviews($user)
+            'canReview'   => $canReview,
         ]);
     }
     public function syncGitHubSkills(Request $request): bool

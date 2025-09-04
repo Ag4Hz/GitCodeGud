@@ -50,6 +50,7 @@ interface Props {
         next_page_url: string | null;
         avatar: string | null;
     };
+    canReview?: boolean;
     reviews: ReviewsPayload
 }
 
@@ -380,6 +381,10 @@ function unfollow() {
                         <ReviewForm :reviewee-id="user.id" />
                 </section>
 
+                    <p v-else-if="!isOwner" class="text-sm text-gray-500">
+                        You can leave a review only after there’s at least one submission between you and {{ user.name }} (either direction).
+                    </p>
+                </div>
                 <ReviewList :reviews="props.reviews" />
             </div>
         </div>

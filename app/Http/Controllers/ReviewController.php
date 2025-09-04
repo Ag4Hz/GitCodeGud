@@ -19,7 +19,6 @@ class ReviewController extends Controller
         ]);
 
         return redirect()
-            ->route('users.show', $request->integer('reviewee_id'))
-            ->with('success', 'Review created successfully!');
+            ->route('users.show', $request->integer('reviewee_id'));
     }
 }

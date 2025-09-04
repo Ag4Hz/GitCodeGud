@@ -4,6 +4,8 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use App\Rules\CanReviewUser;
+use App\Services\ReviewService;
 
 class StoreReviewRequest extends FormRequest
 {
@@ -20,6 +22,7 @@ class StoreReviewRequest extends FormRequest
                 'integer',
                 'exists:users,id',
                 Rule::notIn([$this->user()->id]),
+                new CanReviewUser(app(ReviewService::class)),
             ],
             'comment' => ['required', 'string', 'min:3', 'max:4096'],
         ];

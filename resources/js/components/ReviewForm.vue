@@ -12,10 +12,9 @@ comment: '',
 })
 
 const submit = () => {
-form.post(route ? route('reviews.store') : '/reviews', {
-preserveScroll: true,
-onSuccess: () => form.reset('comment'),
-})
+    form.post(route('reviews.store'), {
+        onSuccess: () => form.reset('comment'),
+    })
 }
 </script>
 
