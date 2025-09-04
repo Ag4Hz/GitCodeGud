@@ -20,13 +20,7 @@ class DashboardController extends Controller
         $bountySearchService = new BountySearchService();
         $bountySearchData = $bountySearchService->getBountyData($request);
 
-        $userSearchTerm = $request->string('search_user');
-        $users = UserService::listUser($userSearchTerm);
-        $userSearchData = UserService::searchUser($users);
-
         $combinedProps = array_merge($bountySearchData, [
-            'userFilters' => ['search' => $userSearchTerm->toString()],
-            'users' => $userSearchData['users'] ?? ['data' => []],
             'popularBounties' => $this->popularBountiesService->getPopularBounties(10),
             'trendingBounties' => $this->popularBountiesService->getTrendingBounties(5),
         ]);

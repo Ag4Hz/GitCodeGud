@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { Head, Link, usePage, router } from '@inertiajs/vue3';
+import Pagination from '@/components/Pagination.vue';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import Pagination from '@/components/Pagination.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem, type User } from '@/types';
 import { type Bounty } from '@/types/bounty';
-import { Calendar, DollarSign, ExternalLink, Target, User as UserIcon, GitBranch, Users, Tag, Code, MessageSquare } from 'lucide-vue-next';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { Calendar, Code, DollarSign, ExternalLink, GitBranch, MessageSquare, Tag, Target, User as UserIcon, Users } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 
 interface BountyWithDetails extends Bounty {
@@ -134,7 +134,7 @@ const getRepositoryName = (repoUrl: string | undefined): string => {
 
     try {
         const url = new URL(repoUrl);
-        const pathParts = url.pathname.split('/').filter(part => part);
+        const pathParts = url.pathname.split('/').filter((part) => part);
         if (pathParts.length >= 2) {
             return `${pathParts[0]}/${pathParts[1]}`;
         }
@@ -166,6 +166,10 @@ const ownerInfo = computed(() => {
     };
 });
 
+const canUserSubmit = computed(() => {
+    return currentUser && props.bounty.status === 'open' && currentUser.id !== ownerInfo.value.id && !props.userSubmission;
+});
+
 const refreshComments = () => {
     loadingComments.value = true;
     router.reload({
@@ -191,6 +195,7 @@ const shouldShowPagination = computed(() => {
 
         <div class="px-4 py-6">
             <div class="mx-auto max-w-4xl space-y-6">
+                <!-- Main Bounty Card -->
                 <Card>
                     <CardHeader>
                         <div class="flex items-start justify-between">
@@ -211,7 +216,7 @@ const shouldShowPagination = computed(() => {
 
                             <!-- Action Buttons -->
                             <div class="flex flex-wrap gap-2">
-                                <Link v-if="canUserSubmit && !userSubmission" :href="`/bounties/${bounty.id}/submit`" as="button">
+                                <Link v-if="canUserSubmit" :href="`/bounties/${bounty.id}/submit`" as="button">
                                     <Button class="flex items-center gap-2">
                                         <Target class="h-4 w-4" />
                                         Submit Solution
@@ -257,8 +262,8 @@ const shouldShowPagination = computed(() => {
                                             View Pull Request
                                         </a>
                                         <span class="text-sm text-muted-foreground">
-                                        • Submitted {{ formatDate(userSubmission.created_at) }}
-                                    </span>
+                                            • Submitted {{ formatDate(userSubmission.created_at) }}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -462,14 +467,14 @@ const shouldShowPagination = computed(() => {
                                 <MessageSquare class="h-5 w-5" />
                                 GitHub Comments
                                 <span v-if="comments?.total && comments.total > 0" class="text-sm text-muted-foreground">
-                                ({{ comments.total }})
-                            </span>
+                                    ({{ comments.total }})
+                                </span>
                             </h3>
 
                             <!-- Loading State -->
                             <div v-if="loadingComments" class="flex items-center justify-center py-8">
                                 <div class="flex items-center gap-2 text-muted-foreground">
-                                    <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+                                    <div class="h-4 w-4 animate-spin rounded-full border-b-2 border-current"></div>
                                     <span>Loading comments...</span>
                                 </div>
                             </div>
@@ -523,8 +528,8 @@ const shouldShowPagination = computed(() => {
                                                         GitHub User
                                                     </Badge>
                                                     <span class="text-xs text-muted-foreground">
-                                                    {{ formatDate(comment.created_at) }}
-                                                </span>
+                                                        {{ formatDate(comment.created_at) }}
+                                                    </span>
                                                     <a
                                                         :href="comment.html_url"
                                                         target="_blank"
@@ -547,12 +552,12 @@ const shouldShowPagination = computed(() => {
 
                                                 <!-- Comment Actions -->
                                                 <div class="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                                                <span v-if="comment.updated_at !== comment.created_at">
-                                                    Edited {{ formatDate(comment.updated_at) }}
-                                                </span>
+                                                    <span v-if="comment.updated_at !== comment.created_at">
+                                                        Edited {{ formatDate(comment.updated_at) }}
+                                                    </span>
                                                     <span v-if="comment.reactions?.total_count > 0">
-                                                    {{ comment.reactions.total_count }} reactions
-                                                </span>
+                                                        {{ comment.reactions.total_count }} reactions
+                                                    </span>
                                                 </div>
                                             </div>
                                         </div>
@@ -623,8 +628,8 @@ const shouldShowPagination = computed(() => {
                                                     {{ submission.status.toUpperCase() }}
                                                 </Badge>
                                                 <span class="text-sm text-muted-foreground">
-                                                {{ formatDate(submission.created_at) }}
-                                            </span>
+                                                    {{ formatDate(submission.created_at) }}
+                                                </span>
                                             </div>
                                         </div>
                                     </CardContent>

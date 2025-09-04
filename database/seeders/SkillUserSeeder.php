@@ -5,8 +5,8 @@ namespace Database\Seeders;
 use App\Models\User;
 use App\Models\Skill;
 use App\Models\SkillUser;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class SkillUserSeeder extends Seeder
 {
@@ -31,12 +31,29 @@ class SkillUserSeeder extends Seeder
         foreach ($users as $user) {
             if (rand(1, 100) <= 10) continue;
 
-            $skillCount = rand(1, min(20, $skills->count()));
-            $randomSkills = $skills->random($skillCount);
+            // Assign each user a total XP cap bucket
+            $roll = rand(1, 100);
+            if ($roll <= 20) {
+                $userCap = rand(50000, 150000);   // weak (20%)
+            } elseif ($roll <= 60) {
+                $userCap = rand(150000, 350000);  // mid (40%)
+            } elseif ($roll <= 90) {
+                $userCap = rand(350000, 550000);  // strong (30%)
+            } else {
+                $userCap = rand(550000, 750000);  // elite (10%)
+            }
+
+            $usedXp = 0;
+            $overflowed = false;
+
+            // shuffle skills so each user gets a different spread
+            $randomSkills = $skills->shuffle();
 
             foreach ($randomSkills as $skill) {
-                $randomXp = rand(1, 100);
+                if ($overflowed) break; // stop after one overflow
 
+                // 🎲 Pick XP chunk like before
+                $randomXp = rand(1, 100);
                 if ($randomXp <= 40) {
                     $xp = rand(0, 5000);
                 } elseif ($randomXp <= 70) {
@@ -45,6 +62,16 @@ class SkillUserSeeder extends Seeder
                     $xp = rand(50000, 200000);
                 } else {
                     $xp = rand(200000, 500000);
+                }
+
+                // check cap
+                if ($usedXp + $xp > $userCap) {
+                    if (!$overflowed) {
+                        // allow one overflow
+                        $overflowed = true;
+                    } else {
+                        break; // hard stop
+                    }
                 }
 
                 SkillUser::firstOrCreate(
@@ -57,9 +84,12 @@ class SkillUserSeeder extends Seeder
                         'level' => $this->calculateLevel($xp),
                     ]
                 );
+
+                $usedXp += $xp;
             }
         }
 
+        // fill some extra random relations (same as before)
         $extraRelations = rand(100, 500);
         $createdRelations = 0;
         $maxAttempts = $extraRelations * 3;
@@ -81,6 +111,15 @@ class SkillUserSeeder extends Seeder
                 $createdRelations++;
             }
         }
+
+        DB::statement('
+        UPDATE users u
+            SET xp = (
+                SELECT COALESCE(SUM(xp), 0)
+                FROM user_skills us
+                WHERE us.user_id = u.id
+            )
+        ');
     }
 
     private function calculateLevel(int $xp): int

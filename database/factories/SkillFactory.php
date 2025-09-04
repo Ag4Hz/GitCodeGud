@@ -9,6 +9,21 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class SkillFactory extends Factory
 {
+    public static array $skills = [
+        ['skill_name' => 'PHP', 'type' => 'language'],
+        ['skill_name' => 'JavaScript', 'type' => 'language'],
+        ['skill_name' => 'Python', 'type' => 'language'],
+        ['skill_name' => 'Java', 'type' => 'language'],
+        ['skill_name' => 'C#', 'type' => 'language'],
+        ['skill_name' => 'C++', 'type' => 'language'],
+        ['skill_name' => 'Vue', 'type' => 'framework'],
+        ['skill_name' => 'React', 'type' => 'framework'],
+        ['skill_name' => 'Laravel', 'type' => 'framework'],
+        ['skill_name' => 'MongoDB', 'type' => 'database'],
+        ['skill_name' => 'Linux', 'type' => 'tool'],
+        // Insert here more skills if needed
+    ];
+
     /**
      * Define the model's default state.
      *
@@ -16,11 +31,11 @@ class SkillFactory extends Factory
      */
     public function definition(): array
     {
-        $skills = [
-            'PHP', 'Javascript', 'Python', 'Java', 'C#', 'C++', 'Vue.js', 'React', 'Laravel', 'MongoDB', 'Linux', 'Git',
-        ];
-        return [
-            'skill_name' => fake()->unique()->randomElement($skills),
-        ];
+        return fake()->randomElement(self::$skills);
+    }
+
+    public static function skillCount()
+    {
+        return count(self::$skills);
     }
 }

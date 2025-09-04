@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import BountyManagement from '@/components/BountyManagement.vue';
+import FollowModal from '@/components/FollowModal.vue';
 import InputError from '@/components/InputError.vue';
+import Toast from '@/components/Toast.vue';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,14 +10,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useInitials } from '@/composables/useInitials';
+import { useToast } from '@/composables/useToast';
 import { useXP } from '@/composables/useXP';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem, type User } from '@/types';
 import { type BountyPagination } from '@/types/bounty';
+import { getBountyMessage, getXPSyncMessage } from '@/utils/toastMessages';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { AlertCircle, Code, Database, Github, Plus, Settings, Star, Target, Trophy, Zap } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
-import FollowModal from "@/components/FollowModal.vue"
+
+const { success: showSuccess, error: showError } = useToast();
 
 interface UserWithXP extends Omit<User, 'skills'> {
     total_xp: number;
@@ -40,14 +45,14 @@ interface Props {
     isFollowing?: boolean;
     profileUserId: number;
     followings: {
-        data: { id: number; nickname: string }[]
-        next_page_url: string | null
-    }
+        data: { id: number; nickname: string }[];
+        next_page_url: string | null;
+    };
     followers: {
-        data: { id: number; nickname: string }[]
-        next_page_url: string | null
-        avatar: string | null
-    }
+        data: { id: number; nickname: string }[];
+        next_page_url: string | null;
+        avatar: string | null;
+    };
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -160,6 +165,12 @@ const syncGitHubSkills = () => {
         {},
         {
             onFinish: () => (syncing.value = false),
+            onSuccess: () => {
+                showSuccess(getXPSyncMessage('success', 'sync', 'en'));
+            },
+            onError: () => {
+                showError(getXPSyncMessage('error', 'sync', 'en'));
+            },
         },
     );
 };
@@ -177,9 +188,11 @@ const submitBounty = () => {
         onSuccess: () => {
             showCreateForm.value = false;
             bountyForm.reset();
+            showSuccess(getBountyMessage('success', 'create', 'en'));
         },
         onError: (errors) => {
             console.log('Validation errors:', errors);
+            showError(getBountyMessage('error', 'create', 'en'));
         },
     });
 };
@@ -204,7 +217,9 @@ function follow() {
         {},
         {
             preserveScroll: true,
-            onFinish: () => { followingBusy.value = false; },
+            onFinish: () => {
+                followingBusy.value = false;
+            },
             onSuccess: () => {
                 router.reload({ only: ['followers', 'followings', 'user'] });
             },
@@ -215,16 +230,15 @@ function follow() {
 function unfollow() {
     if (followingBusy.value) return;
     followingBusy.value = true;
-    router.delete(
-        route('users.unfollow', props.user.id),
-        {
-            preserveScroll: true,
-            onFinish: () => { followingBusy.value = false; },
-            onSuccess: () => {
-                router.reload({ only: ['followers', 'followings', 'user']});
-            },
+    router.delete(route('users.unfollow', props.user.id), {
+        preserveScroll: true,
+        onFinish: () => {
+            followingBusy.value = false;
         },
-    );
+        onSuccess: () => {
+            router.reload({ only: ['followers', 'followings', 'user'] });
+        },
+    });
 }
 </script>
 
@@ -273,7 +287,6 @@ function unfollow() {
 
                                     <FollowModal prop-name="followers" title="Followers" :count="user.followers_count" />
                                     <FollowModal prop-name="followings" title="Followings" :count="user.followings_count" />
-
                                 </div>
                             </div>
 
@@ -643,5 +656,8 @@ function unfollow() {
                 </div>
             </div>
         </div>
+
+        <!-- Toast Notifications -->
+        <Toast />
     </AppLayout>
 </template>
