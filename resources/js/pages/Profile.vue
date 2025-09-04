@@ -14,6 +14,7 @@ import { getXPSyncMessage } from '@/utils/toastMessages';
 import { Head, router } from '@inertiajs/vue3';
 import { Code, Database, Settings, Star, Target, Trophy, Zap } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
+import ReviewForm from '@/components/ReviewForm.vue';
 import ReviewList from '@/components/ReviewList.vue';
 import { type ReviewsPayload } from '@/types/review'
 
@@ -373,6 +374,12 @@ function unfollow() {
                         </CardContent>
                     </Card>
                 </div>
+
+                <section v-if="!isOwner" class="rounded-xl border border-gray-200 p-4 dark:border-white/10">
+                        <h2 class="text-lg font-semibold mb-2">Write a review for {{ user.name }}</h2>
+                        <ReviewForm :reviewee-id="user.id" />
+                </section>
+
                 <ReviewList :reviews="props.reviews" />
             </div>
         </div>

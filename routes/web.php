@@ -12,6 +12,8 @@ use App\Http\Controllers\SubmissionStatusController;
 use Illuminate\Support\Facades\Route;
 
 use Inertia\Inertia;
+use App\Http\Controllers\ReviewController;
+
 
 Route::get('/', function () {
     return Inertia::render('Welcome');
@@ -27,6 +29,8 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/users/{user}/follow', [FollowerController::class, 'store'])->name('users.follow');
     Route::delete('/users/{user}/follow', [FollowerController::class, 'destroy'])->name('users.unfollow');
+
+    Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
 });
 
 Route::middleware('auth')->group(function () {
