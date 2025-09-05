@@ -1,50 +1,50 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import InputError from '@/components/InputError.vue'
-import { Search, Loader2, X, AlertCircle, MessageCircle, Info } from 'lucide-vue-next'
-import { router } from '@inertiajs/vue3'
+import InputError from '@/components/InputError.vue';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { router } from '@inertiajs/vue3';
+import { AlertCircle, Info, Loader2, MessageCircle, Search, X } from 'lucide-vue-next';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 
 interface Repository {
-    id: number
-    name: string
-    full_name: string
-    description: string
-    url: string
-    language: string
-    updated_at: string
-    open_issues_count: number
+    id: number;
+    name: string;
+    full_name: string;
+    description: string;
+    url: string;
+    language: string;
+    updated_at: string;
+    open_issues_count: number;
 }
 
 interface Issue {
-    id: number
-    number: number
-    title: string
-    body: string
-    url: string
-    state: string
-    created_at: string
-    updated_at: string
+    id: number;
+    number: number;
+    title: string;
+    body: string;
+    url: string;
+    state: string;
+    created_at: string;
+    updated_at: string;
     user: {
-        login: string
-        avatar_url: string
-    }
+        login: string;
+        avatar_url: string;
+    };
     labels: Array<{
-        name: string
-        color: string
-    }>
-    comments: number
+        name: string;
+        color: string;
+    }>;
+    comments: number;
 }
 
 interface Props {
-    form: any
-    repositories?: Repository[]
-    issues?: Issue[]
-    repositoryQuery?: string
-    selectedRepository?: string
+    form: any;
+    repositories?: Repository[];
+    issues?: Issue[];
+    repositoryQuery?: string;
+    selectedRepository?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -52,83 +52,84 @@ const props = withDefaults(defineProps<Props>(), {
     issues: () => [],
     repositoryQuery: '',
     selectedRepository: '',
-})
+});
 
 const emit = defineEmits<{
-    updateForm: [field: string, value: any]
-}>()
+    updateForm: [field: string, value: any];
+}>();
 
 const clearForm = () => {
-    selectedRepo.value = null
-    selectedIssue.value = null
-    repositorySearchQuery.value = ''
-    issueSearchQuery.value = ''
-    showRepositoryDropdown.value = false
-    showIssueDropdown.value = false
-}
+    selectedRepo.value = null;
+    selectedIssue.value = null;
+    repositorySearchQuery.value = '';
+    issueSearchQuery.value = '';
+    showRepositoryDropdown.value = false;
+    showIssueDropdown.value = false;
+};
 
 defineExpose({
-    clearForm
-})
+    clearForm,
+});
 
-const repositorySearchQuery = ref(props.repositoryQuery)
-const issueSearchQuery = ref('')
-const selectedRepo = ref<Repository | null>(null)
-const selectedIssue = ref<Issue | null>(null)
-const repositoryLoading = ref(false)
-const issueLoading = ref(false)
-const showRepositoryDropdown = ref(false)
-const showIssueDropdown = ref(false)
+const repositorySearchQuery = ref(props.repositoryQuery);
+const issueSearchQuery = ref('');
+const selectedRepo = ref<Repository | null>(null);
+const selectedIssue = ref<Issue | null>(null);
+const repositoryLoading = ref(false);
+const issueLoading = ref(false);
+const showRepositoryDropdown = ref(false);
+const showIssueDropdown = ref(false);
 
-let repositorySearchTimeout: number | null = null
+let repositorySearchTimeout: number | null = null;
 
 if (props.selectedRepository && props.repositories.length > 0) {
-    const found = props.repositories.find(repo => repo.full_name === props.selectedRepository)
+    const found = props.repositories.find((repo) => repo.full_name === props.selectedRepository);
     if (found) {
-        selectedRepo.value = found
-        repositorySearchQuery.value = found.name
+        selectedRepo.value = found;
+        repositorySearchQuery.value = found.name;
     }
 }
 
 const filteredIssues = computed(() => {
-    if (!issueSearchQuery.value.trim()) return props.issues
-    const query = issueSearchQuery.value.toLowerCase().trim()
-    return props.issues.filter(issue =>
-        issue.title.toLowerCase().includes(query) ||
-        issue.number.toString().includes(query) ||
-        (issue.body && issue.body.toLowerCase().includes(query)) ||
-        issue.user.login.toLowerCase().includes(query)
-    )
-})
+    if (!issueSearchQuery.value.trim()) return props.issues;
+    const query = issueSearchQuery.value.toLowerCase().trim();
+    return props.issues.filter(
+        (issue) =>
+            issue.title.toLowerCase().includes(query) ||
+            issue.number.toString().includes(query) ||
+            (issue.body && issue.body.toLowerCase().includes(query)) ||
+            issue.user.login.toLowerCase().includes(query),
+    );
+});
 
 const updateFormField = (field: string, value: any) => {
-    emit('updateForm', field, value)
-}
+    emit('updateForm', field, value);
+};
 
 const debouncedSearchRepositories = () => {
     if (repositorySearchTimeout) {
-        clearTimeout(repositorySearchTimeout)
+        clearTimeout(repositorySearchTimeout);
     }
 
     repositorySearchTimeout = setTimeout(() => {
-        searchRepositories()
-    }, 500)
-}
+        searchRepositories();
+    }, 500);
+};
 
 const handleRepositoryFocus = () => {
     if (props.repositories.length > 0) {
-        showRepositoryDropdown.value = true
+        showRepositoryDropdown.value = true;
     }
-}
+};
 
 const searchRepositories = () => {
     if (!repositorySearchQuery.value.trim()) {
-        showRepositoryDropdown.value = false
-        return
+        showRepositoryDropdown.value = false;
+        return;
     }
 
-    showRepositoryDropdown.value = true
-    repositoryLoading.value = true
+    showRepositoryDropdown.value = true;
+    repositoryLoading.value = true;
 
     router.visit(route('bounty.search-repositories'), {
         method: 'get',
@@ -139,17 +140,17 @@ const searchRepositories = () => {
         preserveScroll: true,
         replace: true,
         onFinish: () => {
-            repositoryLoading.value = false
-            showRepositoryDropdown.value = true
-        }
-    })
-}
+            repositoryLoading.value = false;
+            showRepositoryDropdown.value = true;
+        },
+    });
+};
 
 const searchIssues = () => {
-    if (!selectedRepo.value) return
+    if (!selectedRepo.value) return;
 
-    issueLoading.value = true
-    const [owner, repo] = selectedRepo.value.full_name.split('/')
+    issueLoading.value = true;
+    const [owner, repo] = selectedRepo.value.full_name.split('/');
 
     router.visit(route('bounty.repository-issues', { owner, repo }), {
         method: 'get',
@@ -157,110 +158,120 @@ const searchIssues = () => {
         preserveScroll: true,
         replace: true,
         onFinish: () => {
-            issueLoading.value = false
-            showIssueDropdown.value = true
-        }
-    })
-}
+            issueLoading.value = false;
+            showIssueDropdown.value = true;
+        },
+    });
+};
 
 const selectRepository = (repository: Repository) => {
-    selectedRepo.value = repository
-    repositorySearchQuery.value = repository.name
-    showRepositoryDropdown.value = false
+    selectedRepo.value = repository;
+    repositorySearchQuery.value = repository.name;
+    showRepositoryDropdown.value = false;
 
-    clearIssue()
-    updateFormField('repository_full_name', repository.full_name)
-    searchIssues()
-}
+    clearIssue();
+    updateFormField('repository_full_name', repository.full_name);
+    searchIssues();
+};
 
 const selectIssue = (issue: Issue) => {
-    selectedIssue.value = issue
-    issueSearchQuery.value = `#${issue.number} - ${issue.title}`
-    showIssueDropdown.value = false
-    updateFormField('issue_number', issue.number)
+    selectedIssue.value = issue;
+    issueSearchQuery.value = `#${issue.number} - ${issue.title}`;
+    showIssueDropdown.value = false;
+    updateFormField('issue_number', issue.number);
 
     if (!props.form.title) {
-        updateFormField('title', `Fix: ${issue.title}`)
+        updateFormField('title', `Fix: ${issue.title}`);
     }
 
     if (!props.form.description && issue.body) {
-        const truncatedBody = issue.body.length > 500
-            ? issue.body.substring(0, 500) + '...'
-            : issue.body
-        updateFormField('description', `Related to GitHub issue: ${issue.url}\n\n${truncatedBody}`)
+        const truncatedBody = issue.body.length > 500 ? issue.body.substring(0, 500) + '...' : issue.body;
+        updateFormField('description', `Related to GitHub issue: ${issue.url}\n\n${truncatedBody}`);
     }
-}
+};
 
 const clearRepository = () => {
-    selectedRepo.value = null
-    repositorySearchQuery.value = ''
-    clearIssue()
-    updateFormField('repository_full_name', '')
-    showRepositoryDropdown.value = false
+    selectedRepo.value = null;
+    repositorySearchQuery.value = '';
+    clearIssue();
+    updateFormField('repository_full_name', '');
+    showRepositoryDropdown.value = false;
 
     // Clear search results
     router.visit(route('bounties.create'), {
         preserveState: true,
         preserveScroll: true,
         replace: true,
-    })
-}
+    });
+};
 
 const clearIssue = () => {
-    selectedIssue.value = null
-    issueSearchQuery.value = ''
-    updateFormField('issue_number', '')
-    showIssueDropdown.value = false
-}
+    selectedIssue.value = null;
+    issueSearchQuery.value = '';
+    updateFormField('issue_number', '');
+    showIssueDropdown.value = false;
+};
 
 const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
         month: 'short',
-        day: 'numeric'
-    })
-}
+        day: 'numeric',
+    });
+};
 
 const handleClickOutside = (event: MouseEvent) => {
-    const target = event.target as HTMLElement
+    const target = event.target as HTMLElement;
     if (!target.closest('.relative')) {
-        showRepositoryDropdown.value = false
-        showIssueDropdown.value = false
+        showRepositoryDropdown.value = false;
+        showIssueDropdown.value = false;
     }
-}
+};
 
 onMounted(() => {
-    document.addEventListener('click', handleClickOutside)
-})
+    document.addEventListener('click', handleClickOutside);
+});
 
 onUnmounted(() => {
-    document.removeEventListener('click', handleClickOutside)
+    document.removeEventListener('click', handleClickOutside);
     if (repositorySearchTimeout) {
-        clearTimeout(repositorySearchTimeout)
+        clearTimeout(repositorySearchTimeout);
     }
-})
+});
 
-watch(() => props.form.errors, (errors) => {
-    if (errors.repository_full_name) {
-        showRepositoryDropdown.value = false
-    }
-    if (errors.issue_number) {
-        showIssueDropdown.value = false
-    }
-}, { deep: true })
+watch(
+    () => props.form.errors,
+    (errors) => {
+        if (errors.repository_full_name) {
+            showRepositoryDropdown.value = false;
+        }
+        if (errors.issue_number) {
+            showIssueDropdown.value = false;
+        }
+    },
+    { deep: true },
+);
 
 // Watch for new repositories from backend
-watch(() => props.repositories, (newRepos) => {
-    if (newRepos.length > 0 && repositorySearchQuery.value.trim()) {
-        showRepositoryDropdown.value = true
-    }
-}, { immediate: true })
+watch(
+    () => props.repositories,
+    (newRepos) => {
+        if (newRepos.length > 0 && repositorySearchQuery.value.trim()) {
+            showRepositoryDropdown.value = true;
+        }
+    },
+    { immediate: true },
+);
 
 // Watch for new issues from backend
-watch(() => props.issues, (newIssues) => {
-    if (newIssues.length > 0 && selectedRepo.value) {
-        showIssueDropdown.value = true
-    }
-}, { immediate: true })
+watch(
+    () => props.issues,
+    (newIssues) => {
+        if (newIssues.length > 0 && selectedRepo.value) {
+            showIssueDropdown.value = true;
+        }
+    },
+    { immediate: true },
+);
 </script>
 
 <template>
@@ -277,7 +288,7 @@ watch(() => props.issues, (newIssues) => {
                         @input="debouncedSearchRepositories"
                         @focus="handleRepositoryFocus"
                     />
-                    <Search class="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    <Search class="absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 </div>
 
                 <!-- Repository Dropdown -->
@@ -297,14 +308,11 @@ watch(() => props.issues, (newIssues) => {
                             v-for="repo in props.repositories"
                             :key="repo.id"
                             type="button"
-                            class="flex w-full items-start gap-3 p-3 text-left hover:bg-accent transition-colors"
+                            class="flex w-full items-start gap-3 p-3 text-left transition-colors hover:bg-accent"
                             @click="selectRepository(repo)"
                         >
                             <div class="mt-1 flex-shrink-0">
-                                <div
-                                    class="h-2 w-2 rounded-full bg-green-500"
-                                    :title="repo.language"
-                                ></div>
+                                <div class="h-2 w-2 rounded-full bg-green-500" :title="repo.language"></div>
                             </div>
                             <div class="min-w-0 flex-1">
                                 <div class="flex items-center gap-2">
@@ -313,7 +321,7 @@ watch(() => props.issues, (newIssues) => {
                                         {{ repo.language }}
                                     </Badge>
                                 </div>
-                                <p v-if="repo.description" class="text-sm text-muted-foreground line-clamp-2">
+                                <p v-if="repo.description" class="line-clamp-2 text-sm text-muted-foreground">
                                     {{ repo.description }}
                                 </p>
                                 <div class="mt-1 flex items-center gap-4 text-xs text-muted-foreground">
@@ -333,10 +341,7 @@ watch(() => props.issues, (newIssues) => {
             <div v-if="selectedRepo" class="rounded-lg border bg-accent/10 p-3">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
-                        <div
-                            class="h-2 w-2 rounded-full bg-green-500"
-                            :title="selectedRepo.language"
-                        ></div>
+                        <div class="h-2 w-2 rounded-full bg-green-500" :title="selectedRepo.language"></div>
                         <div>
                             <div class="flex items-center gap-2">
                                 <span class="font-medium">{{ selectedRepo.name }}</span>
@@ -369,7 +374,7 @@ watch(() => props.issues, (newIssues) => {
                         @focus="showIssueDropdown = true"
                         @input="showIssueDropdown = true"
                     />
-                    <Search class="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    <Search class="absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 </div>
 
                 <!-- Issues Dropdown -->
@@ -391,7 +396,7 @@ watch(() => props.issues, (newIssues) => {
                             v-for="issue in filteredIssues"
                             :key="issue.id"
                             type="button"
-                            class="flex w-full items-start gap-3 p-3 text-left hover:bg-accent transition-colors"
+                            class="flex w-full items-start gap-3 p-3 text-left transition-colors hover:bg-accent"
                             @click="selectIssue(issue)"
                         >
                             <div class="mt-1 flex-shrink-0">
@@ -399,10 +404,10 @@ watch(() => props.issues, (newIssues) => {
                             </div>
                             <div class="min-w-0 flex-1">
                                 <div class="flex items-start gap-2">
-                                    <span class="font-medium text-sm">#{{ issue.number }}</span>
-                                    <span class="text-sm flex-1">{{ issue.title }}</span>
+                                    <span class="text-sm font-medium">#{{ issue.number }}</span>
+                                    <span class="flex-1 text-sm">{{ issue.title }}</span>
                                 </div>
-                                <p v-if="issue.body" class="text-sm text-muted-foreground line-clamp-2 mt-1">
+                                <p v-if="issue.body" class="mt-1 line-clamp-2 text-sm text-muted-foreground">
                                     {{ issue.body }}
                                 </p>
                                 <div class="mt-2 flex items-center gap-4 text-xs text-muted-foreground">
@@ -435,14 +440,14 @@ watch(() => props.issues, (newIssues) => {
             <!-- Selected Issue Display -->
             <div v-if="selectedIssue" class="rounded-lg border bg-accent/10 p-3">
                 <div class="flex items-start justify-between">
-                    <div class="flex items-start gap-3 flex-1 min-w-0">
-                        <AlertCircle class="mt-1 h-4 w-4 text-green-600 flex-shrink-0" />
+                    <div class="flex min-w-0 flex-1 items-start gap-3">
+                        <AlertCircle class="mt-1 h-4 w-4 flex-shrink-0 text-green-600" />
                         <div class="min-w-0 flex-1">
                             <div class="flex items-start gap-2">
                                 <span class="font-medium">#{{ selectedIssue.number }}</span>
-                                <span class="text-sm flex-1">{{ selectedIssue.title }}</span>
+                                <span class="flex-1 text-sm">{{ selectedIssue.title }}</span>
                             </div>
-                            <p v-if="selectedIssue.body" class="text-sm text-muted-foreground line-clamp-2 mt-1">
+                            <p v-if="selectedIssue.body" class="mt-1 line-clamp-2 text-sm text-muted-foreground">
                                 {{ selectedIssue.body }}
                             </p>
                             <div v-if="selectedIssue.labels.length > 0" class="mt-2 flex flex-wrap gap-1">
@@ -457,7 +462,7 @@ watch(() => props.issues, (newIssues) => {
                             </div>
                         </div>
                     </div>
-                    <Button @click="clearIssue" variant="ghost" size="sm" class="flex-shrink-0 ml-2">
+                    <Button @click="clearIssue" variant="ghost" size="sm" class="ml-2 flex-shrink-0">
                         <X class="h-4 w-4" />
                     </Button>
                 </div>
@@ -466,9 +471,12 @@ watch(() => props.issues, (newIssues) => {
         </div>
 
         <!-- Quick Actions -->
-        <div v-if="selectedRepo && !selectedIssue && !issueLoading" class="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950">
+        <div
+            v-if="selectedRepo && !selectedIssue && !issueLoading"
+            class="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950"
+        >
             <div class="flex items-center gap-3">
-                <Info class="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                <Info class="h-5 w-5 flex-shrink-0 text-blue-600 dark:text-blue-400" />
                 <div>
                     <h4 class="font-medium text-blue-800 dark:text-blue-200">Select an Issue</h4>
                     <p class="text-sm text-blue-700 dark:text-blue-300">

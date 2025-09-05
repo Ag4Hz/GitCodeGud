@@ -102,20 +102,28 @@ const getStatusDisplayText = (status: string): string => {
 const submissionStatusVariant = computed(() => {
     if (!props.userSubmission) return 'outline';
     switch (props.userSubmission.status) {
-        case 'pending': return 'secondary';
-        case 'accepted': return 'default';
-        case 'rejected': return 'destructive';
-        default: return 'outline';
+        case 'pending':
+            return 'secondary';
+        case 'accepted':
+            return 'default';
+        case 'rejected':
+            return 'destructive';
+        default:
+            return 'outline';
     }
 });
 
 const submissionStatusText = computed(() => {
     if (!props.userSubmission) return '';
     switch (props.userSubmission.status) {
-        case 'pending': return 'Pending Review';
-        case 'accepted': return 'Accepted';
-        case 'rejected': return 'Rejected';
-        default: return 'Unknown';
+        case 'pending':
+            return 'Pending Review';
+        case 'accepted':
+            return 'Accepted';
+        case 'rejected':
+            return 'Rejected';
+        default:
+            return 'Unknown';
     }
 });
 
@@ -244,25 +252,21 @@ const shouldShowPagination = computed(() => {
 
                     <CardContent class="space-y-6">
                         <!-- User Submission Info (if exists) -->
-                        <div v-if="userSubmission" class="border-l-4 border-l-blue-500 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                        <div v-if="userSubmission" class="rounded-lg border-l-4 border-l-blue-500 bg-blue-50 p-4 dark:bg-blue-900/20">
                             <div class="flex items-start justify-between">
                                 <div>
-                                    <h4 class="font-semibold text-blue-800 dark:text-blue-200 mb-1">Your Submission</h4>
-                                    <p class="text-sm text-blue-700 dark:text-blue-300 mb-2">
-                                        Status: {{ submissionStatusText }}
-                                    </p>
+                                    <h4 class="mb-1 font-semibold text-blue-800 dark:text-blue-200">Your Submission</h4>
+                                    <p class="mb-2 text-sm text-blue-700 dark:text-blue-300">Status: {{ submissionStatusText }}</p>
                                     <div class="flex items-center gap-2">
                                         <a
                                             :href="userSubmission.pr_url"
                                             target="_blank"
-                                            class="text-sm text-blue-600 hover:text-blue-800 transition-colors flex items-center gap-1"
+                                            class="flex items-center gap-1 text-sm text-blue-600 transition-colors hover:text-blue-800"
                                         >
                                             <ExternalLink class="h-3 w-3" />
                                             View Pull Request
                                         </a>
-                                        <span class="text-sm text-muted-foreground">
-                                            • Submitted {{ formatDate(userSubmission.created_at) }}
-                                        </span>
+                                        <span class="text-sm text-muted-foreground"> • Submitted {{ formatDate(userSubmission.created_at) }} </span>
                                     </div>
                                 </div>
                             </div>
@@ -459,7 +463,9 @@ const shouldShowPagination = computed(() => {
                             <h3 class="mb-4 flex items-center gap-2 text-lg font-semibold">
                                 <MessageSquare class="h-5 w-5" />
                                 GitHub Comments
-                                <span v-if="comments?.total && comments.total > 0" class="text-sm text-muted-foreground"> ({{ comments.total }}) </span>
+                                <span v-if="comments?.total && comments.total > 0" class="text-sm text-muted-foreground">
+                                    ({{ comments.total }})
+                                </span>
                             </h3>
 
                             <!-- Loading State -->
@@ -537,7 +543,9 @@ const shouldShowPagination = computed(() => {
                                                     <span v-if="comment.updated_at !== comment.created_at">
                                                         Edited {{ formatDate(comment.updated_at) }}
                                                     </span>
-                                                    <span v-if="comment.reactions?.total_count > 0"> {{ comment.reactions.total_count }} reactions </span>
+                                                    <span v-if="comment.reactions?.total_count > 0">
+                                                        {{ comment.reactions.total_count }} reactions
+                                                    </span>
                                                 </div>
                                             </div>
                                         </div>
@@ -598,7 +606,7 @@ const shouldShowPagination = computed(() => {
                                                     v-if="submission.pr_url"
                                                     :href="submission.pr_url"
                                                     target="_blank"
-                                                    class="text-sm text-blue-600 hover:text-blue-800 transition-colors flex items-center gap-1"
+                                                    class="flex items-center gap-1 text-sm text-blue-600 transition-colors hover:text-blue-800"
                                                 >
                                                     <ExternalLink class="h-3 w-3" />
                                                     PR
@@ -621,9 +629,7 @@ const shouldShowPagination = computed(() => {
                 <!-- Back to Dashboard -->
                 <div class="flex justify-center">
                     <Link href="/dashboard">
-                        <Button variant="outline" class="flex items-center gap-2"> 
-                            ← Back to Dashboard 
-                        </Button>
+                        <Button variant="outline" class="flex items-center gap-2"> ← Back to Dashboard </Button>
                     </Link>
                 </div>
             </div>

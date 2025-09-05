@@ -1,33 +1,28 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import {
-    DropdownMenu,
-    DropdownMenuTrigger,
-    DropdownMenuContent,
-    DropdownMenuItem
-} from '@/components/ui/dropdown-menu/index.js'
-import { Button } from '@/components/ui/button/index.js'
-import { ChevronDown } from 'lucide-vue-next'
+import { Button } from '@/components/ui/button/index.js';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu/index.js';
+import { ChevronDown } from 'lucide-vue-next';
+import { computed } from 'vue';
 
 interface Props {
-    modelValue: string
-    languages: string[]
-    placeholder?: string
+    modelValue: string;
+    languages: string[];
+    placeholder?: string;
 }
 const props = withDefaults(defineProps<Props>(), {
     modelValue: '',
     languages: () => [],
-    placeholder: 'All Languages'
-})
+    placeholder: 'All Languages',
+});
 
 const emit = defineEmits<{
-    'update:modelValue': [value: string]
-}>()
+    'update:modelValue': [value: string];
+}>();
 
-const selectedLanguage = computed(() => props.modelValue)
+const selectedLanguage = computed(() => props.modelValue);
 const handleLanguageSelect = (language: string) => {
-    emit('update:modelValue', language)
-}
+    emit('update:modelValue', language);
+};
 </script>
 
 <template>
@@ -40,10 +35,7 @@ const handleLanguageSelect = (language: string) => {
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent class="w-48">
-                <DropdownMenuItem
-                    @click="handleLanguageSelect('')"
-                    :class="{ 'bg-accent': !selectedLanguage }"
-                >
+                <DropdownMenuItem @click="handleLanguageSelect('')" :class="{ 'bg-accent': !selectedLanguage }">
                     {{ placeholder }}
                 </DropdownMenuItem>
                 <DropdownMenuItem

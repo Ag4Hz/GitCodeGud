@@ -10,7 +10,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { type BountyPagination } from '@/types/bounty';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
-import { AlertCircle, Github, Plus, CheckCircle } from 'lucide-vue-next';
+import { AlertCircle, CheckCircle, Github, Plus } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
 
 interface Repository {
@@ -123,7 +123,7 @@ const submitBounty = () => {
             }
             router.visit(route('bounties.create'), {
                 preserveState: false,
-                preserveScroll: true
+                preserveScroll: true,
             });
         },
         onError: (errors) => {
