@@ -10,9 +10,12 @@ use App\Services\ReviewService;
 
 class CanReviewUser implements ValidationRule
 {
-    public function __construct(
-        private ReviewService $reviewService
-    ) {}
+    private ReviewService $reviewService;
+
+    public function __construct()
+    {
+        $this->reviewService = app(ReviewService::class);
+    }
 
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
