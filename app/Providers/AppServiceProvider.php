@@ -20,7 +20,6 @@ class AuthServiceProvider extends ServiceProvider
         User::class => UserPolicy::class,
         Submission::class => SubmissionPolicy::class,
         ];
-    }
 
     public function boot(): void
     {
