@@ -58,7 +58,7 @@ class ReviewService
         ]);
     }
 
-    public function getUserReviews(User $user): LengthAwarePaginator
+    public function getUserReviews(User $user)
     {
         return $user->reviewsReceived()
             ->with(['reviewer'])

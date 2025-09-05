@@ -47,7 +47,7 @@ class ProfileController extends Controller
             'bounties' => BountyResource::collection($bounties),
             'isFollowing' => auth()->check()? auth()->user()->isFollowing($user): false,
             'isOwner' => $request->user() && $request->user()->id === $user->id,
-            'reviews'    => $this->reviewService->getUserReviews($user)
+            'reviews'    => $this->reviewService->getUserReviews($user),
             'canReview'   => $canReview,
         ]);
     }
