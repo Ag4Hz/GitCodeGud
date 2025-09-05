@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\GitHubSkillSyncService;
 use App\Services\FollowStatsService;
 
+use App\Services\ReviewService;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -21,6 +22,7 @@ class ProfileController extends Controller
         private UserBountyService $userBountyService,
         protected GitHubSkillSyncService $gitHubSkillSync,
         private FollowStatsService $followStatsService,
+        private ReviewService $reviewService,
     ) {}
 
     public function show(Request $request, ?User $user = null): Response
@@ -32,6 +34,7 @@ class ProfileController extends Controller
         $this->followStatsService->attachCounts($user);
 
         $bounties = $this->userBountyService->getUserBountiesWithDeleted($user);
+
         return Inertia::render('Profile', [
             'user' => array_merge(
                 XPHelper::getUserWithXP($user),
@@ -45,6 +48,7 @@ class ProfileController extends Controller
             'bounties' => BountyResource::collection($bounties),
             'isFollowing' => auth()->check()? auth()->user()->isFollowing($user): false,
             'isOwner' => $request->user() && $request->user()->id === $user->id,
+            'reviews'    => $this->reviewService->getUserReviews($user)
         ]);
     }
     public function syncGitHubSkills(Request $request): bool

@@ -123,4 +123,8 @@ class User extends Authenticatable
         return $this->followings()->whereKey($user->id)->exists();
     }
 
+    public function reviewsReceived() {
+        return $this->hasMany(Review::class, 'reviewee_id');
+    }
+    
 }

@@ -10,6 +10,7 @@ import { type Bounty } from '@/types/bounty';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { Calendar, Code, DollarSign, ExternalLink, GitBranch, MessageSquare, Tag, Target, User as UserIcon, Users } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
+import { useDateFormatter } from '@/composables/useDateFormatter';
 
 interface BountyWithDetails extends Bounty {
     issue: {
@@ -76,13 +77,7 @@ const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
     },
 ]);
 
-const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-    });
-};
+const { formatDate } = useDateFormatter();
 
 const getStatusColor = (status: string) => {
     switch (status) {
