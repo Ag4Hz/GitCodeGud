@@ -25,12 +25,14 @@ const adminMessages: AdminMessage = {
             threshold: 'Threshold settings updated successfully.',
             skill_weights: 'Skill weights updated successfully.',
             batch_update: 'All settings updated successfully.',
+            recalculate: 'XP recalculated for all users successfully.',
         },
         error: {
             base: 'Failed to update base settings.',
             threshold: 'Failed to update threshold settings.',
             skill_weights: 'Failed to update skill weights.',
             batch_update: 'Failed to update all settings.',
+            recalculate: 'Failed to recalculate XP for all users.',
         },
     },
 };

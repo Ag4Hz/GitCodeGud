@@ -9,7 +9,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { getAdminMessage } from '@/utils/toastMessages';
 import { Head, useForm } from '@inertiajs/vue3';
-import { ChartArea, Settings } from 'lucide-vue-next';
+import { ChartArea, FolderSync, Settings } from 'lucide-vue-next';
 import { computed, h, ref } from 'vue';
 import ApexCharts from 'vue3-apexcharts';
 
@@ -158,6 +158,20 @@ const batchForm = useForm({
 
 const formatNumber = (num: number) => {
     return new Intl.NumberFormat().format(Math.round(num));
+};
+
+const recalculateXp = () => {
+    if (confirm('Are you sure you want to normalize XP for all users? This action cannot be undone.')) {
+        const recalcForm = useForm({});
+        recalcForm.post(route('admin.xp-settings.recalculate'), {
+            onSuccess: () => {
+                showSuccess(getAdminMessage('success', 'recalculate', 'en'));
+            },
+            onError: () => {
+                showError(getAdminMessage('error', 'recalculate', 'en'));
+            },
+        });
+    }
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -484,6 +498,12 @@ const xpSettingsTab = ref<XPSettingsTab>(XPSettingsTab.Base);
                             </div>
                         </CardContent>
                     </Card>
+
+                    <!-- Normalize XP for every user -->
+                    <Button variant="destructive" class="bg-red-600 hover:bg-red-700 md:col-span-2 lg:col-span-1" @click="recalculateXp">
+                        <FolderSync />
+                        Normalize XP for All Users
+                    </Button>
                 </div>
 
                 <!-- Fine tuning -->

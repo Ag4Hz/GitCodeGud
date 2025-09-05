@@ -8,7 +8,7 @@ use App\Policies\SubmissionPolicy;
 use App\Policies\UserPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
-class AppServiceProvider extends ServiceProvider
+class AuthServiceProvider extends ServiceProvider
 {
     /**
      * Register any application services.

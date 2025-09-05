@@ -38,6 +38,7 @@ class AdminController extends Controller
                     $type = $key === 'base_xp' ? 'integer' : 'float';
                     GeneralSetting::setValue($key, $value, $type);
                 }
+                DB::table('general_settings')->update(['updated_at' => now()]);
             }
 
             // Update thresholds if provided
@@ -45,6 +46,7 @@ class AdminController extends Controller
                 $sortedThresholds = array_values($validated['thresholds']);
                 sort($sortedThresholds);
                 LevelThreshold::updateThresholds($sortedThresholds);
+                DB::table('level_thresholds')->update(['updated_at' => now()]);
             }
 
             // Update skill weights if provided
@@ -73,6 +75,7 @@ class AdminController extends Controller
                         WHERE skill_name IN ({$placeholders})
                     ", $bindings);
                 }
+                DB::table('skills')->update(['updated_at' => now()]);
             }
         });
 
@@ -90,6 +93,7 @@ class AdminController extends Controller
         sort($sortedThresholds);
 
         LevelThreshold::updateThresholds($sortedThresholds);
+        DB::table('level_thresholds')->update(['updated_at' => now()]);
         XPHelper::clearCaches();
 
         return back()->with('success', 'Level thresholds updated successfully!');
@@ -124,6 +128,7 @@ class AdminController extends Controller
         }
 
         $this->clearAllCaches();
+        DB::table('skills')->update(['updated_at' => now()]);
 
         return back()->with('success', 'Skill weights updated successfully!');
     }
@@ -136,6 +141,7 @@ class AdminController extends Controller
         GeneralSetting::setValue('bonus_multiplier', $xpSettings['bonus_multiplier'], 'float');
 
         XPHelper::clearCaches();
+        DB::table('general_settings')->update(['updated_at' => now()]);
 
         return back()->with('success', 'XP settings updated successfully!');
     }
@@ -145,5 +151,18 @@ class AdminController extends Controller
         XPHelper::clearCaches();
         Cache::forget('admin_xp_stats');
         Cache::forget('admin_skill_weights');
+    }
+
+    public function recalculateXp() {
+        try {
+            DB::statement('CALL recalculate_user_xp()');
+            $this->clearAllCaches();
+
+            return back()->with('success', 'XP settings updated successfully!');
+        } catch (\Exception $e) {
+            \Log::error('XP recalculation failed: ' . $e->getMessage());
+
+            return back()->withErrors('An error occurred while recalculating XP. Please try again later.');
+        }
     }
 }

@@ -1,5 +1,6 @@
 import '../css/app.css';
 
+import { useToast } from '@/composables/useToast';
 import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import type { DefineComponent } from 'vue';
@@ -7,6 +8,7 @@ import { createApp, h } from 'vue';
 import { ZiggyVue } from 'ziggy-js';
 import { initializeTheme } from './composables/useAppearance';
 
+const { success: showSuccess } = useToast();
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
 createInertiaApp({
@@ -22,6 +24,25 @@ createInertiaApp({
         color: '#4B5563',
     },
 });
+
+let lastXpUpdate: string | null = null;
+
+async function checkXpUpdate() {
+    try {
+        const res = await fetch('/api/xp-settings/last-update');
+        const data = await res.json();
+
+        if (data.updated_at && data.updated_at !== lastXpUpdate) {
+            lastXpUpdate = data.updated_at;
+            showSuccess('XP settings have been updated! Progression may differ from now on.', undefined, true);
+        }
+    } catch (e) {
+        console.error('Failed to check XP update', e);
+    }
+}
+
+// Check every 10 seconds
+setInterval(checkXpUpdate, 10000);
 
 // This will set light / dark mode on page load...
 initializeTheme();
