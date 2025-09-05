@@ -4,6 +4,10 @@ namespace App\Http\Requests;
 
 use App\Models\Bounty;
 use App\Models\Issue;
+use App\Rules\GitHubIssueUrl;
+use App\Rules\GitHubRepositoryUrl;
+use App\Rules\IssueBelongsToRepository;
+use App\Rules\UniqueIssueForBounty;
 use App\Services\GitHubApiService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
@@ -39,6 +43,22 @@ class BountyStoreRequest extends FormRequest
             'reward_xp' => ['required', 'integer', 'min:1', 'max:1000'],
         ];
 
+        // Support both URL-based and form-based input methods
+        if ($this->filled('repo_url') && $this->filled('issue_url')) {
+            $rules['repo_url'] = [
+                'required',
+                'url',
+                new GitHubRepositoryUrl(),
+            ];
+            $rules['issue_url'] = [
+                'required',
+                'url',
+                new GitHubIssueUrl(),
+                new IssueBelongsToRepository(),
+                new UniqueIssueForBounty(),
+            ];
+        }
+
         if ($this->filled('repository_full_name') && $this->filled('issue_number')) {
             $rules['repository_full_name'] = ['required', 'string'];
             $rules['issue_number'] = ['required', 'integer', 'min:1'];
@@ -50,11 +70,44 @@ class BountyStoreRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator) {
+            // Handle URL-based validation
+            if ($this->filled('issue_url')) {
+                $this->validateIssueStatus($validator);
+            }
 
+            // Handle form-based validation
             if ($this->filled('repository_full_name') && $this->filled('issue_number')) {
                 $this->validateSelectedRepositoryAndIssue($validator);
             }
         });
+    }
+
+    private function validateIssueStatus(Validator $validator): void
+    {
+        $issueUrl = $this->input('issue_url');
+        $user = $this->user();
+
+        if (!$user || !$issueUrl) {
+            return;
+        }
+
+        $githubApi = new GitHubApiService($user);
+
+        if (!$githubApi->hasValidToken()) {
+            $validator->errors()->add('issue_url', 'GitHub API access is required to validate issues.');
+            return;
+        }
+
+        $issueInfo = GitHubApiService::parseGitHubIssueUrl($issueUrl);
+        if (!$issueInfo) {
+            return;
+        }
+        
+        $isOpen = $githubApi->isIssueOpen($issueInfo['repo_full_name'], $issueInfo['issue_number']);
+
+        if (!$isOpen) {
+            $validator->errors()->add('issue_url', 'Only open GitHub issues can be used for bounties.');
+        }
     }
 
     private function validateSelectedRepositoryAndIssue(Validator $validator): void

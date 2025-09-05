@@ -105,18 +105,43 @@ class BountyController extends Controller
             ->with('refresh', true);
     }
 
+    public function submissions(Request $request, Bounty $bounty): Response
+    {
+        $user = $request->user();
+
+        if (!$user || $bounty->issue->repo->user_id !== $user->id) {
+            abort(403, 'Only the bounty owner can view all submissions.');
+        }
+
+        return Inertia::render('bounties/Submissions', [
+            'bounty' => $bounty->load(['issue.repo']),
+            'submissions' => $bounty->submissions()->with(['user'])->latest()->paginate(10),
+        ]);
+    }
+
     public function show(Request $request, Bounty $bounty): Response
     {
         $this->trackBountyView($request, $bounty);
 
-        $bountyData = $bounty->load(['issue.repo', 'submissions.user'])
-            ->loadCount('submissions');
+        $user = $request->user();
+        $userSubmission = null;
+        $canUserSubmit = false;
+
+        if ($user) {
+            $userSubmission = $bounty->submissions()
+                ->where('user_id', $user->id)
+                ->first();
+
+            $canUserSubmit = $user->can('create', [\App\Models\Submission::class, $bounty]);
+        }
 
         return Inertia::render('bounties/Show', [
-            'bounty' => $bountyData,
+            'bounty' => $bounty->load(['issue.repo', 'submissions.user'])->loadCount('submissions'),
             'popularityScore' => ($bounty->views ?? 0) + ($bountyData->submissions_count ?? 0),
             'comments' => Inertia::merge(fn() => $this->getPaginatedComments($bounty, $request)),
-        ]);
+            'canUserSubmit' => $canUserSubmit,
+            'userSubmission' => $userSubmission,
+            ]);
     }
 
     private function trackBountyView(Request $request, Bounty $bounty): void

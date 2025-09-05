@@ -3,9 +3,7 @@ import NavFooter from '@/components/NavFooter.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import UserSearch from '@/components/UserSearch.vue';
 import PopularBountiesPanel from '@/components/PopularBountiesPanel.vue';
 import { Eye } from 'lucide-vue-next';
 import { contactLinks } from '@/composables/contactLinks';
@@ -13,9 +11,9 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import type { AppPageProps, BreadcrumbItem } from '@/types';
 import { BountyStatus, type Bounty, type BountyPagination } from '@/types/bounty';
 import { Head, router } from '@inertiajs/vue3';
-import { Calendar, ChevronDown, DollarSign, Loader2, Search, Target } from 'lucide-vue-next';
+import { Calendar, DollarSign, Loader2, Search, Target } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
-
+import  LanguageFilter from '@/components/LanguageFilter.vue';
 type User = { id: number; nickname: string; avatar: string; name: string };
 
 type PageProps = AppPageProps<{
@@ -198,36 +196,28 @@ const hasActiveBountyFilters = computed(() => {
     <AppLayout :breadcrumbs="breadcrumbs">
         <div>
             <!-- User Search at the top -->
-            <div class="relative mx-auto mt-10 mb-16 w-full max-w-md">
-                <UserSearch :filters="props.userFilters" :results="props.users" />
-            </div>
 
             <!-- Bounty Search and Grid Section -->
-            <div class="flex h-full flex-1 flex-col gap-6 rounded-xl p-4 mb-96">
-
+            <div class="mb-96 flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
                 <!-- Top Section - Popular and Trending Bounties -->
                 <div class="w-full space-y-6">
                     <!-- Header -->
-                    <div class="text-center max-w-2xl mx-auto">
-                        <h1 class="text-3xl font-bold tracking-tight mb-2">Find Open Bounties</h1>
+                    <div class="mx-auto max-w-2xl text-center">
+                        <h1 class="mb-2 text-3xl font-bold tracking-tight">Find Open Bounties</h1>
                         <p class="text-muted-foreground">
                             Discover rewarding development opportunities and earn XP by contributing to open source projects.
                         </p>
                     </div>
 
                     <!-- Popular Bounties Section -->
-                    <div :class="[
-                        'grid grid-cols-1 gap-6',
-                        (trendingBounties && trendingBounties.length > 0)
-                          ? 'lg:grid-cols-2'
-                          : 'lg:grid-cols-1 justify-items-center'
-                      ]">
-
+                    <div
+                        :class="[
+                            'grid grid-cols-1 gap-6',
+                            trendingBounties && trendingBounties.length > 0 ? 'lg:grid-cols-2' : 'justify-items-center lg:grid-cols-1',
+                        ]"
+                    >
                         <!-- Popular Bounties -->
-                        <PopularBountiesPanel
-                            :bounties="popularBounties"
-                            title="🔥 Popular Bounties"
-                        />
+                        <PopularBountiesPanel :bounties="popularBounties" title="🔥 Popular Bounties" />
 
                         <!-- Trending Bounties -->
                         <PopularBountiesPanel
@@ -236,9 +226,12 @@ const hasActiveBountyFilters = computed(() => {
                             title="📈 Trending This Week"
                         />
 
-                        <div v-else class="flex items-center justify-center border-2 border-dashed border-gray-200 rounded-lg p-8 dark:border-gray-700">
+                        <div
+                            v-else
+                            class="flex items-center justify-center rounded-lg border-2 border-dashed border-gray-200 p-8 dark:border-gray-700"
+                        >
                             <div class="text-center">
-                                <Target class="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                                <Target class="mx-auto mb-4 h-12 w-12 text-gray-400" />
                                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">More Coming Soon</h3>
                                 <p class="text-gray-500 dark:text-gray-400">New bounties are added regularly</p>
                             </div>
@@ -270,27 +263,11 @@ const hasActiveBountyFilters = computed(() => {
 
                             <!-- Language Filter -->
                             <div class="sm:w-48">
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger as-child>
-                                        <Button variant="outline" class="w-full justify-between">
-                                            {{ localSelectedLanguage || 'All Languages' }}
-                                            <ChevronDown class="h-4 w-4 opacity-50" />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent class="w-48">
-                                        <DropdownMenuItem @click="localSelectedLanguage = ''" :class="{ 'bg-accent': !localSelectedLanguage }">
-                                            All Languages
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem
-                                            v-for="language in availableLanguages"
-                                            :key="language"
-                                            @click="localSelectedLanguage = language"
-                                            :class="{ 'bg-accent': localSelectedLanguage === language }"
-                                        >
-                                            {{ language }}
-                                        </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
+                                <LanguageFilter
+                                    v-model="localSelectedLanguage"
+                                    :languages="availableLanguages"
+                                    placeholder="All Languages"
+                                />
                             </div>
 
                             <!-- Clear Filters Button -->
@@ -328,12 +305,12 @@ const hasActiveBountyFilters = computed(() => {
                         <Card
                             v-for="bounty in bounties.data"
                             :key="bounty.id"
-                            class="cursor-pointer transition-all hover:shadow-lg hover:-translate-y-1 border-l-4 border-l-green-500"
+                            class="cursor-pointer border-l-4 border-l-green-500 transition-all hover:-translate-y-1 hover:shadow-lg"
                             @click="navigateToBounty(bounty)"
                         >
                             <CardHeader class="pb-3">
                                 <div class="flex items-start justify-between gap-2">
-                                    <h3 class="font-semibold line-clamp-2 text-lg leading-tight">
+                                    <h3 class="line-clamp-2 text-lg leading-tight font-semibold">
                                         {{ bounty.title }}
                                     </h3>
                                     <Badge :class="getStatusColor(bounty.status)" class="flex-shrink-0 text-xs">
@@ -349,19 +326,10 @@ const hasActiveBountyFilters = computed(() => {
 
                                 <!-- Languages -->
                                 <div v-if="bounty.languages && bounty.languages.length > 0" class="flex flex-wrap gap-1">
-                                    <Badge
-                                        v-for="language in bounty.languages.slice(0, 3)"
-                                        :key="language"
-                                        variant="outline"
-                                        class="text-xs"
-                                    >
+                                    <Badge v-for="language in bounty.languages.slice(0, 3)" :key="language" variant="outline" class="text-xs">
                                         {{ language }}
                                     </Badge>
-                                    <Badge
-                                        v-if="bounty.languages.length > 3"
-                                        variant="outline"
-                                        class="text-xs"
-                                    >
+                                    <Badge v-if="bounty.languages.length > 3" variant="outline" class="text-xs">
                                         +{{ bounty.languages.length - 3 }}
                                     </Badge>
                                 </div>
@@ -369,7 +337,7 @@ const hasActiveBountyFilters = computed(() => {
                                 <!-- Metadata with views -->
                                 <div class="flex items-center justify-between text-sm">
                                     <div class="flex items-center gap-3">
-                                        <div class="flex items-center gap-1 text-yellow-600 font-medium">
+                                        <div class="flex items-center gap-1 font-medium text-yellow-600">
                                             <DollarSign class="h-4 w-4" />
                                             {{ bounty.reward_xp }} XP
                                         </div>
@@ -379,7 +347,10 @@ const hasActiveBountyFilters = computed(() => {
                                             {{ bounty.views }}
                                         </div>
                                         <!-- Submissions count ha van -->
-                                        <div v-if="bounty.submissions_count && bounty.submissions_count > 0" class="flex items-center gap-1 text-muted-foreground">
+                                        <div
+                                            v-if="bounty.submissions_count && bounty.submissions_count > 0"
+                                            class="flex items-center gap-1 text-muted-foreground"
+                                        >
                                             <Target class="h-3 w-3" />
                                             {{ bounty.submissions_count }}
                                         </div>

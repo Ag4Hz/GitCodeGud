@@ -39,7 +39,7 @@ class BountyPolicy
         if (!$repoInfo) {
             return false;
         }
-
+        
         $gitId = $repoInfo['owner'] . '/' . $repoInfo['name'];
         $repoData = $githubApi->getRepository($gitId);
 

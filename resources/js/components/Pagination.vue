@@ -18,15 +18,18 @@ const props = defineProps<{
             v-for="(link, index) in props.links"
             :key="index"
             :href="link?.url ?? '#'"
+            :only="['leaderboardUsers']"
+            preserve-state
+            preserve-scroll
             class="rounded border px-3 py-1 text-sm transition-colors"
             :class="[
-                'border-gray-300 dark:border-white/10',
-                link.active ? 'bg-green-700 text-white' : 'bg-white text-gray-700 dark:bg-white/5 dark:text-gray-200',
-                link.active ? '' : 'hover:bg-gray-100 dark:hover:bg-white/10',
-                link.url ? '' : 'pointer-events-none opacity-50',
-            ]"
+        link.active
+          ? 'border-gray-300 bg-white/70 text-gray-900 dark:border-white/20 dark:bg-white/20 dark:text-gray-100'
+          : '',
+        link.url ? '' : 'pointer-events-none opacity-50',
+      ]"
         >
-            <span v-html="link.label"></span>
+            <span v-html="link.label" />
         </Link>
     </div>
 </template>

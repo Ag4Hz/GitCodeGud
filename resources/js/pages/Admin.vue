@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import Icon from '@/components/Icon.vue';
+import Toast from '@/components/Toast.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/composables/useToast';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
+import { getAdminMessage } from '@/utils/toastMessages';
 import { Head, useForm } from '@inertiajs/vue3';
 import { ChartArea, Settings } from 'lucide-vue-next';
 import { computed, h, ref } from 'vue';
@@ -164,6 +167,8 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
+const { success: showSuccess, error: showError } = useToast();
+
 const sortedLevelThresholds = computed(() => {
     return Object.entries(props.xpConfig.level_thresholds).sort(([a], [b]) => Number(a) - Number(b));
 });
@@ -191,6 +196,10 @@ const saveXPSettings = () => {
         onSuccess: () => {
             editingXPSettings.value = false;
             editingXPField.value = null;
+            showSuccess(getAdminMessage('success', 'base', 'en'));
+        },
+        onError: () => {
+            showError(getAdminMessage('error', 'base', 'en'));
         },
     });
 };
@@ -234,6 +243,10 @@ const saveThresholds = () => {
         onSuccess: () => {
             editingThresholds.value = false;
             editingIndex.value = null;
+            showSuccess(getAdminMessage('success', 'threshold', 'en'));
+        },
+        onError: () => {
+            showError(getAdminMessage('error', 'threshold', 'en'));
         },
     });
 };
@@ -281,6 +294,10 @@ const saveSkillWeights = () => {
         onSuccess: () => {
             editingSkillWeights.value = false;
             editingSkillIndex.value = null;
+            showSuccess(getAdminMessage('success', 'skill_weights', 'en'));
+        },
+        onError: () => {
+            showError(getAdminMessage('error', 'skill_weights', 'en'));
         },
     });
 };
@@ -338,7 +355,11 @@ const saveAllChanges = () => {
             editingXPField.value = null;
             editingIndex.value = null;
             editingSkillIndex.value = null;
+            showSuccess(getAdminMessage('success', 'batch_update', 'en'));
             updateHasChanges();
+        },
+        onError: () => {
+            showError(getAdminMessage('error', 'batch_update', 'en'));
         },
     });
 };
@@ -817,5 +838,8 @@ const xpSettingsTab = ref<XPSettingsTab>(XPSettingsTab.Base);
                 </div>
             </div>
         </div>
+
+        <!-- Toast Notifications -->
+        <Toast />
     </AppLayout>
 </template>

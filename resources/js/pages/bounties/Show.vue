@@ -28,6 +28,7 @@ interface BountyWithDetails extends Bounty {
         status: string;
         user: User;
         created_at: string;
+        pr_url?: string;
     }>;
 }
 
@@ -49,6 +50,13 @@ interface CommentsData {
 interface Props {
     bounty: BountyWithDetails;
     comments?: CommentsData | null;
+    canUserSubmit?: boolean;
+    userSubmission?: {
+        id: number;
+        status: string;
+        pr_url: string;
+        created_at: string;
+    } | null;
 }
 
 const props = defineProps<Props>();
@@ -90,6 +98,26 @@ const getStatusColor = (status: string) => {
 const getStatusDisplayText = (status: string): string => {
     return status.toUpperCase();
 };
+
+const submissionStatusVariant = computed(() => {
+    if (!props.userSubmission) return 'outline';
+    switch (props.userSubmission.status) {
+        case 'pending': return 'secondary';
+        case 'accepted': return 'default';
+        case 'rejected': return 'destructive';
+        default: return 'outline';
+    }
+});
+
+const submissionStatusText = computed(() => {
+    if (!props.userSubmission) return '';
+    switch (props.userSubmission.status) {
+        case 'pending': return 'Pending Review';
+        case 'accepted': return 'Accepted';
+        case 'rejected': return 'Rejected';
+        default: return 'Unknown';
+    }
+});
 
 const isValidGitHubUrl = (url: string | undefined): boolean => {
     if (!url) return false;
@@ -139,7 +167,7 @@ const ownerInfo = computed(() => {
 });
 
 const canUserSubmit = computed(() => {
-    return currentUser && props.bounty.status === 'open' && currentUser.id !== ownerInfo.value.id;
+    return currentUser && props.bounty.status === 'open' && currentUser.id !== ownerInfo.value.id && !props.userSubmission;
 });
 
 const refreshComments = () => {
@@ -186,16 +214,60 @@ const shouldShowPagination = computed(() => {
                             </div>
 
                             <!-- Action Buttons -->
-                            <div class="flex gap-2">
-                                <Button v-if="canUserSubmit" class="flex items-center gap-2">
-                                    <Target class="h-4 w-4" />
-                                    Submit Solution
+                            <div class="flex flex-wrap gap-2">
+                                <Link v-if="canUserSubmit" :href="`/bounties/${bounty.id}/submit`" as="button">
+                                    <Button class="flex items-center gap-2">
+                                        <Target class="h-4 w-4" />
+                                        Submit Solution
+                                    </Button>
+                                </Link>
+
+                                <div v-else-if="userSubmission" class="flex items-center gap-2">
+                                    <Badge :variant="submissionStatusVariant" class="capitalize">
+                                        {{ submissionStatusText }}
+                                    </Badge>
+                                </div>
+
+                                <!-- Bounty Owner Actions - Only show for bounty owner -->
+                                <Button
+                                    v-if="bounty.issue.repo.user_id === currentUser?.id && bounty.submissions && bounty.submissions.length > 0"
+                                    variant="outline"
+                                    :href="`/bounties/${bounty.id}/submissions`"
+                                    class="flex items-center gap-2"
+                                >
+                                    <Users class="h-4 w-4" />
+                                    Manage Submissions ({{ bounty.submissions.length }})
                                 </Button>
                             </div>
                         </div>
                     </CardHeader>
 
                     <CardContent class="space-y-6">
+                        <!-- User Submission Info (if exists) -->
+                        <div v-if="userSubmission" class="border-l-4 border-l-blue-500 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <h4 class="font-semibold text-blue-800 dark:text-blue-200 mb-1">Your Submission</h4>
+                                    <p class="text-sm text-blue-700 dark:text-blue-300 mb-2">
+                                        Status: {{ submissionStatusText }}
+                                    </p>
+                                    <div class="flex items-center gap-2">
+                                        <a
+                                            :href="userSubmission.pr_url"
+                                            target="_blank"
+                                            class="text-sm text-blue-600 hover:text-blue-800 transition-colors flex items-center gap-1"
+                                        >
+                                            <ExternalLink class="h-3 w-3" />
+                                            View Pull Request
+                                        </a>
+                                        <span class="text-sm text-muted-foreground">
+                                            • Submitted {{ formatDate(userSubmission.created_at) }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Description -->
                         <div>
                             <h3 class="mb-3 flex items-center gap-2 text-lg font-semibold">
@@ -438,8 +510,8 @@ const shouldShowPagination = computed(() => {
                                                     <span class="text-sm font-semibold">{{ comment.user?.login || 'Unknown User' }}</span>
                                                     <Badge variant="outline" class="text-xs"> GitHub User </Badge>
                                                     <span class="text-xs text-muted-foreground">
-                                                    {{ formatDate(comment.created_at) }}
-                                                </span>
+                                                        {{ formatDate(comment.created_at) }}
+                                                    </span>
                                                     <a
                                                         :href="comment.html_url"
                                                         target="_blank"
@@ -462,9 +534,9 @@ const shouldShowPagination = computed(() => {
 
                                                 <!-- Comment Actions -->
                                                 <div class="mt-2 flex items-center gap-4 text-xs text-muted-foreground">
-                                                <span v-if="comment.updated_at !== comment.created_at">
-                                                    Edited {{ formatDate(comment.updated_at) }}
-                                                </span>
+                                                    <span v-if="comment.updated_at !== comment.created_at">
+                                                        Edited {{ formatDate(comment.updated_at) }}
+                                                    </span>
                                                     <span v-if="comment.reactions?.total_count > 0"> {{ comment.reactions.total_count }} reactions </span>
                                                 </div>
                                             </div>
@@ -522,12 +594,21 @@ const shouldShowPagination = computed(() => {
                                             </div>
 
                                             <div class="flex items-center gap-3">
+                                                <a
+                                                    v-if="submission.pr_url"
+                                                    :href="submission.pr_url"
+                                                    target="_blank"
+                                                    class="text-sm text-blue-600 hover:text-blue-800 transition-colors flex items-center gap-1"
+                                                >
+                                                    <ExternalLink class="h-3 w-3" />
+                                                    PR
+                                                </a>
                                                 <Badge :variant="submission.status === 'accepted' ? 'default' : 'secondary'" class="text-xs">
                                                     {{ submission.status.toUpperCase() }}
                                                 </Badge>
                                                 <span class="text-sm text-muted-foreground">
-                                                {{ formatDate(submission.created_at) }}
-                                            </span>
+                                                    {{ formatDate(submission.created_at) }}
+                                                </span>
                                             </div>
                                         </div>
                                     </CardContent>
@@ -540,7 +621,9 @@ const shouldShowPagination = computed(() => {
                 <!-- Back to Dashboard -->
                 <div class="flex justify-center">
                     <Link href="/dashboard">
-                        <Button variant="outline" class="flex items-center gap-2"> ← Back to Dashboard </Button>
+                        <Button variant="outline" class="flex items-center gap-2"> 
+                            ← Back to Dashboard 
+                        </Button>
                     </Link>
                 </div>
             </div>
