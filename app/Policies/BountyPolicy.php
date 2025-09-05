@@ -28,6 +28,7 @@ class BountyPolicy
 
     public function createForRepository(User $user, string $repoUrl): bool
     {
+
         $githubApi = new GitHubApiService($user);
 
         if (!$githubApi->hasValidToken()) {
@@ -45,7 +46,6 @@ class BountyPolicy
         return isset($repoData['permissions']) &&
             ($repoData['permissions']['admin'] || $repoData['permissions']['push']);
     }
-
     public function update(User $user, Bounty $bounty): bool
     {
         if ($bounty->trashed()) {
