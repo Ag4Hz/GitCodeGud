@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import FollowModal from '@/components/FollowModal.vue';
-import InputError from '@/components/InputError.vue';
 import Toast from '@/components/Toast.vue';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -11,10 +10,9 @@ import { useToast } from '@/composables/useToast';
 import { useXP } from '@/composables/useXP';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem, type User } from '@/types';
-import { type BountyPagination } from '@/types/bounty';
-import { getBountyMessage, getXPSyncMessage } from '@/utils/toastMessages';
-import { Head, router, useForm } from '@inertiajs/vue3';
-import { AlertCircle, Code, Database, Github, Plus, Settings, Star, Target, Trophy, Zap } from 'lucide-vue-next';
+import { getXPSyncMessage } from '@/utils/toastMessages';
+import { Head, router } from '@inertiajs/vue3';
+import { Code, Database, Settings, Star, Target, Trophy, Zap } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 
 const { success: showSuccess, error: showError } = useToast();
