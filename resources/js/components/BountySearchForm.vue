@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import InputError from '@/components/InputError.vue'
 import { Search, Loader2, X, AlertCircle, MessageCircle, Info } from 'lucide-vue-next'
-import { router, usePage } from '@inertiajs/vue3'
+import { router } from '@inertiajs/vue3'
 
 interface Repository {
     id: number
@@ -57,8 +57,6 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
     updateForm: [field: string, value: any]
 }>()
-
-const page = usePage()
 
 const clearForm = () => {
     selectedRepo.value = null
