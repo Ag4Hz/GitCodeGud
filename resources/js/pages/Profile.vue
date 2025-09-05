@@ -11,7 +11,7 @@ import { useXP } from '@/composables/useXP';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem, type User } from '@/types';
 import { getXPSyncMessage } from '@/utils/toastMessages';
-import { Head, router } from '@inertiajs/vue3';
+import { Head, router} from '@inertiajs/vue3';
 import { Code, Database, Settings, Star, Target, Trophy, Zap } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 import ReviewForm from '@/components/ReviewForm.vue';
@@ -376,9 +376,9 @@ function unfollow() {
                     </Card>
                 </div>
 
-                <section v-if="!isOwner" class="rounded-xl border border-gray-200 p-4 dark:border-white/10">
-                        <h2 class="text-lg font-semibold mb-2">Write a review for {{ user.name }}</h2>
-                        <ReviewForm :reviewee-id="user.id" />
+                <section v-if="!isOwner && canReview" class="rounded-xl border p-4">
+                    <h2 class="text-lg font-semibold mb-2">Write a review for {{ user.name }}</h2>
+                    <ReviewForm :reviewee-id="user.id" />
                 </section>
 
                     <p v-else-if="!isOwner" class="text-sm text-gray-500">
@@ -388,7 +388,6 @@ function unfollow() {
                 <ReviewList :reviews="props.reviews" />
             </div>
         </div>
-
         <!-- Toast Notifications -->
         <Toast />
     </AppLayout>
