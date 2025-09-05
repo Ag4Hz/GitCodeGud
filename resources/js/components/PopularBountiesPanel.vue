@@ -51,11 +51,11 @@ const formatDate = (dateString: string) => {
 const getStatusColor = (status: BountyStatus) => {
     switch (status) {
         case BountyStatus.OPEN:
-            return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+            return 'bg-green-100 text-green-800 dark:bg-green-900/60 dark:text-green-200';
         case BountyStatus.CLOSED:
-            return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
+            return 'bg-gray-100 text-gray-800 dark:bg-gray-700/70 dark:text-gray-200';
         default:
-            return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
+            return 'bg-gray-100 text-gray-800 dark:bg-gray-700/70 dark:text-gray-200';
     }
 };
 
@@ -69,97 +69,105 @@ const sortedBounties = computed(() => {
 </script>
 
 <template>
-    <Card v-if="props.bounties.length > 0" class="h-fit">
-        <CardHeader class="pb-3">
-            <CardTitle class="flex items-center gap-2 text-lg">
-                <TrendingUp class="h-5 w-5 text-orange-500" />
+    <Card class="gap-0 rounded-2xl border border-gray-200 bg-white/40 p-0 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-white/5">
+        <CardHeader class="rounded-t-2xl bg-white/40 px-4 py-3 backdrop-blur-xl sm:px-5 sm:py-4 md:px-6 md:py-5 dark:bg-white/10">
+            <CardTitle class="text-base font-semibold tracking-tight text-gray-900 sm:text-lg md:text-xl dark:text-gray-100">
                 {{ props.title }}
             </CardTitle>
         </CardHeader>
 
-        <CardContent class="space-y-0 p-4">
-            <div class="max-h-96 overflow-y-auto pr-2">
-                <div class="space-y-2">
-                    <div
+        <CardContent class="m-0 p-0">
+            <div v-if="props.bounties.length > 0" class="relative">
+                <ul class="m-0 divide-y divide-gray-200 overflow-y-auto dark:divide-white/10">
+                    <li
                         v-for="(bounty, index) in sortedBounties"
                         :key="bounty.id"
-                        class="group cursor-pointer rounded-lg border border-transparent p-3 transition-all hover:border-gray-200 hover:bg-gray-50 dark:hover:border-gray-600 dark:hover:bg-gray-700/50"
+                        role="button"
+                        tabindex="0"
                         @click="navigateToBounty(bounty)"
+                        class="group flex items-stretch gap-3 px-3 py-3 transition-colors hover:bg-white/50 focus:bg-gray-50 focus:outline-none sm:px-4 sm:py-4 md:px-5 dark:hover:bg-white/5 dark:focus:bg-white/5"
                     >
-                        <div class="flex items-start justify-between gap-3">
-                            <!-- Rank and Content -->
-                            <div class="flex min-w-0 flex-1 items-start gap-3">
-                                <!-- Popularity Rank -->
-                                <div
-                                    class="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-orange-100 text-xs font-bold text-orange-800 dark:bg-orange-900 dark:text-orange-200"
-                                >
-                                    {{ index + 1 }}
+                        <div
+                            class="flex h-9 w-9 flex-shrink-0 items-center justify-center self-center rounded-xl border border-gray-200 bg-white/60 text-sm font-semibold text-gray-700 dark:border-white/10 dark:bg-white/5 dark:text-gray-200"
+                        >
+                            {{ index + 1 }}
+                        </div>
+
+                        <div class="grid min-w-0 flex-1 grid-cols-1 items-start gap-2 sm:grid-cols-[1fr_auto]">
+                            <div class="min-w-0">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <h4 class="min-w-0 flex-1 truncate text-sm font-semibold text-gray-900 sm:text-base dark:text-gray-100">
+                                        {{ bounty.title }}
+                                    </h4>
+
+                                    <span
+                                        class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
+                                        :class="getStatusColor(bounty.status)"
+                                    >
+                                        {{ bounty.status.toUpperCase() }}
+                                    </span>
                                 </div>
 
-                                <!-- Bounty Info -->
-                                <div class="min-w-0 flex-1 space-y-1">
-                                    <div class="flex flex-wrap items-center gap-2">
-                                        <h4
-                                            class="line-clamp-1 text-sm font-medium transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400"
-                                        >
-                                            {{ bounty.title }}
-                                        </h4>
-                                        <span :class="`flex-shrink-0 rounded-md px-2 py-1 text-xs ${getStatusColor(bounty.status)}`">
-                                            {{ bounty.status.toUpperCase() }}
-                                        </span>
+                                <div v-if="bounty.languages && bounty.languages.length" class="mt-2 flex flex-wrap gap-1.5">
+                                    <Badge
+                                        v-for="language in bounty.languages.slice(0, 2)"
+                                        :key="language"
+                                        variant="outline"
+                                        class="border-gray-300/70 text-xs dark:border-white/20"
+                                    >
+                                        {{ language }}
+                                    </Badge>
+                                    <span v-if="bounty.languages.length > 2" class="text-xs text-gray-600 dark:text-gray-300">
+                                        +{{ bounty.languages.length - 2 }}
+                                    </span>
+                                </div>
+
+                                <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-gray-600 sm:text-[13px] dark:text-gray-300">
+                                    <div class="inline-flex items-center gap-1">
+                                        <DollarSign class="h-4 w-4" />
+                                        <span class="tabular-nums">{{ bounty.reward_xp }} XP</span>
                                     </div>
 
-                                    <!-- Languages-->
-                                    <div v-if="bounty.languages && bounty.languages.length > 0" class="flex flex-wrap gap-1">
-                                        <Badge v-for="language in bounty.languages.slice(0, 2)" :key="language" variant="outline" class="text-xs">
-                                            {{ language }}
-                                        </Badge>
-                                        <span v-if="bounty.languages.length > 2" class="text-xs text-gray-500 dark:text-gray-400">
-                                            +{{ bounty.languages.length - 2 }}
-                                        </span>
+                                    <div v-if="bounty.views && bounty.views > 0" class="inline-flex items-center gap-1">
+                                        <Eye class="h-4 w-4" />
+                                        <span class="tabular-nums">{{ bounty.views }}</span>
                                     </div>
 
-                                    <!-- Stats Row -->
-                                    <div class="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
-                                        <div class="flex items-center gap-1 text-yellow-600 dark:text-yellow-500">
-                                            <DollarSign class="h-3 w-3" />
-                                            {{ bounty.reward_xp }} XP
-                                        </div>
-                                        <div v-if="bounty.views && bounty.views > 0" class="flex items-center gap-1">
-                                            <Eye class="h-3 w-3" />
-                                            {{ bounty.views }}
-                                        </div>
-                                        <div v-if="bounty.submissions_count && bounty.submissions_count > 0" class="flex items-center gap-1">
-                                            <Target class="h-3 w-3" />
-                                            {{ bounty.submissions_count }}
-                                        </div>
-                                        <div class="flex items-center gap-1">
-                                            <Calendar class="h-3 w-3" />
-                                            {{ formatDate(bounty.created_at) }}
-                                        </div>
+                                    <div v-if="bounty.submissions_count && bounty.submissions_count > 0" class="inline-flex items-center gap-1">
+                                        <Target class="h-4 w-4" />
+                                        <span class="tabular-nums">{{ bounty.submissions_count }}</span>
+                                    </div>
+
+                                    <div class="inline-flex items-center gap-1">
+                                        <Calendar class="h-4 w-4" />
+                                        <span>{{ formatDate(bounty.created_at) }}</span>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Popularity Score -->
-                            <div class="flex flex-shrink-0 flex-col items-end text-right">
-                                <div class="text-xs font-medium text-orange-600 dark:text-orange-400">{{ bounty.popularity_score ?? 0 }} pts</div>
-                                <div class="text-xs text-gray-500 dark:text-gray-400">popularity</div>
+                            <div class="flex flex-col items-end justify-between sm:items-center sm:justify-center">
+                                <div
+                                    class="rounded-xl border border-purple-200 bg-purple-50/70 px-3 py-1 text-xs font-semibold text-purple-800 dark:border-purple-300/20 dark:bg-purple-300/10 dark:text-purple-200"
+                                >
+                                    {{ bounty.popularity_score ?? 0 }} pts
+                                </div>
+                                <div class="mt-1 text-[11px] tracking-wide text-purple-700/70 uppercase dark:text-purple-300/70">popularity</div>
                             </div>
                         </div>
-                    </div>
-                </div>
+                    </li>
+                </ul>
             </div>
 
-            <!-- Empty State -->
-            <div v-if="props.bounties.length === 0" class="py-8 text-center text-gray-500 dark:text-gray-400">
-                <TrendingUp class="mx-auto mb-2 h-8 w-8 opacity-50" />
+            <div v-else class="flex flex-col items-center justify-center gap-3 px-6 py-16 text-center text-gray-600 dark:text-gray-300">
+                <div class="flex h-12 w-12 items-center justify-center rounded-2xl border border-dashed border-gray-300/70 dark:border-white/15">
+                    <TrendingUp class="h-6 w-6" />
+                </div>
                 <p class="text-sm">No popular bounties yet</p>
+                <p class="max-w-sm text-xs text-gray-500 dark:text-gray-400">New bounties will show up here as they gain traction.</p>
             </div>
         </CardContent>
     </Card>
 </template>
-
 <style scoped>
 .line-clamp-1 {
     display: -webkit-box;

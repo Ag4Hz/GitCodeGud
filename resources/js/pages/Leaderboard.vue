@@ -75,7 +75,7 @@ const changeSort = (dir: Dir) => {
             <h2 class="mt-28 mb-6 text-center text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl md:text-4xl dark:text-gray-100">
                 Hunt bugs. Fix code. Earn XP.
             </h2>
-            <p class="mb-28 text-center text-base text-gray-600 sm:text-lg md:text-xl dark:text-gray-300">
+            <p class="mb-28 text-center text-base text-muted-foreground sm:text-lg md:text-xl">
                 Welcome to the battleground where developers rise and legends are made.
             </p>
 

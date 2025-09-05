@@ -4,7 +4,7 @@ import NavFooter from '@/components/NavFooter.vue';
 import PopularBountiesPanel from '@/components/PopularBountiesPanel.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { contactLinks } from '@/composables/contactLinks';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -191,215 +191,219 @@ const hasActiveBountyFilters = computed(() => {
 
 <template>
     <Head title="Dashboard - Find Bounties" />
-
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div>
-            <!-- User Search at the top -->
+        <div class="mx-auto max-w-7xl px-8 py-8 sm:px-6 lg:px-8">
+            <!-- Popular Bounties Section -->
+            <div
+                :class="[
+                    'mx-auto grid w-full gap-6',
+                    trendingBounties && trendingBounties.length > 0 ? 'max-w-4xl md:grid-cols-2' : 'max-w-2xl justify-items-center',
+                ]"
+            >
+                <!-- Popular Bounties -->
+                <PopularBountiesPanel :bounties="popularBounties" title="🔥 Popular Bounties" />
 
-            <!-- Bounty Search and Grid Section -->
-            <div class="mb-96 flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
-                <!-- Top Section - Popular and Trending Bounties -->
-                <div class="w-full space-y-6">
-                    <!-- Header -->
-                    <div class="mx-auto max-w-2xl text-center">
-                        <h1 class="mb-2 text-3xl font-bold tracking-tight">Find Open Bounties</h1>
-                        <p class="text-muted-foreground">
-                            Discover rewarding development opportunities and earn XP by contributing to open source projects.
-                        </p>
-                    </div>
+                <!-- Trending Bounties -->
+                <PopularBountiesPanel
+                    v-if="trendingBounties && trendingBounties.length > 0"
+                    :bounties="trendingBounties"
+                    title="📈 Trending This Week"
+                />
 
-                    <!-- Popular Bounties Section -->
-                    <div
-                        :class="[
-                            'grid grid-cols-1 gap-6',
-                            trendingBounties && trendingBounties.length > 0 ? 'lg:grid-cols-2' : 'justify-items-center lg:grid-cols-1',
-                        ]"
-                    >
-                        <!-- Popular Bounties -->
-                        <PopularBountiesPanel :bounties="popularBounties" title="🔥 Popular Bounties" />
-
-                        <!-- Trending Bounties -->
-                        <PopularBountiesPanel
-                            v-if="trendingBounties && trendingBounties.length > 0"
-                            :bounties="trendingBounties"
-                            title="📈 Trending This Week"
-                        />
-
-                        <div
-                            v-else
-                            class="flex items-center justify-center rounded-lg border-2 border-dashed border-gray-200 p-8 dark:border-gray-700"
-                        >
-                            <div class="text-center">
-                                <Target class="mx-auto mb-4 h-12 w-12 text-gray-400" />
-                                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">More Coming Soon</h3>
-                                <p class="text-gray-500 dark:text-gray-400">New bounties are added regularly</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="border-t border-gray-200 dark:border-gray-700"></div>
-
-                <!-- Search and Filters -->
-                <Card class="mx-auto w-full max-w-4xl">
-                    <CardHeader>
-                        <CardTitle class="flex items-center gap-2">
-                            <Search class="h-5 w-5" />
-                            Search & Filter Bounties
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent class="space-y-4">
-                        <div class="flex flex-col gap-4 sm:flex-row">
-                            <!-- Search Bar -->
-                            <div class="relative flex-1">
-                                <Search class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
-                                <Input
-                                    v-model="localSearchQuery"
-                                    placeholder="Search bounties by title, description, or repository..."
-                                    class="pr-4 pl-10"
-                                />
-                            </div>
-
-                            <!-- Language Filter -->
-                            <div class="sm:w-48">
-                                <LanguageFilter v-model="localSelectedLanguage" :languages="availableLanguages" placeholder="All Languages" />
-                            </div>
-
-                            <!-- Clear Filters Button -->
-                            <Button v-if="hasActiveBountyFilters" @click="clearBountyFilters" variant="outline" size="default" class="sm:w-auto">
-                                Clear Filters
-                            </Button>
-                        </div>
-
-                        <!-- Active Filters Display -->
-                        <div v-if="hasActiveBountyFilters" class="flex flex-wrap gap-2">
-                            <Badge v-if="localSearchQuery.trim()" variant="secondary" class="flex items-center gap-1">
-                                Search: "{{ localSearchQuery.trim() }}"
-                            </Badge>
-                            <Badge v-if="localSelectedLanguage" variant="secondary" class="flex items-center gap-1">
-                                Language: {{ localSelectedLanguage }}
-                            </Badge>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <!-- Loading State -->
-                <div v-if="isBountySearching" class="flex items-center justify-center py-8">
-                    <Loader2 class="h-8 w-8 animate-spin text-muted-foreground" />
-                    <span class="ml-2 text-muted-foreground">Searching bounties...</span>
-                </div>
-
-                <!-- All Bounties Section -->
-                <div v-else-if="bounties && bounties.data && bounties.data.length > 0">
-                    <div class="mb-6">
-                        <h2 class="text-xl font-semibold">All Bounties</h2>
-                        <p class="text-muted-foreground">Browse all available bounties</p>
-                    </div>
-
-                    <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                        <Card
-                            v-for="bounty in bounties.data"
-                            :key="bounty.id"
-                            class="cursor-pointer border-l-4 border-l-green-500 transition-all hover:-translate-y-1 hover:shadow-lg"
-                            @click="navigateToBounty(bounty)"
-                        >
-                            <CardHeader class="pb-3">
-                                <div class="flex items-start justify-between gap-2">
-                                    <h3 class="line-clamp-2 text-lg leading-tight font-semibold">
-                                        {{ bounty.title }}
-                                    </h3>
-                                    <Badge :class="getStatusColor(bounty.status)" class="flex-shrink-0 text-xs">
-                                        {{ getStatusDisplayText(bounty.status) }}
-                                    </Badge>
-                                </div>
-                            </CardHeader>
-                            <CardContent class="space-y-4">
-                                <!-- Short Description -->
-                                <p v-if="bounty.description" class="text-sm text-muted-foreground">
-                                    {{ bounty.description.length > 100 ? bounty.description.substring(0, 100) + '...' : bounty.description }}
-                                </p>
-
-                                <!-- Languages -->
-                                <div v-if="bounty.languages && bounty.languages.length > 0" class="flex flex-wrap gap-1">
-                                    <Badge v-for="language in bounty.languages.slice(0, 3)" :key="language" variant="outline" class="text-xs">
-                                        {{ language }}
-                                    </Badge>
-                                    <Badge v-if="bounty.languages.length > 3" variant="outline" class="text-xs">
-                                        +{{ bounty.languages.length - 3 }}
-                                    </Badge>
-                                </div>
-
-                                <!-- Metadata with views -->
-                                <div class="flex items-center justify-between text-sm">
-                                    <div class="flex items-center gap-3">
-                                        <div class="flex items-center gap-1 font-medium text-yellow-600">
-                                            <DollarSign class="h-4 w-4" />
-                                            {{ bounty.reward_xp }} XP
-                                        </div>
-                                        <!-- Views megjelenítése -->
-                                        <div v-if="bounty.views && bounty.views > 0" class="flex items-center gap-1 text-muted-foreground">
-                                            <Eye class="h-3 w-3" />
-                                            {{ bounty.views }}
-                                        </div>
-                                        <!-- Submissions count ha van -->
-                                        <div
-                                            v-if="bounty.submissions_count && bounty.submissions_count > 0"
-                                            class="flex items-center gap-1 text-muted-foreground"
-                                        >
-                                            <Target class="h-3 w-3" />
-                                            {{ bounty.submissions_count }}
-                                        </div>
-                                    </div>
-
-                                    <!-- Created Date -->
-                                    <span class="flex items-center gap-1 text-xs text-muted-foreground">
-                                        <Calendar class="h-3 w-3" />
-                                        {{ formatDate(bounty.created_at) }}
-                                    </span>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </div>
-                </div>
-
-                <!-- Empty State -->
-                <div v-else class="py-12 text-center">
-                    <Target class="mx-auto mb-6 h-16 w-16 text-muted-foreground" />
-                    <h3 class="mb-2 text-xl font-semibold">
-                        {{ hasActiveBountyFilters ? 'No bounties found' : 'No bounties available' }}
-                    </h3>
-                    <p class="mb-4 text-muted-foreground">
-                        {{
-                            hasActiveBountyFilters
-                                ? 'Try adjusting your search terms or filters to find bounties.'
-                                : 'There are no open bounties at the moment. Check back later!'
-                        }}
-                    </p>
-                    <Button v-if="hasActiveBountyFilters" @click="clearBountyFilters" variant="outline"> Clear all filters </Button>
-                </div>
-
-                <!-- Pagination -->
-                <div v-if="bounties && bounties.last_page > 1" class="mt-8 flex justify-center">
-                    <div class="flex items-center gap-2">
-                        <Button v-if="bounties.current_page > 1" variant="outline" size="sm" @click="navigateToBountyPage(bounties.current_page - 1)">
-                            Previous
-                        </Button>
-                        <span class="px-3 text-sm text-muted-foreground"> Page {{ bounties.current_page }} of {{ bounties.last_page }} </span>
-                        <Button
-                            v-if="bounties.current_page < bounties.last_page"
-                            variant="outline"
-                            size="sm"
-                            @click="navigateToBountyPage(bounties.current_page + 1)"
-                        >
-                            Next
-                        </Button>
+                <div v-else class="flex items-center justify-center rounded-lg border-2 border-dashed border-gray-200 p-8 dark:border-gray-700">
+                    <div class="text-center">
+                        <Target class="mx-auto mb-4 h-12 w-12 text-gray-400" />
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">More Coming Soon</h3>
+                        <p class="text-gray-500 dark:text-gray-400">New bounties are added regularly</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Footer -->
-            <NavFooter :items="contactLinks" />
+            <!-- Text -->
+
+            <h2 class="mt-28 mb-6 text-center text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl md:text-4xl dark:text-gray-100">
+                Find Open Bounties
+            </h2>
+            <p class="mb-28 text-center text-base text-muted-foreground sm:text-lg md:text-xl">
+                Discover rewarding development opportunities and earn XP by contributing to open source projects.
+            </p>
+
+            <!-- Search and Filters -->
+            <div
+                :class="[
+        'mx-auto w-full max-w-4xl space-y-4',
+        trendingBounties && trendingBounties.length > 0 ? '' : 'max-w-2xl',
+    ]"
+            >
+                <!-- Search -->
+                <div class="relative">
+                    <Search
+                        class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                    />
+                    <Input
+                        v-model="localSearchQuery"
+                        placeholder="Search bounties by title, description, or repository..."
+                        class="pr-4 pl-10"
+                    />
+                </div>
+
+                <!-- Filters -->
+                <div class="flex flex-wrap items-center gap-3">
+                    <div class="w-full sm:w-48">
+                        <LanguageFilter
+                            v-model="localSelectedLanguage"
+                            :languages="availableLanguages"
+                            placeholder="All Languages"
+                        />
+                    </div>
+
+                    <Button
+                        v-if="hasActiveBountyFilters"
+                        @click="clearBountyFilters"
+                        variant="outline"
+                        size="default"
+                        class="rounded-xl bg-white/40 backdrop-blur-md dark:bg-white/10"
+                    >
+                        Clear Filters
+                    </Button>
+                </div>
+
+                <!-- Active Filters -->
+                <div v-if="hasActiveBountyFilters" class="flex flex-wrap gap-2">
+                    <Badge
+                        v-if="localSearchQuery.trim()"
+                        variant="secondary"
+                        class="flex items-center gap-1 rounded-lg"
+                    >
+                        Search: "{{ localSearchQuery.trim() }}"
+                    </Badge>
+                    <Badge
+                        v-if="localSelectedLanguage"
+                        variant="secondary"
+                        class="flex items-center gap-1 rounded-lg"
+                    >
+                        Language: {{ localSelectedLanguage }}
+                    </Badge>
+                </div>
+            </div>
+
+
+            <!-- Loading State -->
+            <div v-if="isBountySearching" class="flex items-center justify-center py-8">
+                <Loader2 class="h-8 w-8 animate-spin text-muted-foreground" />
+                <span class="ml-2 text-muted-foreground">Searching bounties...</span>
+            </div>
+
+            <!-- All Bounties Section -->
+            <div v-else-if="bounties && bounties.data && bounties.data.length > 0">
+                <div class="mb-6">
+                    <h2 class="text-xl font-semibold">All Bounties</h2>
+                    <p class="text-muted-foreground">Browse all available bounties</p>
+                </div>
+
+                <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    <Card
+                        v-for="bounty in bounties.data"
+                        :key="bounty.id"
+                        class="cursor-pointer border-l-4 border-l-green-500 transition-all hover:-translate-y-1 hover:shadow-lg"
+                        @click="navigateToBounty(bounty)"
+                    >
+                        <CardHeader class="pb-3">
+                            <div class="flex items-start justify-between gap-2">
+                                <h3 class="line-clamp-2 text-lg leading-tight font-semibold">
+                                    {{ bounty.title }}
+                                </h3>
+                                <Badge :class="getStatusColor(bounty.status)" class="flex-shrink-0 text-xs">
+                                    {{ getStatusDisplayText(bounty.status) }}
+                                </Badge>
+                            </div>
+                        </CardHeader>
+                        <CardContent class="space-y-4">
+                            <!-- Short Description -->
+                            <p v-if="bounty.description" class="text-sm text-muted-foreground">
+                                {{ bounty.description.length > 100 ? bounty.description.substring(0, 100) + '...' : bounty.description }}
+                            </p>
+
+                            <!-- Languages -->
+                            <div v-if="bounty.languages && bounty.languages.length > 0" class="flex flex-wrap gap-1">
+                                <Badge v-for="language in bounty.languages.slice(0, 3)" :key="language" variant="outline" class="text-xs">
+                                    {{ language }}
+                                </Badge>
+                                <Badge v-if="bounty.languages.length > 3" variant="outline" class="text-xs">
+                                    +{{ bounty.languages.length - 3 }}
+                                </Badge>
+                            </div>
+
+                            <!-- Metadata with views -->
+                            <div class="flex items-center justify-between text-sm">
+                                <div class="flex items-center gap-3">
+                                    <div class="flex items-center gap-1 font-medium text-yellow-600">
+                                        <DollarSign class="h-4 w-4" />
+                                        {{ bounty.reward_xp }} XP
+                                    </div>
+                                    <!-- Views megjelenítése -->
+                                    <div v-if="bounty.views && bounty.views > 0" class="flex items-center gap-1 text-muted-foreground">
+                                        <Eye class="h-3 w-3" />
+                                        {{ bounty.views }}
+                                    </div>
+                                    <!-- Submissions count ha van -->
+                                    <div
+                                        v-if="bounty.submissions_count && bounty.submissions_count > 0"
+                                        class="flex items-center gap-1 text-muted-foreground"
+                                    >
+                                        <Target class="h-3 w-3" />
+                                        {{ bounty.submissions_count }}
+                                    </div>
+                                </div>
+
+                                <!-- Created Date -->
+                                <span class="flex items-center gap-1 text-xs text-muted-foreground">
+                                    <Calendar class="h-3 w-3" />
+                                    {{ formatDate(bounty.created_at) }}
+                                </span>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div v-else class="py-12 text-center">
+                <Target class="mx-auto mb-6 h-16 w-16 text-muted-foreground" />
+                <h3 class="mb-2 text-xl font-semibold">
+                    {{ hasActiveBountyFilters ? 'No bounties found' : 'No bounties available' }}
+                </h3>
+                <p class="mb-4 text-muted-foreground">
+                    {{
+                        hasActiveBountyFilters
+                            ? 'Try adjusting your search terms or filters to find bounties.'
+                            : 'There are no open bounties at the moment. Check back later!'
+                    }}
+                </p>
+                <Button v-if="hasActiveBountyFilters" @click="clearBountyFilters" variant="outline"> Clear all filters </Button>
+            </div>
+
+            <!-- Pagination -->
+            <div v-if="bounties && bounties.last_page > 1" class="mt-8 flex justify-center">
+                <div class="flex items-center gap-2">
+                    <Button v-if="bounties.current_page > 1" variant="outline" size="sm" @click="navigateToBountyPage(bounties.current_page - 1)">
+                        Previous
+                    </Button>
+                    <span class="px-3 text-sm text-muted-foreground"> Page {{ bounties.current_page }} of {{ bounties.last_page }} </span>
+                    <Button
+                        v-if="bounties.current_page < bounties.last_page"
+                        variant="outline"
+                        size="sm"
+                        @click="navigateToBountyPage(bounties.current_page + 1)"
+                    >
+                        Next
+                    </Button>
+                </div>
+            </div>
         </div>
+
+        <!-- Footer -->
+        <NavFooter :items="contactLinks" />
     </AppLayout>
 </template>
 
