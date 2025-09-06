@@ -176,7 +176,7 @@ function unfollow() {
     <AppLayout :breadcrumbs="breadcrumbItems">
         <Head :title="isOwner ? 'My Profile' : `${user.name}'s Profile`" />
         <div class="px-4 py-6">
-            <div class="mx-auto max-w-4xl space-y-6">
+            <div class="mx-auto max-w-4xl space-y-6 px-4 sm:px-6 lg:px-8">
                 <!-- Profile Header -->
                 <Card>
                     <CardHeader>

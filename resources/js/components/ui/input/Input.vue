@@ -2,6 +2,7 @@
 import type { HTMLAttributes } from 'vue'
 import { cn } from '@/lib/utils'
 import { useVModel } from '@vueuse/core'
+import { ComboboxInput } from '@headlessui/vue';
 
 const props = defineProps<{
   defaultValue?: string | number
@@ -24,10 +25,11 @@ const modelValue = useVModel(props, 'modelValue', emits, {
     v-model="modelValue"
     data-slot="input"
     :class="cn(
-      'file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input flex h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm',
+        'w-full rounded-2xl border bg-white/40 border-gray-200 py-8 pr-3 pl-12 text-sm sm:py-3 sm:pr-4 sm:pl-12 sm:text-base sm:backdrop-blur-2xl md:py-4 md:pr-6 md:pl-14 md:text-base dark:border-white/10 dark:bg-white/5 dark:text-gray-100',
       'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
       'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
       props.class,
     )"
   >
 </template>
+class=""

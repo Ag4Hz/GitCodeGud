@@ -70,8 +70,8 @@ const sortedBounties = computed(() => {
 
 <template>
     <Card class="gap-0 rounded-2xl border border-gray-200 bg-white/40 p-0 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-white/5">
-        <CardHeader class="rounded-t-2xl bg-white/40 px-4 py-3 backdrop-blur-xl sm:px-5 sm:py-4 md:px-6 md:py-5 dark:bg-white/10">
-            <CardTitle class="text-base font-semibold tracking-tight text-gray-900 sm:text-lg md:text-xl dark:text-gray-100">
+        <CardHeader class="rounded-t-2xl bg-white/40 px-2 py-4 backdrop-blur-xl sm:px-5 md:px-6 dark:bg-white/5">
+            <CardTitle class="font-medium text-gray-600 dark:text-gray-300">
                 {{ props.title }}
             </CardTitle>
         </CardHeader>
@@ -85,7 +85,7 @@ const sortedBounties = computed(() => {
                         role="button"
                         tabindex="0"
                         @click="navigateToBounty(bounty)"
-                        class="group flex items-stretch gap-3 px-3 py-3 transition-colors hover:bg-white/50 focus:bg-gray-50 focus:outline-none sm:px-4 sm:py-4 md:px-5 dark:hover:bg-white/5 dark:focus:bg-white/5"
+                        class="group flex items-stretch gap-5 px-3 py-3 transition-colors hover:bg-white/50 focus:bg-gray-50 focus:outline-none sm:px-4 sm:py-4 md:px-5 dark:hover:bg-white/5 dark:focus:bg-white/5"
                     >
                         <div
                             class="flex h-9 w-9 flex-shrink-0 items-center justify-center self-center rounded-xl border border-gray-200 bg-white/60 text-sm font-semibold text-gray-700 dark:border-white/10 dark:bg-white/5 dark:text-gray-200"
@@ -108,22 +108,8 @@ const sortedBounties = computed(() => {
                                     </span>
                                 </div>
 
-                                <div v-if="bounty.languages && bounty.languages.length" class="mt-2 flex flex-wrap gap-1.5">
-                                    <Badge
-                                        v-for="language in bounty.languages.slice(0, 2)"
-                                        :key="language"
-                                        variant="outline"
-                                        class="border-gray-300/70 text-xs dark:border-white/20"
-                                    >
-                                        {{ language }}
-                                    </Badge>
-                                    <span v-if="bounty.languages.length > 2" class="text-xs text-gray-600 dark:text-gray-300">
-                                        +{{ bounty.languages.length - 2 }}
-                                    </span>
-                                </div>
-
-                                <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-gray-600 sm:text-[13px] dark:text-gray-300">
-                                    <div class="inline-flex items-center gap-1">
+                                <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs  sm:text-[13px] dark:text-gray-300">
+                                    <div class="inline-flex items-center gap-1 text-yellow-700">
                                         <DollarSign class="h-4 w-4" />
                                         <span class="tabular-nums">{{ bounty.reward_xp }} XP</span>
                                     </div>
@@ -152,6 +138,22 @@ const sortedBounties = computed(() => {
                                     {{ bounty.popularity_score ?? 0 }} pts
                                 </div>
                                 <div class="mt-1 text-[11px] tracking-wide text-purple-700/70 uppercase dark:text-purple-300/70">popularity</div>
+                            </div>
+
+                            <div class="mt-2 flex min-h-[24px] flex-wrap gap-1.5">
+                                <template v-if="bounty.languages && bounty.languages.length">
+                                    <Badge
+                                        v-for="language in bounty.languages.slice(0, 2)"
+                                        :key="language"
+                                        variant="outline"
+                                        class="border-gray-300/70 text-xs dark:border-white/20"
+                                    >
+                                        {{ language }}
+                                    </Badge>
+                                    <span v-if="bounty.languages.length > 2" class="text-xs text-gray-600 dark:text-gray-300">
+                                        {{ bounty.languages.length - 2 }}
+                                    </span>
+                                </template>
                             </div>
                         </div>
                     </li>
