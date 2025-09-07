@@ -102,7 +102,7 @@ class BountyStoreRequest extends FormRequest
         if (!$issueInfo) {
             return;
         }
-
+        
         $isOpen = $githubApi->isIssueOpen($issueInfo['repo_full_name'], $issueInfo['issue_number']);
 
         if (!$isOpen) {
@@ -127,7 +127,7 @@ class BountyStoreRequest extends FormRequest
             $existingBounty = Bounty::withTrashed()->where('issue_id', $existingIssue->id)->first();
             if ($existingBounty) {
                 if ($existingBounty->trashed()) {
-                    $validator->errors()->add('issue_numPaneber', 'An archived bounty already exists for this issue. Please restore the existing bounty instead of creating a new one.');
+                    $validator->errors()->add('issue_number', 'An archived bounty already exists for this issue. Please restore the existing bounty instead of creating a new one.');
                 } else {
                     $validator->errors()->add('issue_number', 'A bounty already exists for this issue. Each issue can only have one bounty.');
                 }
