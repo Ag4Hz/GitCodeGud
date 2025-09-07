@@ -52,7 +52,6 @@ watch(search, () => {
                     placeholder="Looking for a buddy?"
                 />
             </div>
-
             <ComboboxOptions
                 class="p-x2 absolute right-0 left-0 z-50 mt-2 max-h-72 w-full overflow-y-auto rounded-xl border border-gray-200 bg-white/40 text-sm shadow-xl ring-1 ring-black/5 backdrop-blur-xl backdrop-saturate-150 sm:backdrop-blur-2xl dark:border-white/10 dark:bg-white/10 dark:text-gray-200"
             >

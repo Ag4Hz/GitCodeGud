@@ -288,7 +288,7 @@ const hasActiveBountyFilters = computed(() => {
                             <Card
                                 v-for="bounty in bounties.data"
                                 :key="bounty.id"
-                                class="cursor-pointer min-h-[238px] border border-white/10 border-l-4 border-l-green-800 transition-all hover:-translate-y-1 hover:shadow-lg  bg-white/40 backdrop-blur-xl  dark:bg-white/5"
+                                class="cursor-pointer min-h-[238px] border min-w-0 order-white/10 border-l-4 border-l-green-800 transition-all hover:-translate-y-1 hover:shadow-lg  bg-white/40 backdrop-blur-xl  dark:bg-white/5"
                                 @click="navigateToBounty(bounty)"
                             >
                                 <CardHeader class="pb-3">
@@ -303,7 +303,7 @@ const hasActiveBountyFilters = computed(() => {
                                 </CardHeader>
                                 <CardContent class="flex flex-1 flex-col space-y-4">
                                     <!-- Short Description -->
-                                    <p v-if="bounty.description" class="text-sm text-muted-foreground">
+                                    <p v-if="bounty.description" class="text-sm text-muted-foreground break-all">
                                         {{ bounty.description.length > 100 ? bounty.description.substring(0, 100) + '...' : bounty.description }}
                                     </p>
 

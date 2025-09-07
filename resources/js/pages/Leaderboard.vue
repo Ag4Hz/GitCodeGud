@@ -63,7 +63,7 @@ const changeSort = (dir: Dir) => {
     <Head title="Leaderboard" />
 
     <AppLayout :breadcrumbs="[{ title: 'Leaderboard', href: '/leaderboard' }]">
-        <div class="mx-auto max-w-7xl py-8 px-4 sm:px-6 lg:px-8">
+        <div class="mx-auto max-w-4xl py-8 px-4 sm:px-6 lg:px-8">
             <div class="mb-6 flex items-end justify-between gap-4">
                 <h1 class="text-2xl font-semibold tracking-tight text-gray-900 md:text-3xl dark:text-gray-100">Leaderboard</h1>
             </div>

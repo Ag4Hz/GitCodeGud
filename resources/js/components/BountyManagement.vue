@@ -43,9 +43,11 @@ const currentBounties = computed(() => {
 const getStatusColor = (status: BountyStatus) => {
     switch (status) {
         case BountyStatus.OPEN:
-            return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+            return 'bg-green-100 text-green-800 dark:bg-green-900/60 dark:text-green-200';
         case BountyStatus.CLOSED:
-            return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
+            return 'bg-gray-100 text-gray-800 dark:bg-gray-700/70 dark:text-gray-200';
+        default:
+            return 'bg-gray-100 text-gray-800 dark:bg-gray-700/70 dark:text-gray-200';
     }
 };
 
@@ -177,8 +179,8 @@ const restoreBounty = (bounty: Bounty) => {
 </script>
 
 <template>
-    <Card>
-        <CardHeader>
+    <Card class="gap-0 rounded-2xl border border-gray-200 bg-white/40 p-0 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-white/5">
+        <CardHeader class="gap-0 rounded-t-2xl bg-white/40 px-2 py-3 backdrop-blur-xl sm:px-5 md:px-6 dark:bg-white/5">
             <div>
                 <CardTitle class="flex items-center gap-2">
                     <Target class="h-5 w-5" />
@@ -187,60 +189,65 @@ const restoreBounty = (bounty: Bounty) => {
                 <CardDescription> View and manage your bounty campaigns </CardDescription>
             </div>
         </CardHeader>
-        <CardContent>
+        <CardContent class="my-8">
             <!-- Stats Overview -->
             <div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-5">
-                <div class="rounded-lg border bg-card p-4">
+
+                <div class="rounded-2xl p-4 bg-white/40 dark:bg-white/5 border border-gray-200 dark:border-white/10">
                     <div class="mb-2 flex items-center gap-2">
-                        <Target class="h-4 w-4 text-blue-600" />
+                        <Target class="h-4 w-4 text-purple-600" />
                         <span class="text-sm font-medium">Active</span>
                     </div>
-                    <p class="text-2xl font-bold">{{ bountyStats.total }}</p>
+                    <p class="text-2xl text-purple-600 font-bold">{{ bountyStats.total }}</p>
                 </div>
-                <div class="rounded-lg border bg-card p-4">
+
+                <div class="rounded-2xl p-4 bg-white/40 dark:bg-white/5 border border-gray-200 dark:border-white/10">
                     <div class="mb-2 flex items-center gap-2">
-                        <div class="h-4 w-4 rounded-full bg-green-600"></div>
+                        <div class="h-4 w-4 rounded-full bg-green-800"></div>
                         <span class="text-sm font-medium">Open</span>
                     </div>
-                    <p class="text-2xl font-bold text-green-600">{{ bountyStats.open }}</p>
+                    <p class="text-2xl font-bold text-green-800">{{ bountyStats.open }}</p>
                 </div>
-                <div class="rounded-lg border bg-card p-4">
+
+                <div class="rounded-2xl p-4 bg-white/40 dark:bg-white/5 border border-gray-200 dark:border-white/10">
                     <div class="mb-2 flex items-center gap-2">
                         <div class="h-4 w-4 rounded-full bg-gray-600"></div>
                         <span class="text-sm font-medium">Closed</span>
                     </div>
                     <p class="text-2xl font-bold text-gray-600">{{ bountyStats.closed }}</p>
                 </div>
-                <div class="rounded-lg border bg-card p-4">
+
+                <div class="rounded-2xl p-4 bg-white/40 dark:bg-white/5 border border-gray-200 dark:border-white/10">
                     <div class="mb-2 flex items-center gap-2">
-                        <Archive class="h-4 w-4 text-orange-600" />
+                        <Archive class="h-4 w-4 text-red-800" />
                         <span class="text-sm font-medium">Archived</span>
                     </div>
-                    <p class="text-2xl font-bold text-orange-600">{{ bountyStats.archived }}</p>
+                    <p class="text-2xl font-bold text-red-800">{{ bountyStats.archived }}</p>
                 </div>
-                <div class="rounded-lg border bg-card p-4">
+
+                <div class="rounded-2xl p-4 bg-white/40 dark:bg-white/5 border border-gray-200 dark:border-white/10">
                     <div class="mb-2 flex items-center gap-2">
-                        <DollarSign class="h-4 w-4 text-yellow-600" />
-                        <span class="text-sm font-medium">Total Reward XP</span>
+                        <DollarSign class="h-4 w-4 text-yellow-700" />
+                        <span class="text-sm font-medium">Total XP</span>
                     </div>
-                    <p class="text-2xl font-bold text-yellow-600">{{ bountyStats.totalRewardXP }}</p>
+                    <p class="text-2xl font-bold text-yellow-700">{{ bountyStats.totalRewardXP }}</p>
                 </div>
             </div>
 
             <!-- Toggle View -->
-            <div class="mb-6 flex gap-2">
-                <Button
+            <div class="mb-6 flex flex-col sm:flex-row gap-2">
+            <Button
                     @click="showDeletedBounties = false"
-                    :variant="!showDeletedBounties ? 'default' : 'outline'"
+                    :variant="!showDeletedBounties ? 'secondaryButton' : 'button'"
                     size="sm"
-                    class="flex items-center gap-2"
+                    class="flex items-center py-4"
                 >
                     <Eye class="h-4 w-4" />
                     Active Bounties ({{ bountyStats.total }})
                 </Button>
                 <Button
                     @click="showDeletedBounties = true"
-                    :variant="showDeletedBounties ? 'default' : 'outline'"
+                    :variant="showDeletedBounties ? 'secondaryButton' : 'button'"
                     size="sm"
                     class="flex items-center gap-2"
                 >
@@ -254,9 +261,9 @@ const restoreBounty = (bounty: Bounty) => {
                 <div
                     v-for="bounty in currentBounties"
                     :key="bounty.id"
-                    class="rounded-lg border p-4 transition-colors"
+                    class=" border p-4 transition-colors"
                     :class="[
-                        editingBounty === bounty.id ? 'border-primary bg-accent/30' : 'hover:bg-accent/50',
+                        editingBounty === bounty.id ? 'border-primary bg-accent/30' : 'bg-white/40 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl hover:bg-white/90 dark:hover:bg-white/10',
                         bounty.deleted_at ? 'border-gray-300 bg-gray-50 dark:bg-gray-800/50' : '',
                     ]"
                 >
@@ -352,7 +359,7 @@ const restoreBounty = (bounty: Bounty) => {
                                         {{ bounty.title }}
                                     </h3>
                                     <Badge v-if="bounty.deleted_at" variant="secondary" class="text-xs"> Archived </Badge>
-                                    <Badge v-else :class="getStatusColor(bounty.status)" class="text-xs">
+                                    <Badge v-else :class="getStatusColor(bounty.status)" class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium">
                                         {{ getStatusDisplayText(bounty.status) }}
                                     </Badge>
                                 </div>
@@ -372,7 +379,7 @@ const restoreBounty = (bounty: Bounty) => {
                                         :href="bounty.issue.repo.url"
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        class="flex items-center gap-1 text-blue-600 hover:underline"
+                                        class="flex items-center gap-1 text-purple-700/70 dark:text-purple-300/70 dark:hover:text-white"
                                     >
                                         <ExternalLink class="h-3 w-3" />
                                         Repository
@@ -381,7 +388,7 @@ const restoreBounty = (bounty: Bounty) => {
                                         :href="bounty.issue.url"
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        class="flex items-center gap-1 text-blue-600 hover:underline"
+                                        class="flex items-center gap-1 text-purple-700/70 dark:text-purple-300/70 dark:hover:text-white"
                                     >
                                         <ExternalLink class="h-3 w-3" />
                                         Issue

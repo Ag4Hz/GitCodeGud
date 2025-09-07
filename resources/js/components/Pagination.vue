@@ -13,7 +13,7 @@ const props = defineProps<{
 </script>
 
 <template>
-    <div class="mt-6 flex justify-center space-x-1">
+    <div class="mt-6 flex justify-center flex-wrap gap-1 px-2">
         <Link
             v-for="(link, index) in props.links"
             :key="index"
@@ -21,7 +21,7 @@ const props = defineProps<{
             :only="['leaderboardUsers']"
             preserve-state
             preserve-scroll
-            class="rounded border px-3 py-1 text-sm transition-colors"
+            class="inline-flex items-center rounded border px-3 py-1 text-sm transition-colors shrink-0 whitespace-nowrap"
             :class="[
                 link.active ? 'border-gray-300 bg-white/70 text-gray-900 dark:border-white/20 dark:bg-white/20 dark:text-gray-100' : '',
                 link.url ? '' : 'pointer-events-none opacity-50',
