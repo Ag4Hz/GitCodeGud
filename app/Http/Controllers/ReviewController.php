@@ -15,7 +15,7 @@ class ReviewController extends Controller
     public function store(StoreReviewRequest $request)
     {
 
-        $review = $this->reviewService->createReview($request->integer('reviewee_id'), $request->string('comment'));
+        $review = $this->reviewService->createReview($request->integer('reviewee_id'), $request->string('comment'), $request->integer('rating') );
 
 
         return redirect()

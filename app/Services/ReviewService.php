@@ -48,11 +48,12 @@ class ReviewService
         return $this->hasSubmissionBetweenUsers($viewerId, $profileUser->id);
     }
 
-    public function createReview(int $revieweeId, string $comment): Review
+    public function createReview(int $revieweeId, string $comment, int $rating): Review
     {
         return Review::create([
             'user_id'     => Auth::id(),
             'reviewee_id' => $revieweeId,
+            'rating'      => $rating,
             'comment'     => $comment,
             'date'        => now(),
         ]);
