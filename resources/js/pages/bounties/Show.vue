@@ -275,7 +275,11 @@ const shouldShowPagination = computed(() => {
                                     </Button>
                                 </Link>
 
-                                <Link v-else-if="canUserSubmit && userSubmission && userSubmission.status === 'rejected'" :href="`/bounties/${bounty.id}/submit`" as="button">
+                                <Link
+                                    v-else-if="canUserSubmit && userSubmission && userSubmission.status === 'rejected'"
+                                    :href="`/bounties/${bounty.id}/submit`"
+                                    as="button"
+                                >
                                     <Button variant="destructive" class="flex items-center gap-2">
                                         <Target class="h-4 w-4" />
                                         Resubmit Solution
@@ -348,11 +352,8 @@ const shouldShowPagination = computed(() => {
                                             <ExternalLink class="h-3 w-3" />
                                             View Pull Request
                                         </a>
-                                        <span class="text-sm text-muted-foreground">
-                                            • Submitted {{ formatDate(userSubmission.created_at) }}
-                                        </span>
+                                        <span class="text-sm text-muted-foreground"> • Submitted {{ formatDate(userSubmission.created_at) }} </span>
                                     </div>
-
                                 </div>
                             </div>
                         </div>
