@@ -3,26 +3,18 @@
 namespace App\Providers;
 
 use App\Models\Submission;
-use App\Models\User;
-use App\Policies\SubmissionPolicy;
-use App\Policies\UserPolicy;
-use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
+use App\Observers\SubmissionObserver;
+use Illuminate\Support\ServiceProvider;
 
-class AuthServiceProvider extends ServiceProvider
+class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     * The model to policy mappings for the application.
-     *
-     * @var array<class-string, class-string>
-     */
-    protected $policies = [
-        User::class => UserPolicy::class,
-        Submission::class => SubmissionPolicy::class,
-        ];
+    public function register(): void
+    {
+        //
+    }
 
     public function boot(): void
     {
-        //
+        Submission::observe(SubmissionObserver::class);
     }
 }
