@@ -14,7 +14,7 @@ import { type BreadcrumbItem, type User } from '@/types';
 import { type ReviewsPayload } from '@/types/review';
 import { getXPSyncMessage } from '@/utils/toastMessages';
 import { Head, router } from '@inertiajs/vue3';
-import { Code, Database, Settings, Star, Target, Trophy, Zap, MessageSquareMore } from 'lucide-vue-next';
+import { Code, Database, MessageSquareMore, Settings, Star, Target, Trophy, Zap } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 
 const { success: showSuccess, error: showError } = useToast();
@@ -182,17 +182,15 @@ function unfollow() {
                     <CardHeader>
                         <div class="flex items-center gap-6">
                             <div class="relative">
-                                <Avatar class=" lg:h-22 lg:w-22 md:h-18 md:w-18 sm:h-15 sm:w-15 overflow-hidden rounded-full">
+                                <Avatar class="overflow-hidden rounded-full sm:h-15 sm:w-15 md:h-18 md:w-18 lg:h-22 lg:w-22">
                                     <AvatarImage v-if="user.avatar" :src="user.avatar" :alt="user.name" />
-                                    <AvatarFallback
-                                        class="rounded-lg bg-neutral-200 font-semibold text-black dark:bg-neutral-700 dark:text-white"
-                                    >
-                                    {{ getInitials(user.name) }}
+                                    <AvatarFallback class="rounded-lg bg-neutral-200 font-semibold text-black dark:bg-neutral-700 dark:text-white">
+                                        {{ getInitials(user.name) }}
                                     </AvatarFallback>
                                 </Avatar>
 
                                 <!-- Large XP Level Badge -->
-                                <div class="absolute -right-1 -bottom-1 flex items-center justify-center ">
+                                <div class="absolute -right-1 -bottom-1 flex items-center justify-center">
                                     <Badge
                                         class="h-6 min-w-6 border-3 border-white bg-purple-600 px-2 text-sm font-bold text-white shadow-lg dark:border-gray-900"
                                     >
@@ -210,25 +208,22 @@ function unfollow() {
                                     {{ user.email }}
                                 </CardDescription>
 
-
                                 <div class="mt-2 flex flex-wrap items-center gap-4">
-                                    <div class="flex items-center gap-1 text-[11px] sm:text-sm md:text-base font-medium">
+                                    <div class="flex items-center gap-1 text-[11px] font-medium sm:text-sm md:text-base">
                                         <Trophy class="h-4 w-4 text-orange-500" />
                                         Level {{ user.level }}
                                     </div>
 
-                                    <div class="flex items-center gap-1 text-[11px] sm:text-sm md:text-base font-medium">
+                                    <div class="flex items-center gap-1 text-[11px] font-medium sm:text-sm md:text-base">
                                         <Zap class="h-4 w-4 text-purple-600" />
                                         {{ formatXP(user.total_xp) }} XP
                                     </div>
 
-                                    <div class="flex gap-2 sm:gap-3 lg:gap-4 text-[10px] sm:text-sm md:text-base">
+                                    <div class="flex gap-2 text-[10px] sm:gap-3 sm:text-sm md:text-base lg:gap-4">
                                         <FollowModal prop-name="followers" title="Followers" :count="user.followers_count" />
                                         <FollowModal prop-name="followings" title="Followings" :count="user.followings_count" />
                                     </div>
                                 </div>
-
-
                             </div>
 
                             <div v-if="!isOwner" class="mt-3 flex items-center gap-2">
@@ -304,12 +299,7 @@ function unfollow() {
                                     </CardTitle>
                                     <CardDescription>Your programming skills organized by category</CardDescription>
                                 </div>
-                                <Button
-                                    @click="syncGitHubSkills"
-                                    :disabled="syncing"
-                                    class="inline-flex items-center gap-2"
-                                    variant="button"
-                                >
+                                <Button @click="syncGitHubSkills" :disabled="syncing" class="inline-flex items-center gap-2" variant="button">
                                     <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
                                         <path
                                             fill-rule="evenodd"
@@ -324,7 +314,7 @@ function unfollow() {
                         <CardContent class="space-y-6">
                             <!-- Skill Categories -->
                             <div v-for="(skills, type) in skillsByType" :key="type" class="space-y-3">
-                                <div class="rounded-lg border-gray-200 dark:border-white/10 p-4">
+                                <div class="rounded-lg border-gray-200 p-4 dark:border-white/10">
                                     <div class="mb-4 flex items-center gap-2">
                                         <component :is="getTypeIcon(type)" class="h-5 w-5 text-purple-600" />
                                         <h3 class="text-lg font-semibold">{{ getTypeDisplayName(type) }}</h3>
@@ -336,7 +326,7 @@ function unfollow() {
                                         <div
                                             v-for="skill in skills"
                                             :key="skill.skill_name"
-                                            class="flex items-center justify-between rounded-lg border border-gray-200 dark:border-white/10 p-3 transition-colors hover:bg-white/90 dark:hover:bg-white/10 "
+                                            class="flex items-center justify-between rounded-lg border border-gray-200 p-3 transition-colors hover:bg-white/90 dark:border-white/10 dark:hover:bg-white/10"
                                         >
                                             <div class="min-w-0 flex-1">
                                                 <h4 class="truncate font-medium">{{ skill.skill_name }}</h4>
@@ -366,12 +356,8 @@ function unfollow() {
                                     </CardTitle>
                                     <CardDescription>Sync your skills from GitHub repositories!</CardDescription>
                                 </div>
-                                <Button
-                                    @click="syncGitHubSkills"
-                                    :disabled="syncing"
-                                    class="inline-flex items-center gap-2"
-                                    variant="button"
-                                >                                    <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                                <Button @click="syncGitHubSkills" :disabled="syncing" class="inline-flex items-center gap-2" variant="button">
+                                    <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
                                         <path
                                             fill-rule="evenodd"
                                             d="M10 0C4.477 0 0 4.484 0 10.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0110 4.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.31.678.921.678 1.856 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0020 10.017C20 4.484 15.522 0 10 0z"
@@ -379,7 +365,7 @@ function unfollow() {
                                         ></path>
                                     </svg>
                                     {{ syncing ? 'Syncing...' : 'Sync from GitHub' }}
-                                </button>
+                                </Button>
                             </div>
                         </CardHeader>
                         <CardContent>
@@ -397,9 +383,7 @@ function unfollow() {
                             <MessageSquareMore class="h-5 w-5" />
                             Write a review for {{ user.name }}
                         </CardTitle>
-                        <CardDescription>
-                            Share your experience collaborating with {{ user.nickname }} on an issue!
-                        </CardDescription>
+                        <CardDescription> Share your experience collaborating with {{ user.nickname }} on an issue! </CardDescription>
                     </CardHeader>
 
                     <ReviewForm :reviewee-id="user.id" class="px-6 pb-6" />
@@ -420,8 +404,6 @@ function unfollow() {
 
                     <ReviewList :reviews="props.reviews" class="px-6" />
                 </Card>
-
-
             </div>
         </div>
     </AppLayout>

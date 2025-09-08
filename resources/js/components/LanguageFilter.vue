@@ -4,7 +4,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { ChevronDown } from 'lucide-vue-next';
 import { computed } from 'vue';
 
-
 interface Props {
     modelValue: string;
     languages: string[];
@@ -29,14 +28,18 @@ const handleLanguageSelect = (language: string) => {
 <template>
     <div>
         <DropdownMenu>
-            <DropdownMenuTrigger as-child >
-                <Button variant="outline" class="w-full rounded-[10px] border border-gray-200 bg-white/40 dark:hover:bg-white/10 text-sm dark:border-white/10 dark:bg-white/5 dark:text-gray-500"
+            <DropdownMenuTrigger as-child>
+                <Button
+                    variant="outline"
+                    class="w-full rounded-[10px] border border-gray-200 bg-white/40 text-sm dark:border-white/10 dark:bg-white/5 dark:text-gray-500 dark:hover:bg-white/10"
                 >
                     {{ selectedLanguage || placeholder }}
                     <ChevronDown class="h-4 w-4 opacity-50" />
                 </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent class="w-48 rounded-[10px] border border-gray-200 bg-white/40 backdrop-blur-sm backdrop-saturate-150 sm:backdrop-blur-sm dark:border-white/10 dark:bg-white/5 dark:text-gray-200">
+            <DropdownMenuContent
+                class="w-48 rounded-[10px] border border-gray-200 bg-white/40 backdrop-blur-sm backdrop-saturate-150 sm:backdrop-blur-sm dark:border-white/10 dark:bg-white/5 dark:text-gray-200"
+            >
                 <DropdownMenuItem @click="handleLanguageSelect('')" :class="{ '': !selectedLanguage }">
                     {{ placeholder }}
                 </DropdownMenuItem>

@@ -293,7 +293,7 @@ watch(
                 <!-- Repository Dropdown -->
                 <div
                     v-if="showRepositoryDropdown && (props.repositories.length > 0 || repositoryLoading)"
-                    class="mt-[2px] rounded-2xl border bg-white-10 text-sm font-medium shadow-sm backdrop-blur-xl backdrop-saturate-150 sm:backdrop-blur-2xl dark:bg-white/10"
+                    class="bg-white-10 mt-[2px] rounded-2xl border text-sm font-medium shadow-sm backdrop-blur-xl backdrop-saturate-150 sm:backdrop-blur-2xl dark:bg-white/10"
                 >
                     <div v-if="repositoryLoading" class="p-3 text-center">
                         <Loader2 class="mx-auto h-4 w-4 animate-spin" />

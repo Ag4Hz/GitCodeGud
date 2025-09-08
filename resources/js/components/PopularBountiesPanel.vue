@@ -78,7 +78,7 @@ const sortedBounties = computed(() => {
 
         <CardContent class="m-0 p-0">
             <div v-if="props.bounties.length > 0" class="relative">
-                <ul class="m-0 divide-y divide-gray-200 overflow-y-auto max-h-96 dark:divide-white/10">
+                <ul class="m-0 max-h-96 divide-y divide-gray-200 overflow-y-auto dark:divide-white/10">
                     <li
                         v-for="(bounty, index) in sortedBounties"
                         :key="bounty.id"
@@ -108,7 +108,7 @@ const sortedBounties = computed(() => {
                                     </span>
                                 </div>
 
-                                <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs  sm:text-[13px] dark:text-gray-300">
+                                <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs sm:text-[13px] dark:text-gray-300">
                                     <div class="inline-flex items-center gap-1 text-yellow-700">
                                         <DollarSign class="h-4 w-4" />
                                         <span class="tabular-nums">{{ bounty.reward_xp }} XP</span>

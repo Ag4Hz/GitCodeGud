@@ -38,9 +38,13 @@ const displayXP = (user: User) => (showLevel.value ? formatXP(user.skill_xp ?? 0
         <table class="w-full table-fixed text-xs sm:text-sm md:text-base">
             <thead class="bg-white/40 backdrop-blur md:sticky md:top-0 md:z-10 dark:bg-white/10">
                 <tr>
-                    <th class="w-[15%] px-3 py-2 text-center font-medium text-gray-600 sm:px-4 sm:py-3 md:px-6 md:py-4 dark:text-gray-300">Position</th>
+                    <th class="w-[15%] px-3 py-2 text-center font-medium text-gray-600 sm:px-4 sm:py-3 md:px-6 md:py-4 dark:text-gray-300">
+                        Position
+                    </th>
                     <th class="w-[60%] px-3 py-2 text-left font-medium text-gray-600 sm:px-4 sm:py-3 md:px-6 md:py-4 dark:text-gray-300">User</th>
-                    <th class="w-[30%] px-3 py-2 text-right font-medium text-gray-600 sm:px-4 sm:py-3 md:px-6 md:py-4 dark:text-gray-300">{{ xpHeader }}</th>
+                    <th class="w-[30%] px-3 py-2 text-right font-medium text-gray-600 sm:px-4 sm:py-3 md:px-6 md:py-4 dark:text-gray-300">
+                        {{ xpHeader }}
+                    </th>
                 </tr>
             </thead>
 

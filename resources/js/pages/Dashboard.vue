@@ -252,7 +252,9 @@ const hasActiveBountyFilters = computed(() => {
                             <div class="sm:w-48">
                                 <LanguageFilter v-model="localSelectedLanguage" :languages="availableLanguages" placeholder="All Languages" />
                             </div>
-                            <Button v-if="hasActiveBountyFilters" @click="clearBountyFilters" variant="button" size="default" class="rounded-xl"> Clear Filters </Button>
+                            <Button v-if="hasActiveBountyFilters" @click="clearBountyFilters" variant="button" size="default" class="rounded-xl">
+                                Clear Filters
+                            </Button>
                         </div>
 
                         <!-- Active Filters Display -->
@@ -274,7 +276,6 @@ const hasActiveBountyFilters = computed(() => {
 
                     <!-- All Bounties Section -->
                     <div v-else-if="bounties && bounties.data && bounties.data.length > 0">
-
                         <div class="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
                             <Card
                                 v-for="bounty in bounties.data"

@@ -260,7 +260,7 @@ const restoreBounty = (bounty: Bounty) => {
                 <div
                     v-for="bounty in currentBounties"
                     :key="bounty.id"
-                    class="border rounded-2xl  bg-whie/40dark:bg-white/5 p-4 transition-colors"
+                    class="bg-whie/40dark:bg-white/5 rounded-2xl border p-4 transition-colors"
                     :class="[
                         editingBounty === bounty.id
                             ? 'border-primary bg-accent/30'
@@ -293,7 +293,7 @@ const restoreBounty = (bounty: Bounty) => {
                                         type="text"
                                         required
                                         maxlength="255"
-                                        class="h-12 w-full lg:pl-4 md:pl-4 sm:pl-4"
+                                        class="h-12 w-full sm:pl-4 md:pl-4 lg:pl-4"
                                         :class="editForm.errors.reward_xp && 'border-red-500'"
                                         :disabled="editForm.processing"
                                     />
@@ -345,7 +345,7 @@ const restoreBounty = (bounty: Bounty) => {
                                     <div class="rounded-lg border bg-gray-50 p-3 text-sm dark:bg-purple-900/30">
                                         <div class="flex items-center gap-2">
                                             <ExternalLink class="h-3 w-3" />
-                                            <a :href="bounty.issue.url" target="_blank" class="text-purple-600 hover:underline break-all">
+                                            <a :href="bounty.issue.url" target="_blank" class="break-all text-purple-600 hover:underline">
                                                 {{ bounty.issue.url }}
                                             </a>
                                         </div>
@@ -469,7 +469,7 @@ const restoreBounty = (bounty: Bounty) => {
                             <!-- Active Bounty Actions -->
                             <template v-else>
                                 <!-- View Mode Buttons -->
-                                <div  v-if="editingBounty !== bounty.id" class="flex gap-2">
+                                <div v-if="editingBounty !== bounty.id" class="flex gap-2">
                                     <Button @click="startEdit(bounty)" variant="button" size="sm" class="flex items-center gap-1">
                                         <Edit2 class="h-3 w-3" />
                                         Edit

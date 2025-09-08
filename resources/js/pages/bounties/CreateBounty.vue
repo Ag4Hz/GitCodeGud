@@ -159,7 +159,7 @@ watch(flashSuccess, (newValue) => {
     <AppLayout :breadcrumbs="breadcrumbItems">
         <Head title="Create Bounty" />
 
-        <div class="mx-auto w-full max-w-4xl space-y-6 px-4 sm:px-6 mb-8">
+        <div class="mx-auto mb-8 w-full max-w-4xl space-y-6 px-4 sm:px-6">
             <!-- Page Header -->
             <div class="mx-auto my-16 max-w-2xl text-center">
                 <h1 class="mb-2 text-3xl font-bold tracking-tight">Create New Bounty</h1>
