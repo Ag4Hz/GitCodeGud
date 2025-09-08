@@ -4,13 +4,13 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { useDateFormatter } from '@/composables/useDateFormatter';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem, type User } from '@/types';
 import { type Bounty } from '@/types/bounty';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { Calendar, Code, DollarSign, ExternalLink, GitBranch, MessageSquare, Tag, Target, User as UserIcon, Users } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
-import { useDateFormatter } from '@/composables/useDateFormatter';
 
 interface BountyWithDetails extends Bounty {
     issue: {

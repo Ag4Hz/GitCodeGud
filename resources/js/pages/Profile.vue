@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import FollowModal from '@/components/FollowModal.vue';
-import Toast from '@/components/Toast.vue';
+import ReviewList from '@/components/ReviewList.vue';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -10,12 +10,11 @@ import { useToast } from '@/composables/useToast';
 import { useXP } from '@/composables/useXP';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem, type User } from '@/types';
+import { type ReviewsPayload } from '@/types/review';
 import { getXPSyncMessage } from '@/utils/toastMessages';
 import { Head, router } from '@inertiajs/vue3';
 import { Code, Database, Settings, Star, Target, Trophy, Zap } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
-import ReviewList from '@/components/ReviewList.vue';
-import { type ReviewsPayload } from '@/types/review'
 
 const { success: showSuccess, error: showError } = useToast();
 
@@ -49,7 +48,7 @@ interface Props {
         next_page_url: string | null;
         avatar: string | null;
     };
-    reviews: ReviewsPayload
+    reviews: ReviewsPayload;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -57,7 +56,6 @@ const props = withDefaults(defineProps<Props>(), {
     followers: Object,
     reviews: () => ({ data: [], current_page: 1, last_page: 1, next_page_url: null, prev_page_url: null }),
 });
-
 
 const isOwner = computed(() => props.isOwner);
 
@@ -376,8 +374,5 @@ function unfollow() {
                 <ReviewList :reviews="props.reviews" />
             </div>
         </div>
-
-        <!-- Toast Notifications -->
-        <Toast />
     </AppLayout>
 </template>

@@ -19,6 +19,8 @@ createInertiaApp({
             .use(plugin)
             .use(ZiggyVue)
             .mount(el);
+
+        initXpUpdateCheck();
     },
     progress: {
         color: '#4B5563',
@@ -41,8 +43,13 @@ async function checkXpUpdate() {
     }
 }
 
-// Check every 10 seconds
-setInterval(checkXpUpdate, 10000);
+async function initXpUpdateCheck() {
+    const res = await fetch('/api/xp-settings/last-update');
+    const data = await res.json();
+    lastXpUpdate = data.updated_at || null;
+
+    setInterval(checkXpUpdate, 30000);
+}
 
 // This will set light / dark mode on page load...
 initializeTheme();
