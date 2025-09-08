@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Submission;
+use App\Helpers\XPHelper;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -10,6 +11,7 @@ use Illuminate\Http\Request;
 class SubmissionStatusController extends Controller
 {
     use AuthorizesRequests;
+
     public function update(Request $request, Submission $submission): RedirectResponse
     {
         $user = $request->user();
@@ -22,16 +24,21 @@ class SubmissionStatusController extends Controller
             'status' => ['required', 'in:accepted,rejected']
         ]);
 
+        $oldStatus = $submission->status;
+
         $submission->update([
             'status' => $request->status
         ]);
 
-        $message = $request->status === 'accepted'
-            ? 'Submission accepted successfully!'
-            : 'Submission rejected.';
+        if ($request->status === 'accepted' && $oldStatus !== 'accepted') {
+                XPHelper::awardSubmissionXP($submission);
+                $message = 'Submission accepted successfully! XP awarded to contributor.';
+        } else {
+            $message = $request->status === 'accepted'
+                ? 'Submission accepted successfully!'
+                : 'Submission rejected.';
+        }
 
-        return redirect()
-            ->back()
-            ->with('success', $message);
+        return redirect()->back()->with('success', $message);
     }
 }
