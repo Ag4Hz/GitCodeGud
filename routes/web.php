@@ -38,6 +38,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/bounties/{bounty}/submit', [SubmissionController::class, 'create'])->name('submissions.create');
     Route::post('/submissions', [SubmissionController::class, 'store'])->name('submissions.store');
     Route::get('/submissions/{submission}', [SubmissionController::class, 'show'])->name('submissions.show');
+    Route::get('/my-submissions', [SubmissionController::class, 'userSubmissions'])->name('submissions.mine');
     Route::get('/bounties/{bounty}/submissions', [BountyController::class, 'submissions'])->name('bounties.submissions');
     Route::patch('/submissions/{submission}/status', [SubmissionStatusController::class, 'update'])->name('submissions.status.update');
 });
@@ -63,22 +64,14 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::post('/admin/xp-settings', [AdminController::class, 'updateXPSettings'])->name('admin.xp-settings.update');
     Route::post('/admin/settings/batch-update', [AdminController::class, 'updateAllSettings'])->name('admin.settings.batch-update');
     Route::post('/admin/xp-settings/recalculate', [AdminController::class, 'recalculateXp'])->name('admin.xp-settings.recalculate');
+
+    Route::get('/admin/xp-events', [AdminController::class, 'xpEvents'])->name('admin.xp-events');
+    Route::get('/admin/xp-events/export', [AdminController::class, 'exportXpEvents'])->name('admin.xp-events.export');
 });
 
 Route::middleware('auth')->group(function () {
     Route::get('/leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard');
 });
-
-Route::get('/api/xp-settings/last-update', function () {
-    $general = DB::table('general_settings')->max('updated_at');
-    $thresholds = DB::table('level_thresholds')->max('updated_at');
-    $skills = DB::table('user_skills')->max('updated_at');
-
-    $latest = collect([$general, $thresholds, $skills])->filter()->max();
-
-    return response()->json(['updated_at' => $latest]);
-});
-
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

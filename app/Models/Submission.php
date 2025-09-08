@@ -94,4 +94,8 @@ class Submission extends Model
     {
         return $this->pr_url && GitHubApiService::isValidGitHubPullRequestUrl($this->pr_url);
     }
+    public function canBeResubmitted(): bool
+    {
+        return $this->status === 'rejected';
+    }
 }

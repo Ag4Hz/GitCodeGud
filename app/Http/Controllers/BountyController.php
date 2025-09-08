@@ -130,6 +130,7 @@ class BountyController extends Controller
         if ($user) {
             $userSubmission = $bounty->submissions()
                 ->where('user_id', $user->id)
+                ->latest()
                 ->first();
 
             $canUserSubmit = $user->can('create', [\App\Models\Submission::class, $bounty]);
@@ -137,11 +138,11 @@ class BountyController extends Controller
 
         return Inertia::render('bounties/Show', [
             'bounty' => $bounty->load(['issue.repo', 'submissions.user'])->loadCount('submissions'),
-            'popularityScore' => ($bounty->views ?? 0) + ($bountyData->submissions_count ?? 0),
+            'popularityScore' => ($bounty->views ?? 0) + ($bounty->submissions_count ?? 0),
             'comments' => Inertia::merge(fn() => $this->getPaginatedComments($bounty, $request)),
             'canUserSubmit' => $canUserSubmit,
             'userSubmission' => $userSubmission,
-            ]);
+        ]);
     }
 
     private function trackBountyView(Request $request, Bounty $bounty): void
