@@ -122,7 +122,7 @@ const mainNavItems = computed((): NavItem[] => {
                         <NavigationMenuList class="flex h-full items-stretch space-x-2">
                             <NavigationMenuItem v-for="(item, index) in mainNavItems" :key="index" class="relative flex h-full items-center ">
                                 <Link
-                                    :class="[navigationMenuTriggerStyle(), activeItemStyles(item.href), 'h-9 cursor-pointer bg-gray-50/80 backdrop-blur dark:bg-black/30']"
+                                    :class="[navigationMenuTriggerStyle(), activeItemStyles(item.href), 'h-9 cursor-pointer backdrop-blur-xl bg-white/40 dark:bg-white/5']"
                                     :href="item.href"
                                 >
                                     <component v-if="item.icon" :is="item.icon" class="mr-2 h-4 w-4" />
@@ -180,7 +180,7 @@ const mainNavItems = computed((): NavItem[] => {
                                     </div>
                                 </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" class="w-56">
+                            <DropdownMenuContent align="end" class="w-56 backdrop-blur-xl bg-white/40 dark:bg-white/5">
                                 <div class="flex items-center justify-start gap-2 p-2">
                                     <div class="flex flex-col space-y-1 leading-none">
                                         <p class="font-medium">{{ auth.user.name }}</p>
