@@ -49,6 +49,8 @@ class ProfileController extends Controller
             'isOwner' => $request->user() && $request->user()->id === $user->id,
             'reviews'    => $this->reviewService->getUserReviews($user),
             'canReview'   => $canReview,
+            'ratingAvg'   => $this->reviewService->getUserRatingStats($user)['average'],
+
         ]);
     }
     public function syncGitHubSkills(Request $request): bool

@@ -51,6 +51,7 @@ interface Props {
     };
     canReview?: boolean;
     reviews: ReviewsPayload;
+    ratingAvg: number
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -242,6 +243,10 @@ function unfollow() {
                                     Unfollow
                                 </Button>
                             </div>
+                        </div>
+
+                        <div class="mt-3 text-sm font-medium text-gray-800 dark:text-gray-200">
+                            Rating: {{ Number(props.ratingAvg ?? 0).toFixed(1) }}
                         </div>
                     </CardHeader>
                 </Card>

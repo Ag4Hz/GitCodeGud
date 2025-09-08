@@ -51,11 +51,11 @@ class ReviewService
     public function createReview(int $revieweeId, string $comment, int $rating): Review
     {
         return Review::create([
-            'user_id'     => Auth::id(),
+            'user_id' => Auth::id(),
             'reviewee_id' => $revieweeId,
-            'rating'      => $rating,
-            'comment'     => $comment,
-            'date'        => now(),
+            'rating' => $rating,
+            'comment' => $comment,
+            'date' => now(),
         ]);
     }
 
@@ -67,4 +67,13 @@ class ReviewService
             ->paginate(7);
 
     }
+
+    public function getUserRatingStats(User $user): array
+    {
+        $avg = Review::query()
+            ->where('reviewee_id', $user->id)
+            ->avg('rating') ?? 0;
+        return ['average' => round($avg, 1)];
+    }
+
 }
