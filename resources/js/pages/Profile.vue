@@ -286,9 +286,10 @@ function unfollow() {
                                         <Star class="h-5 w-5" />
                                         Skills & Experience
                                     </CardTitle>
-                                    <CardDescription>Your programming skills organized by category</CardDescription>
+                                    <CardDescription>{{ isOwner ? 'Sync your skills from GitHub repositories!' : `${user.name} hasn't earned any skills yet.` }}</CardDescription>
                                 </div>
                                 <button
+                                    v-if="isOwner"
                                     @click="syncGitHubSkills"
                                     :disabled="syncing"
                                     class="inline-flex items-center gap-2 rounded-md bg-gray-900 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800 focus:ring-2 focus:ring-gray-500 focus:outline-none disabled:opacity-50"
@@ -350,6 +351,7 @@ function unfollow() {
                                     <CardDescription>Sync your skills from GitHub repositories!</CardDescription>
                                 </div>
                                 <button
+                                    v-if="isOwner"
                                     @click="syncGitHubSkills"
                                     :disabled="syncing"
                                     class="inline-flex items-center gap-2 rounded-md bg-gray-900 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800 focus:ring-2 focus:ring-gray-500 focus:outline-none disabled:opacity-50"
@@ -368,7 +370,7 @@ function unfollow() {
                         <CardContent>
                             <div class="py-8 text-center text-muted-foreground">
                                 <Star class="mx-auto mb-4 h-12 w-12 opacity-50" />
-                                <p>No skills earned yet. Sync from GitHub or complete your first bounty to start earning XP!</p>
+                                <p>{{ isOwner ? 'No skills earned yet. Sync from GitHub or complete your first bounty to start earning XP!' : `${user.name} hasn't completed any bounties yet.` }}</p>
                             </div>
                         </CardContent>
                     </Card>
