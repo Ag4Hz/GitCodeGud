@@ -87,11 +87,11 @@ const changeSort = (dir: Dir) => {
                 <div>
                     <DropdownMenu>
                         <DropdownMenuTrigger
-                            class="rounded-md border px-3 py-2 text-sm font-medium shadow-sm hover:bg-gray-100 dark:hover:bg-gray-800"
+                            class="rounded-md border px-3 py-2 text-sm font-medium shadow-sm hover:bg-gray-100 dark:hover:bg-white/10"
                         >
                             Sort: {{ sortDir }}
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" class="bg-white dark:bg-gray-900">
+                        <DropdownMenuContent align="end" class="bg-white dark:bg-white/6 backdrop-blur-xl">
                             <DropdownMenuItem @click="changeSort('asc')">Ascending</DropdownMenuItem>
                             <DropdownMenuItem @click="changeSort('desc')">Descending</DropdownMenuItem>
                         </DropdownMenuContent>
