@@ -4,13 +4,21 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { useDateFormatter } from '@/composables/useDateFormatter';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem, type User } from '@/types';
 import { type Bounty } from '@/types/bounty';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import { Calendar, Code, DollarSign, ExternalLink, GitBranch, MessageSquare, Tag, Target, User as UserIcon, Users } from 'lucide-vue-next';
+import { Calendar, CheckCircle, Clock, Code, DollarSign, ExternalLink, GitBranch, MessageSquare, Tag, Target, User as UserIcon, Users, XCircle, } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
-import { useDateFormatter } from '@/composables/useDateFormatter';
+
+interface SubmissionType {
+    id: number;
+    status: string;
+    user: User;
+    created_at: string;
+    pr_url?: string;
+}
 
 interface BountyWithDetails extends Bounty {
     issue: {
@@ -24,13 +32,7 @@ interface BountyWithDetails extends Bounty {
             user?: User;
         };
     };
-    submissions?: Array<{
-        id: number;
-        status: string;
-        user: User;
-        created_at: string;
-        pr_url?: string;
-    }>;
+    submissions: SubmissionType[];
 }
 
 interface CommentsData {
@@ -92,6 +94,30 @@ const getStatusColor = (status: string) => {
 
 const getStatusDisplayText = (status: string): string => {
     return status.toUpperCase();
+};
+
+const getSubmissionStatusIcon = (status: string) => {
+    switch (status) {
+        case 'accepted':
+            return CheckCircle;
+        case 'rejected':
+            return XCircle;
+        case 'pending':
+        default:
+            return Clock;
+    }
+};
+
+const getSubmissionStatusColor = (status: string) => {
+    switch (status) {
+        case 'accepted':
+            return 'text-green-600 bg-green-100 dark:bg-green-900 dark:text-green-200';
+        case 'rejected':
+            return 'text-red-600 bg-red-100 dark:bg-red-900 dark:text-red-200';
+        case 'pending':
+        default:
+            return 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900 dark:text-yellow-200';
+    }
 };
 
 const submissionStatusVariant = computed(() => {
@@ -170,7 +196,30 @@ const ownerInfo = computed(() => {
 });
 
 const canUserSubmit = computed(() => {
-    return currentUser && props.bounty.status === 'open' && currentUser.id !== ownerInfo.value.id && !props.userSubmission;
+    return (
+        currentUser &&
+        props.bounty.status === 'open' &&
+        currentUser.id !== ownerInfo.value.id &&
+        (!props.userSubmission || props.userSubmission.status === 'rejected')
+    );
+});
+
+const isBountyOwner = computed(() => {
+    return !!(currentUser && props.bounty.issue.repo.user_id === currentUser.id);
+});
+
+const submissions = computed(() => props.bounty.submissions || []);
+
+const hasSubmissions = computed(() => submissions.value.length > 0);
+
+const submissionStats = computed(() => {
+    const subs = submissions.value;
+    return {
+        total: subs.length,
+        pending: subs.filter((s) => s.status === 'pending').length,
+        accepted: subs.filter((s) => s.status === 'accepted').length,
+        rejected: subs.filter((s) => s.status === 'rejected').length,
+    };
 });
 
 const refreshComments = () => {
@@ -213,15 +262,23 @@ const shouldShowPagination = computed(() => {
                                 <div class="flex items-center gap-2 text-lg font-semibold text-green-600">
                                     <DollarSign class="h-5 w-5" />
                                     <span>{{ bounty.reward_xp }} XP Reward</span>
+                                    <Badge variant="secondary" class="text-xs"> Will be awarded on acceptance </Badge>
                                 </div>
                             </div>
 
                             <!-- Action Buttons -->
                             <div class="flex flex-wrap gap-2">
-                                <Link v-if="canUserSubmit" :href="`/bounties/${bounty.id}/submit`" as="button">
+                                <Link v-if="canUserSubmit && !userSubmission" :href="`/bounties/${bounty.id}/submit`" as="button">
                                     <Button class="flex items-center gap-2">
                                         <Target class="h-4 w-4" />
                                         Submit Solution
+                                    </Button>
+                                </Link>
+
+                                <Link v-else-if="canUserSubmit && userSubmission && userSubmission.status === 'rejected'" :href="`/bounties/${bounty.id}/submit`" as="button">
+                                    <Button variant="destructive" class="flex items-center gap-2">
+                                        <Target class="h-4 w-4" />
+                                        Resubmit Solution
                                     </Button>
                                 </Link>
 
@@ -229,30 +286,60 @@ const shouldShowPagination = computed(() => {
                                     <Badge :variant="submissionStatusVariant" class="capitalize">
                                         {{ submissionStatusText }}
                                     </Badge>
+                                    <span v-if="userSubmission.status === 'accepted'" class="text-sm font-medium text-green-600"> XP Awarded! </span>
                                 </div>
 
                                 <!-- Bounty Owner Actions - Only show for bounty owner -->
-                                <Button
-                                    v-if="bounty.issue.repo.user_id === currentUser?.id && bounty.submissions && bounty.submissions.length > 0"
-                                    variant="outline"
-                                    :href="`/bounties/${bounty.id}/submissions`"
-                                    class="flex items-center gap-2"
-                                >
-                                    <Users class="h-4 w-4" />
-                                    Manage Submissions ({{ bounty.submissions.length }})
-                                </Button>
+                                <!-- Bounty Owner Actions -->
+                                <Link v-if="isBountyOwner && hasSubmissions" :href="`/bounties/${bounty.id}/submissions`">
+                                    <Button variant="outline" class="flex items-center gap-2">
+                                        <Users class="h-4 w-4" />
+                                        Manage Submissions ({{ submissions.length }})
+                                    </Button>
+                                </Link>
                             </div>
                         </div>
                     </CardHeader>
 
                     <CardContent class="space-y-6">
-                        <!-- User Submission Info (if exists) -->
                         <div v-if="userSubmission" class="rounded-lg border-l-4 border-l-blue-500 bg-blue-50 p-4 dark:bg-blue-900/20">
                             <div class="flex items-start justify-between">
-                                <div>
+                                <div class="flex-1">
                                     <h4 class="mb-1 font-semibold text-blue-800 dark:text-blue-200">Your Submission</h4>
-                                    <p class="mb-2 text-sm text-blue-700 dark:text-blue-300">Status: {{ submissionStatusText }}</p>
-                                    <div class="flex items-center gap-2">
+                                    <div class="mb-2 flex items-center gap-2">
+                                        <component
+                                            :is="getSubmissionStatusIcon(userSubmission.status)"
+                                            class="h-4 w-4"
+                                            :class="
+                                                userSubmission.status === 'accepted'
+                                                    ? 'text-green-600'
+                                                    : userSubmission.status === 'rejected'
+                                                      ? 'text-red-600'
+                                                      : 'text-yellow-600'
+                                            "
+                                        />
+                                        <span
+                                            class="text-sm"
+                                            :class="
+                                                userSubmission.status === 'accepted'
+                                                    ? 'text-green-700 dark:text-green-300'
+                                                    : userSubmission.status === 'rejected'
+                                                      ? 'text-red-700 dark:text-red-300'
+                                                      : 'text-blue-700 dark:text-blue-300'
+                                            "
+                                        >
+                                            Status: {{ submissionStatusText }}
+                                        </span>
+                                        <Badge
+                                            v-if="userSubmission.status === 'accepted'"
+                                            variant="secondary"
+                                            class="bg-green-100 text-xs text-green-800"
+                                        >
+                                            {{ bounty.reward_xp }} XP Earned
+                                        </Badge>
+                                    </div>
+
+                                    <div class="mb-3 flex items-center gap-2">
                                         <a
                                             :href="userSubmission.pr_url"
                                             target="_blank"
@@ -261,8 +348,34 @@ const shouldShowPagination = computed(() => {
                                             <ExternalLink class="h-3 w-3" />
                                             View Pull Request
                                         </a>
-                                        <span class="text-sm text-muted-foreground"> • Submitted {{ formatDate(userSubmission.created_at) }} </span>
+                                        <span class="text-sm text-muted-foreground">
+                                            • Submitted {{ formatDate(userSubmission.created_at) }}
+                                        </span>
                                     </div>
+
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submission Stats for Bounty Owner -->
+                        <div v-if="isBountyOwner && hasSubmissions" class="rounded-lg border bg-gray-50 p-4 dark:bg-gray-900">
+                            <h4 class="mb-3 font-semibold">Submission Overview</h4>
+                            <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
+                                <div class="text-center">
+                                    <div class="text-2xl font-bold">{{ submissionStats.total }}</div>
+                                    <div class="text-sm text-muted-foreground">Total</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-2xl font-bold text-yellow-600">{{ submissionStats.pending }}</div>
+                                    <div class="text-sm text-muted-foreground">Pending</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-2xl font-bold text-green-600">{{ submissionStats.accepted }}</div>
+                                    <div class="text-sm text-muted-foreground">Accepted</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-2xl font-bold text-red-600">{{ submissionStats.rejected }}</div>
+                                    <div class="text-sm text-muted-foreground">Rejected</div>
                                 </div>
                             </div>
                         </div>
@@ -426,6 +539,9 @@ const shouldShowPagination = computed(() => {
                                                 Not specified
                                             </div>
                                         </div>
+                                        <p v-if="bounty.languages && bounty.languages.length > 0" class="mt-2 text-xs text-muted-foreground">
+                                            XP will be distributed across these languages
+                                        </p>
                                     </CardContent>
                                 </Card>
 
@@ -447,9 +563,77 @@ const shouldShowPagination = computed(() => {
                                             <Users class="h-4 w-4" />
                                             <span class="font-medium">Submissions</span>
                                         </div>
-                                        <p class="text-sm">{{ bounty.submissions?.length || 0 }} submission(s)</p>
+                                        <p class="text-sm">{{ submissions.length }} submission(s)</p>
                                     </CardContent>
                                 </Card>
+                            </div>
+                        </div>
+
+                        <!-- Submissions List (enhanced for preview) -->
+                        <div v-if="hasSubmissions">
+                            <div class="mb-3 flex items-center justify-between">
+                                <h3 class="flex items-center gap-2 text-lg font-semibold">
+                                    <Users class="h-5 w-5" />
+                                    Recent Submissions ({{ submissions.length }})
+                                </h3>
+                                <Link v-if="isBountyOwner" :href="`/bounties/${bounty.id}/submissions`" class="flex items-center gap-1">
+                                    <Button size="sm" variant="outline" class="flex items-center gap-1">
+                                        <Users class="h-3 w-3" />
+                                        Manage All
+                                    </Button>
+                                </Link>
+                            </div>
+
+                            <div class="space-y-3">
+                                <Card v-for="submission in submissions.slice(0, 3)" :key="submission.id" class="transition-shadow hover:shadow-md">
+                                    <CardContent class="p-4">
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center gap-3">
+                                                <Avatar class="h-8 w-8">
+                                                    <AvatarImage
+                                                        :src="`https://github.com/${submission.user.nickname}.png`"
+                                                        :alt="submission.user.name"
+                                                    />
+                                                    <AvatarFallback>
+                                                        {{ submission.user.name?.charAt(0)?.toUpperCase() || 'U' }}
+                                                    </AvatarFallback>
+                                                </Avatar>
+
+                                                <div>
+                                                    <p class="font-medium">{{ submission.user.name }}</p>
+                                                    <p class="text-sm text-muted-foreground">@{{ submission.user.nickname }}</p>
+                                                </div>
+                                            </div>
+
+                                            <div class="flex items-center gap-3">
+                                                <a
+                                                    v-if="submission.pr_url"
+                                                    :href="submission.pr_url"
+                                                    target="_blank"
+                                                    class="flex items-center gap-1 text-sm text-blue-600 transition-colors hover:text-blue-800"
+                                                >
+                                                    <ExternalLink class="h-3 w-3" />
+                                                    PR
+                                                </a>
+                                                <Badge :class="getSubmissionStatusColor(submission.status)" class="text-xs">
+                                                    <component :is="getSubmissionStatusIcon(submission.status)" class="mr-1 h-3 w-3" />
+                                                    {{ submission.status.toUpperCase() }}
+                                                </Badge>
+                                                <span class="text-sm text-muted-foreground">
+                                                    {{ formatDate(submission.created_at) }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+
+                                <div v-if="submissions.length > 3" class="pt-2 text-center">
+                                    <Link :href="`/bounties/${bounty.id}/submissions`">
+                                        <Button variant="outline" size="sm" class="text-sm">
+                                            View {{ submissions.length - 3 }} more submissions
+                                        </Button>
+                                    </Link>
+                                </div>
                             </div>
                         </div>
 
@@ -565,57 +749,6 @@ const shouldShowPagination = computed(() => {
                                         Refresh Comments
                                     </Button>
                                 </div>
-                            </div>
-                        </div>
-
-                        <!-- Submissions List (if any exist) -->
-                        <div v-if="bounty.submissions && bounty.submissions.length > 0">
-                            <h3 class="mb-3 flex items-center gap-2 text-lg font-semibold">
-                                <Users class="h-5 w-5" />
-                                Submissions ({{ bounty.submissions.length }})
-                            </h3>
-
-                            <div class="space-y-3">
-                                <Card v-for="submission in bounty.submissions" :key="submission.id" class="transition-shadow hover:shadow-md">
-                                    <CardContent class="p-4">
-                                        <div class="flex items-center justify-between">
-                                            <div class="flex items-center gap-3">
-                                                <Avatar class="h-8 w-8">
-                                                    <AvatarImage
-                                                        :src="`https://github.com/${submission.user.nickname}.png`"
-                                                        :alt="submission.user.name"
-                                                    />
-                                                    <AvatarFallback>
-                                                        {{ submission.user.name?.charAt(0)?.toUpperCase() || 'U' }}
-                                                    </AvatarFallback>
-                                                </Avatar>
-
-                                                <div>
-                                                    <p class="font-medium">{{ submission.user.name }}</p>
-                                                    <p class="text-sm text-muted-foreground">@{{ submission.user.nickname }}</p>
-                                                </div>
-                                            </div>
-
-                                            <div class="flex items-center gap-3">
-                                                <a
-                                                    v-if="submission.pr_url"
-                                                    :href="submission.pr_url"
-                                                    target="_blank"
-                                                    class="flex items-center gap-1 text-sm text-blue-600 transition-colors hover:text-blue-800"
-                                                >
-                                                    <ExternalLink class="h-3 w-3" />
-                                                    PR
-                                                </a>
-                                                <Badge :variant="submission.status === 'accepted' ? 'default' : 'secondary'" class="text-xs">
-                                                    {{ submission.status.toUpperCase() }}
-                                                </Badge>
-                                                <span class="text-sm text-muted-foreground">
-                                                    {{ formatDate(submission.created_at) }}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </CardContent>
-                                </Card>
                             </div>
                         </div>
                     </CardContent>
