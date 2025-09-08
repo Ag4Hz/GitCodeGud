@@ -78,7 +78,7 @@ const sortedBounties = computed(() => {
 
         <CardContent class="m-0 p-0">
             <div v-if="props.bounties.length > 0" class="relative">
-                <ul class="m-0 divide-y divide-gray-200 overflow-y-auto dark:divide-white/10">
+                <ul class="m-0 divide-y divide-gray-200 overflow-y-auto max-h-96 dark:divide-white/10">
                     <li
                         v-for="(bounty, index) in sortedBounties"
                         :key="bounty.id"

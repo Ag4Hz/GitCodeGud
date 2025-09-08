@@ -27,7 +27,7 @@ useIntersect(landmark, loadMoreItems, {
 <template>
     <Dialog>
         <DialogTrigger>
-            <button class="flex cursor-pointer items-center gap-1 text-sm font-medium">
+            <button class="flex cursor-pointer items-center gap-1 text-[10px] sm:text-sm md:text-base font-medium">
                 <Users class="h-4 w-4 text-green-700" />
                 <span class="inline-flex items-center gap-1.5">
                     <span>{{ count }}</span>
