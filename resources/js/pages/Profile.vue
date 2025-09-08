@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import FollowModal from '@/components/FollowModal.vue';
+import ReviewForm from '@/components/ReviewForm.vue';
 import ReviewList from '@/components/ReviewList.vue';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -48,6 +49,7 @@ interface Props {
         next_page_url: string | null;
         avatar: string | null;
     };
+    canReview?: boolean;
     reviews: ReviewsPayload;
 }
 
@@ -371,6 +373,16 @@ function unfollow() {
                         </CardContent>
                     </Card>
                 </div>
+
+                <section v-if="!isOwner && canReview" class="rounded-xl border p-4">
+                    <h2 class="mb-2 text-lg font-semibold">Write a review for {{ user.name }}</h2>
+                    <ReviewForm :reviewee-id="user.id" />
+                </section>
+
+                <p v-else-if="!isOwner" class="text-sm text-gray-500">
+                    You can leave a review only after there’s at least one submission between you and {{ user.name }} (either direction).
+                </p>
+
                 <ReviewList :reviews="props.reviews" />
             </div>
         </div>
