@@ -5,6 +5,7 @@ import { useInfiniteScroll } from '@/composables/useInfiniteScroll';
 import { useIntersect } from '@/composables/useIntersect';
 import { type ReviewsPayload } from '@/types/review';
 import { router } from '@inertiajs/vue3';
+import { Star } from 'lucide-vue-next';
 import { ref } from 'vue';
 
 withDefaults(defineProps<{ reviews: ReviewsPayload }>(), {
@@ -32,6 +33,18 @@ useIntersect(landmark, loadMoreItems, { rootMargin: '0px 0px 150px 0px' });
         <div v-for="review in items" :key="review.id" class="rounded-xl border border-gray-200 bg-white/50 p-4 dark:border-white/10 dark:bg-white/5">
             <div @click="goToProfile(review.reviewer)" class="cursor-pointer">
                 <UserRow :user="review.reviewer" class="!rounded-none !px-0 !py-0 hover:!bg-transparent dark:hover:!bg-transparent" />
+            </div>
+
+            <div class="mt-1 flex items-center gap-1" :title="review.rating + '/5'">
+                <Star
+                    v-for="i in 5"
+                    :key="i"
+                    class="h-4 w-4"
+                    :class="{
+                        'fill-yellow-400 text-yellow-400': i <= review.rating,
+                        'text-gray-300 dark:text-gray-600': i > review.rating,
+                    }"
+                />
             </div>
 
             <p v-if="review.comment" class="mt-2 text-sm text-gray-700 dark:text-gray-300">

@@ -24,6 +24,7 @@ class StoreReviewRequest extends FormRequest
                 Rule::notIn([$this->user()->id]),
                 new CanReviewUser(app(ReviewService::class)),
             ],
+            'rating'      => ['required', 'integer', 'between:1,5'],
             'comment' => ['required', 'string', 'min:3', 'max:4096'],
         ];
     }
