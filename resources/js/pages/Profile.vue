@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import FollowModal from '@/components/FollowModal.vue';
+import ReviewForm from '@/components/ReviewForm.vue';
+import ReviewList from '@/components/ReviewList.vue';
 import Toast from '@/components/Toast.vue';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -10,12 +12,11 @@ import { useToast } from '@/composables/useToast';
 import { useXP } from '@/composables/useXP';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem, type User } from '@/types';
+import { type ReviewsPayload } from '@/types/review';
 import { getXPSyncMessage } from '@/utils/toastMessages';
 import { Head, router } from '@inertiajs/vue3';
 import { Code, Database, Settings, Star, Target, Trophy, Zap } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
-import ReviewList from '@/components/ReviewList.vue';
-import { type ReviewsPayload } from '@/types/review'
 
 const { success: showSuccess, error: showError } = useToast();
 
@@ -49,7 +50,8 @@ interface Props {
         next_page_url: string | null;
         avatar: string | null;
     };
-    reviews: ReviewsPayload
+    canReview?: boolean;
+    reviews: ReviewsPayload;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -57,7 +59,6 @@ const props = withDefaults(defineProps<Props>(), {
     followers: Object,
     reviews: () => ({ data: [], current_page: 1, last_page: 1, next_page_url: null, prev_page_url: null }),
 });
-
 
 const isOwner = computed(() => props.isOwner);
 
@@ -373,10 +374,19 @@ function unfollow() {
                         </CardContent>
                     </Card>
                 </div>
+
+                <section v-if="!isOwner && canReview" class="rounded-xl border p-4">
+                    <h2 class="mb-2 text-lg font-semibold">Write a review for {{ user.name }}</h2>
+                    <ReviewForm :reviewee-id="user.id" />
+                </section>
+
+                <p v-else-if="!isOwner" class="text-sm text-gray-500">
+                    You can leave a review only after there’s at least one submission between you and {{ user.name }} (either direction).
+                </p>
+
                 <ReviewList :reviews="props.reviews" />
             </div>
         </div>
-
         <!-- Toast Notifications -->
         <Toast />
     </AppLayout>
