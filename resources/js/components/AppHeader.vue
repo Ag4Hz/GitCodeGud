@@ -14,8 +14,8 @@ import { getInitials } from '@/composables/useInitials';
 import { useXP } from '@/composables/useXP';
 import type { BreadcrumbItem, NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
-import { LayoutGrid, Menu, Plus, Search, ShieldCheck, Trophy } from 'lucide-vue-next';
 import { computed } from 'vue';
+import { LayoutGrid, Menu, Plus, ShieldCheck, Trophy, LogIn } from 'lucide-vue-next';
 
 interface Props {
     breadcrumbs?: BreadcrumbItem[];
@@ -27,6 +27,8 @@ const props = withDefaults(defineProps<Props>(), {
 
 const page = usePage();
 const auth = computed(() => page.props.auth);
+
+const isAuthenticated = computed(() => !!auth.value?.user);
 
 const isCurrentRoute = computed(() => (url: string) => page.url === url);
 
@@ -53,19 +55,22 @@ const mainNavItems = computed((): NavItem[] => {
             href: '/leaderboard',
             icon: Trophy,
         },
-        {
+    ];
+
+    if (isAuthenticated.value) {
+        items.push({
             title: 'Create Bounty',
             href: '/bounties/create',
             icon: Plus,
-        },
-    ];
-
-    if (auth.value.user.role === UserRole.ADMIN) {
-        items.push({
-            title: 'Admin',
-            href: '/admin',
-            icon: ShieldCheck,
         });
+
+        if (auth.value.user.role === UserRole.ADMIN) {
+            items.push({
+                title: 'Admin',
+                href: '/admin',
+                icon: ShieldCheck,
+            });
+        }
     }
 
     return items;
@@ -102,9 +107,6 @@ const mainNavItems = computed((): NavItem[] => {
                                         {{ item.title }}
                                     </Link>
                                 </nav>
-                                <div class="flex flex-col space-y-4">
-                                    <!-- Mobile right nav items section - currently empty -->
-                                </div>
                             </div>
                         </SheetContent>
                     </Sheet>
@@ -118,7 +120,11 @@ const mainNavItems = computed((): NavItem[] => {
                 <div class="hidden h-full lg:flex lg:flex-1">
                     <NavigationMenu class="ml-10 flex h-full items-stretch">
                         <NavigationMenuList class="flex h-full items-stretch space-x-2">
-                            <NavigationMenuItem v-for="(item, index) in mainNavItems" :key="index" class="relative flex h-full items-center">
+                            <NavigationMenuItem
+                                v-for="(item, index) in mainNavItems"
+                                :key="index"
+                                class="relative flex h-full items-center"
+                            >
                                 <Link
                                     :class="[navigationMenuTriggerStyle(), activeItemStyles(item.href), 'h-9 cursor-pointer px-3']"
                                     :href="item.href"
@@ -136,63 +142,61 @@ const mainNavItems = computed((): NavItem[] => {
                 </div>
 
                 <div class="ml-auto flex items-center space-x-2">
-                    <div class="relative flex items-center space-x-1">
-                        <Button variant="ghost" size="icon" class="group h-9 w-9 cursor-pointer">
-                            <Search class="size-5 opacity-80 group-hover:opacity-100" />
-                        </Button>
+                    <Button v-if="!isAuthenticated" as-child>
+                        <Link :href="route('login')" class="flex items-center gap-2">
+                            <LogIn class="size-4" /> Login
+                        </Link>
+                    </Button>
 
-                        <div class="hidden space-x-1 lg:flex">
-                            <!-- Right nav items section - currently empty -->
-                        </div>
-                    </div>
+                    <template v-else>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger :as-child="true">
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    class="relative size-10 w-auto rounded-full p-1 focus-within:ring-2 focus-within:ring-primary"
+                                >
+                                    <div class="relative">
+                                        <Avatar class="size-8 overflow-hidden rounded-full">
+                                            <AvatarImage v-if="auth.user.avatar" :src="auth.user.avatar" :alt="auth.user.name" />
+                                            <AvatarFallback
+                                                class="rounded-lg bg-neutral-200 font-semibold text-black dark:bg-neutral-700 dark:text-white"
+                                            >
+                                                {{ getInitials(auth.user?.name) }}
+                                            </AvatarFallback>
+                                        </Avatar>
 
-                    <DropdownMenu>
-                        <DropdownMenuTrigger :as-child="true">
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                class="relative size-10 w-auto rounded-full p-1 focus-within:ring-2 focus-within:ring-primary"
-                            >
-                                <div class="relative">
-                                    <Avatar class="size-8 overflow-hidden rounded-full">
-                                        <AvatarImage v-if="auth.user.avatar" :src="auth.user.avatar" :alt="auth.user.name" />
-                                        <AvatarFallback
-                                            class="rounded-lg bg-neutral-200 font-semibold text-black dark:bg-neutral-700 dark:text-white"
-                                        >
-                                            {{ getInitials(auth.user?.name) }}
-                                        </AvatarFallback>
-                                    </Avatar>
-
-                                    <!-- XP Level Badge Overlay with Tooltip -->
-                                    <Tooltip>
-                                        <TooltipTrigger as-child>
-                                            <div class="absolute -right-1 -bottom-1 flex items-center justify-center">
-                                                <Badge
-                                                    variant="secondary"
-                                                    class="h-4 min-w-4 cursor-help border-2 border-white bg-orange-500 px-1 text-xs font-bold text-white shadow-sm dark:border-gray-900"
-                                                    :aria-label="`Level ${userXPData.level}, ${userXPData.totalXP} experience points`"
-                                                >
-                                                    {{ userXPData.level }}
-                                                </Badge>
-                                            </div>
-                                        </TooltipTrigger>
-                                        <TooltipContent side="top" align="center">
-                                            <p>Level {{ userXPData.level }} • {{ userXPData.totalXP }} XP</p>
-                                        </TooltipContent>
-                                    </Tooltip>
+                                        <!-- XP Level Badge Overlay with Tooltip -->
+                                        <Tooltip>
+                                            <TooltipTrigger as-child>
+                                                <div class="absolute -right-1 -bottom-1 flex items-center justify-center">
+                                                    <Badge
+                                                        variant="secondary"
+                                                        class="h-4 min-w-4 cursor-help border-2 border-white bg-orange-500 px-1 text-xs font-bold text-white shadow-sm dark:border-gray-900"
+                                                        :aria-label="`Level ${userXPData.level}, ${userXPData.totalXP} experience points`"
+                                                    >
+                                                        {{ userXPData.level }}
+                                                    </Badge>
+                                                </div>
+                                            </TooltipTrigger>
+                                            <TooltipContent side="top" align="center">
+                                                <p>Level {{ userXPData.level }} • {{ userXPData.totalXP }} XP</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </div>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" class="w-56">
+                                <div class="flex items-center justify-start gap-2 p-2">
+                                    <div class="flex flex-col space-y-1 leading-none">
+                                        <p class="font-medium">{{ auth.user.name }}</p>
+                                        <p class="text-xs text-muted-foreground">Level {{ userXPData.level }} • {{ userXPData.formattedXP }} XP</p>
+                                    </div>
                                 </div>
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" class="w-56">
-                            <div class="flex items-center justify-start gap-2 p-2">
-                                <div class="flex flex-col space-y-1 leading-none">
-                                    <p class="font-medium">{{ auth.user.name }}</p>
-                                    <p class="text-xs text-muted-foreground">Level {{ userXPData.level }} • {{ userXPData.formattedXP }} XP</p>
-                                </div>
-                            </div>
-                            <UserMenuContent :user="auth.user" />
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                                <UserMenuContent :user="auth.user" />
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </template>
                 </div>
             </div>
         </div>

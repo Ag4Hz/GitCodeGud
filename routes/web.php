@@ -15,13 +15,9 @@ use Inertia\Inertia;
 use App\Http\Controllers\ReviewController;
 
 
-Route::get('/', function () {
-    return Inertia::render('Welcome');
-})->name('home');
-
-Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-});
+Route::get('/', [DashboardController::class, 'index'])->name('home');
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+Route::get('/leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
@@ -67,10 +63,6 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::post('/admin/xp-settings', [AdminController::class, 'updateXPSettings'])->name('admin.xp-settings.update');
     Route::post('/admin/settings/batch-update', [AdminController::class, 'updateAllSettings'])->name('admin.settings.batch-update');
     Route::post('/admin/xp-settings/recalculate', [AdminController::class, 'recalculateXp'])->name('admin.xp-settings.recalculate');
-});
-
-Route::middleware('auth')->group(function () {
-    Route::get('/leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard');
 });
 
 Route::get('/api/xp-settings/last-update', function () {
