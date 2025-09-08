@@ -48,7 +48,7 @@ async function initXpUpdateCheck() {
     const data = await res.json();
     lastXpUpdate = data.updated_at || null;
 
-    setInterval(checkXpUpdate, 30000);
+    setInterval(checkXpUpdate, 10 * 60 * 1000);
 }
 
 // This will set light / dark mode on page load...
