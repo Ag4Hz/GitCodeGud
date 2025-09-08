@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import UserRow from '@/components/UserRow.vue';
+import { useDateFormatter } from '@/composables/useDateFormatter';
 import { useInfiniteScroll } from '@/composables/useInfiniteScroll';
 import { useIntersect } from '@/composables/useIntersect';
 import { type ReviewsPayload } from '@/types/review';
 import { router } from '@inertiajs/vue3';
 import { ref } from 'vue';
-import { useDateFormatter } from '@/composables/useDateFormatter';
 
 withDefaults(defineProps<{ reviews: ReviewsPayload }>(), {
     reviews: () => ({

@@ -8,6 +8,6 @@ export function useDateFormatter() {
     };
 
     return {
-        formatDate
-    }
+        formatDate,
+    };
 }

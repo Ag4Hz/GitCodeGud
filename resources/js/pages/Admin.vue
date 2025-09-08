@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import Icon from '@/components/Icon.vue';
-import Toast from '@/components/Toast.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -858,8 +857,5 @@ const xpSettingsTab = ref<XPSettingsTab>(XPSettingsTab.Base);
                 </div>
             </div>
         </div>
-
-        <!-- Toast Notifications -->
-        <Toast />
     </AppLayout>
 </template>

@@ -2,7 +2,6 @@
 import FollowModal from '@/components/FollowModal.vue';
 import ReviewForm from '@/components/ReviewForm.vue';
 import ReviewList from '@/components/ReviewList.vue';
-import Toast from '@/components/Toast.vue';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -387,7 +386,5 @@ function unfollow() {
                 <ReviewList :reviews="props.reviews" />
             </div>
         </div>
-        <!-- Toast Notifications -->
-        <Toast />
     </AppLayout>
 </template>
