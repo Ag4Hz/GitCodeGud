@@ -199,9 +199,8 @@ const hasActiveBountyFilters = computed(() => {
             <!-- Bounty Search and Grid Section -->
             <div class="mx-auto max-w-4xl space-y-6 px-4 sm:px-6 lg:px-8">
                 <!-- Top Section - Popular and Trending Bounties -->
-                <div class="w-full space-y-6 mt-12 mb-12">
+                <div class="mt-12 mb-12 w-full space-y-6">
                     <!-- Header -->
-
 
                     <!-- Popular Bounties Section -->
                     <div
@@ -253,19 +252,15 @@ const hasActiveBountyFilters = computed(() => {
                             <div class="sm:w-48">
                                 <LanguageFilter v-model="localSelectedLanguage" :languages="availableLanguages" placeholder="All Languages" />
                             </div>
-
-                            <!-- Clear Filters Button -->
-                            <!--                        <Button v-if="hasActiveBountyFilters" @click="clearBountyFilters" variant="outline" size="default" class="sm:w-auto">-->
-                            <!--                            Clear Filters-->
-                            <!--                        </Button>-->
+                            <Button v-if="hasActiveBountyFilters" @click="clearBountyFilters" variant="button" size="default" class="rounded-xl"> Clear Filters </Button>
                         </div>
 
                         <!-- Active Filters Display -->
                         <div v-if="hasActiveBountyFilters" class="flex flex-wrap gap-2">
-                            <!--                        <Badge v-if="localSearchQuery.trim()" variant="secondary" class="flex items-center gap-1">-->
-                            <!--                            Search: "{{ localSearchQuery.trim() }}"-->
-                            <!--                        </Badge>-->
-                            <Badge v-if="localSelectedLanguage" variant="secondary" class="flex items-center gap-1">
+                            <Badge v-if="localSearchQuery.trim()" variant="custom" class="flex items-center gap-1">
+                                Search: "{{ localSearchQuery.trim() }}"
+                            </Badge>
+                            <Badge v-if="localSelectedLanguage" variant="custom" class="flex items-center gap-1">
                                 Language: {{ localSelectedLanguage }}
                             </Badge>
                         </div>
@@ -279,16 +274,12 @@ const hasActiveBountyFilters = computed(() => {
 
                     <!-- All Bounties Section -->
                     <div v-else-if="bounties && bounties.data && bounties.data.length > 0">
-                        <div class="mb-2">
-<!--                            <h2 class="text-xl font-semibold">Bounties</h2>-->
-<!--                            <p class="text-muted-foreground">Browse all available bounties</p>-->
-                        </div>
 
                         <div class="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
                             <Card
                                 v-for="bounty in bounties.data"
                                 :key="bounty.id"
-                                class="cursor-pointer min-h-[238px] border min-w-0 order-white/10 border-l-4 border-l-green-800 transition-all hover:-translate-y-1 hover:shadow-lg  bg-white/40 backdrop-blur-xl  dark:bg-white/5"
+                                class="order-white/10 min-h-[238px] min-w-0 cursor-pointer border border-l-4 border-l-green-800 bg-white/40 backdrop-blur-xl transition-all hover:-translate-y-1 hover:shadow-lg dark:bg-white/5"
                                 @click="navigateToBounty(bounty)"
                             >
                                 <CardHeader class="pb-3">
@@ -296,14 +287,17 @@ const hasActiveBountyFilters = computed(() => {
                                         <h3 class="line-clamp-2 text-lg leading-tight font-semibold">
                                             {{ bounty.title }}
                                         </h3>
-                                        <Badge :class="getStatusColor(bounty.status)" class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium">
+                                        <Badge
+                                            :class="getStatusColor(bounty.status)"
+                                            class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
+                                        >
                                             {{ getStatusDisplayText(bounty.status) }}
                                         </Badge>
                                     </div>
                                 </CardHeader>
                                 <CardContent class="flex flex-1 flex-col space-y-4">
                                     <!-- Short Description -->
-                                    <p v-if="bounty.description" class="text-sm text-muted-foreground break-all">
+                                    <p v-if="bounty.description" class="text-sm break-all text-muted-foreground">
                                         {{ bounty.description.length > 100 ? bounty.description.substring(0, 100) + '...' : bounty.description }}
                                     </p>
 

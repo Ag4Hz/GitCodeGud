@@ -19,7 +19,8 @@ export const buttonVariants = cva(
           'hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50',
         link: 'text-primary underline-offset-4 hover:underline',
 
-        button: 'rounded-md border border-gray-200 bg-white/40 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-white/5 text-black dark:text-white py-4 hover:bg-gray-300/50 dark:hover:bg-white/20',
+        button: 'rounded-md border border-gray-200 bg-white/40 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-white/5 text-black dark:text-white py-4 hover:bg-gray-300/50 dark:hover:bg-white/10',
+        redButton: 'rounded-md border border-gray-200 bg-white/40 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-white/5 text-red-900 py-4 hover:bg-gray-300/50 dark:hover:bg-white/10',
         secondaryButton: 'rounded-md border border-gray-200 bg-black shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-white/80 text-white dark:text-black py-4 hover:bg-gray-300/50 dark:hover:bg-white/20',
 
       },
