@@ -1,21 +1,21 @@
 <script setup lang="ts">
-import { useForm } from '@inertiajs/vue3'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui/button';
+import { useForm } from '@inertiajs/vue3';
 
 const props = defineProps<{
-revieweeId: number
-}>()
+    revieweeId: number;
+}>();
 
 const form = useForm({
-reviewee_id: props.revieweeId,
-comment: '',
-})
+    reviewee_id: props.revieweeId,
+    comment: '',
+});
 
 const submit = () => {
     form.post(route('reviews.store'), {
         onSuccess: () => form.reset('comment'),
-    })
-}
+    });
+};
 </script>
 
 <template>
@@ -31,10 +31,10 @@ const submit = () => {
                 placeholder="Write your review..."
                 class="mt-1 block w-full rounded-md border border-gray-300 p-2"
             />
-            <p v-if="form.errors.comment" class="text-sm text-red-600 mt-1">
+            <p v-if="form.errors.comment" class="mt-1 text-sm text-red-600">
                 {{ form.errors.comment }}
             </p>
-            <p v-if="form.errors.reviewee_id" class="text-sm text-red-600 mt-1">
+            <p v-if="form.errors.reviewee_id" class="mt-1 text-sm text-red-600">
                 {{ form.errors.reviewee_id }}
             </p>
         </div>

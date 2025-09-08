@@ -14,8 +14,8 @@ import { getInitials } from '@/composables/useInitials';
 import { useXP } from '@/composables/useXP';
 import type { BreadcrumbItem, NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
+import { LayoutGrid, LogIn, Menu, Plus, ShieldCheck, Trophy } from 'lucide-vue-next';
 import { computed } from 'vue';
-import { LayoutGrid, Menu, Plus, ShieldCheck, Trophy, LogIn } from 'lucide-vue-next';
 
 interface Props {
     breadcrumbs?: BreadcrumbItem[];
@@ -120,11 +120,7 @@ const mainNavItems = computed((): NavItem[] => {
                 <div class="hidden h-full lg:flex lg:flex-1">
                     <NavigationMenu class="ml-10 flex h-full items-stretch">
                         <NavigationMenuList class="flex h-full items-stretch space-x-2">
-                            <NavigationMenuItem
-                                v-for="(item, index) in mainNavItems"
-                                :key="index"
-                                class="relative flex h-full items-center"
-                            >
+                            <NavigationMenuItem v-for="(item, index) in mainNavItems" :key="index" class="relative flex h-full items-center">
                                 <Link
                                     :class="[navigationMenuTriggerStyle(), activeItemStyles(item.href), 'h-9 cursor-pointer px-3']"
                                     :href="item.href"
@@ -143,9 +139,7 @@ const mainNavItems = computed((): NavItem[] => {
 
                 <div class="ml-auto flex items-center space-x-2">
                     <Button v-if="!isAuthenticated" as-child>
-                        <Link :href="route('login')" class="flex items-center gap-2">
-                            <LogIn class="size-4" /> Login
-                        </Link>
+                        <Link :href="route('login')" class="flex items-center gap-2"> <LogIn class="size-4" /> Login </Link>
                     </Button>
 
                     <template v-else>
