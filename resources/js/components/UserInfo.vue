@@ -14,6 +14,7 @@ interface Props {
     showXP?: boolean;
     showDescription?: boolean;
     clickable?: boolean;
+    descriptionMaxLength?: number;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -21,6 +22,7 @@ const props = withDefaults(defineProps<Props>(), {
     showXP: true,
     showDescription: true,
     clickable: true,
+    descriptionMaxLength: 100,
 });
 
 const { getInitials } = useInitials();
@@ -28,6 +30,20 @@ const { getUserXP } = useXP();
 
 const showAvatar = computed(() => props.user.avatar && props.user.avatar !== '');
 const userXPData = computed(() => getUserXP.value(props.user));
+
+const truncatedDescription = computed(() => {
+    if (!props.user.description) return '';
+
+    if (props.user.description.length <= props.descriptionMaxLength) {
+        return props.user.description;
+    }
+
+    return props.user.description.substring(0, props.descriptionMaxLength).trim() + '...';
+});
+
+const isDescriptionTruncated = computed(() => {
+    return props.user.description && props.user.description.length > props.descriptionMaxLength;
+});
 </script>
 
 <template>
@@ -70,7 +86,19 @@ const userXPData = computed(() => getUserXP.value(props.user));
                 <span v-if="showXP && userXPData.totalXP" class="text-xs text-muted-foreground"> {{ userXPData.formattedXP }} XP </span>
             </div>
             <div v-if="showDescription && user.description" class="mt-1">
-                <span class="block truncate text-xs text-muted-foreground italic"> "{{ user.description }}" </span>
+                <Tooltip v-if="isDescriptionTruncated">
+                    <TooltipTrigger as-child>
+                        <span class="block text-xs text-muted-foreground italic cursor-help">
+                            "{{ truncatedDescription }}"
+                        </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" align="start" class="max-w-48 break-words">
+                        <p class="whitespace-normal text-wrap">"{{ user.description }}"</p>
+                    </TooltipContent>
+                </Tooltip>
+                <span v-else class="block text-xs text-muted-foreground italic">
+                    "{{ user.description }}"
+                </span>
             </div>
         </div>
     </div>

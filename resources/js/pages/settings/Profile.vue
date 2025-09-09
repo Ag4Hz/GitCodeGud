@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
-
-import DeleteUser from '@/components/DeleteUser.vue';
 import HeadingSmall from '@/components/HeadingSmall.vue';
 import InputError from '@/components/InputError.vue';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -74,29 +72,6 @@ const cancel = () => {
                     <div class="flex-1">
                         <h3 class="text-lg font-semibold">{{ user.name }}</h3>
                         <p class="text-sm text-muted-foreground">{{ user.email }}</p>
-
-                        <!-- Description under avatar -->
-                        <div class="mt-4 space-y-2">
-                            <Label for="description">Description</Label>
-                            <div class="relative">
-                                <textarea
-                                    id="description"
-                                    class="w-full resize-none rounded-md border border-border px-3 py-2 shadow-sm placeholder:text-muted-foreground focus:border-transparent focus:ring-2 focus:ring-ring focus:outline-none"
-                                    :class="{ 'border-red-500 focus:ring-red-500': isDescriptionTooLong }"
-                                    v-model="form.description"
-                                    placeholder="Tell others about yourself..."
-                                    rows="3"
-                                ></textarea>
-                                <div
-                                    class="absolute right-2 bottom-2 text-xs text-muted-foreground"
-                                    :class="{ 'text-red-500': isDescriptionTooLong }"
-                                >
-                                    {{ descriptionLength }}/{{ maxDescriptionLength }}
-                                </div>
-                            </div>
-                            <InputError class="mt-1" :message="form.errors.description" />
-                            <p class="text-xs text-muted-foreground">This will be displayed on your public profile.</p>
-                        </div>
                     </div>
                 </div>
 
@@ -114,13 +89,33 @@ const cancel = () => {
                             type="email"
                             class="mt-1 block w-full"
                             v-model="form.email"
-                            required
+                            readonly
                             autocomplete="username"
                             placeholder="Email address"
                         />
                         <InputError class="mt-2" :message="form.errors.email" />
                     </div>
-
+                    <div class="grid gap-2">
+                        <Label for="description">Description</Label>
+                        <div class="relative">
+                            <textarea
+                                id="description"
+                                class="w-full resize-none rounded-md border border-border px-3 py-2 shadow-sm placeholder:text-muted-foreground focus:border-transparent focus:ring-2 focus:ring-ring focus:outline-none"
+                                :class="{ 'border-red-500 focus:ring-red-500': isDescriptionTooLong }"
+                                v-model="form.description"
+                                placeholder="Tell others about yourself..."
+                                rows="3"
+                            ></textarea>
+                            <div
+                                class="absolute right-2 bottom-2 text-xs text-muted-foreground"
+                                :class="{ 'text-red-500': isDescriptionTooLong }"
+                            >
+                                {{ descriptionLength }}/{{ maxDescriptionLength }}
+                            </div>
+                        </div>
+                        <InputError class="mt-1" :message="form.errors.description" />
+                        <p class="text-xs text-muted-foreground">This will be displayed on your public profile.</p>
+                    </div>
                     <div v-if="mustVerifyEmail && !user.email_verified_at">
                         <p class="-mt-4 text-sm text-muted-foreground">
                             Your email address is unverified.
@@ -157,10 +152,6 @@ const cancel = () => {
                         </Transition>
                     </div>
                 </form>
-
-                <div class="pt-10">
-                    <DeleteUser />
-                </div>
             </div>
         </SettingsLayout>
     </AppLayout>
