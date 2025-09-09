@@ -13,6 +13,7 @@ class Review extends Model
         'user_id',
         'reviewee_id',
         'comment',
+        'rating',
         'date',
     ];
 

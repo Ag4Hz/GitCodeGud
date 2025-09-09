@@ -7,7 +7,6 @@ import { Label } from '@/components/ui/label';
 import { router } from '@inertiajs/vue3';
 import { AlertCircle, Info, Loader2, MessageCircle, Search, X } from 'lucide-vue-next';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
-
 interface Repository {
     id: number;
     name: string;
@@ -288,13 +287,13 @@ watch(
                         @input="debouncedSearchRepositories"
                         @focus="handleRepositoryFocus"
                     />
-                    <Search class="absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    <Search class="absolute top-1/2 left-4 z-10 h-5 w-5 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
                 </div>
 
                 <!-- Repository Dropdown -->
                 <div
                     v-if="showRepositoryDropdown && (props.repositories.length > 0 || repositoryLoading)"
-                    class="absolute z-50 mt-1 w-full rounded-md border bg-popover shadow-lg"
+                    class="bg-white-10 mt-[2px] rounded-2xl border text-sm font-medium shadow-sm backdrop-blur-xl backdrop-saturate-150 sm:backdrop-blur-2xl dark:bg-white/10"
                 >
                     <div v-if="repositoryLoading" class="p-3 text-center">
                         <Loader2 class="mx-auto h-4 w-4 animate-spin" />
@@ -303,33 +302,39 @@ watch(
                     <div v-else-if="props.repositories.length === 0" class="p-3 text-center">
                         <p class="text-sm text-muted-foreground">No repositories found</p>
                     </div>
+
                     <div v-else class="max-h-60 overflow-y-auto">
                         <button
                             v-for="repo in props.repositories"
                             :key="repo.id"
                             type="button"
-                            class="flex w-full items-start gap-3 p-3 text-left transition-colors hover:bg-accent"
+                            class="flex w-full items-start gap-3 text-left"
                             @click="selectRepository(repo)"
                         >
-                            <div class="mt-1 flex-shrink-0">
-                                <div class="h-2 w-2 rounded-full bg-green-500" :title="repo.language"></div>
-                            </div>
-                            <div class="min-w-0 flex-1">
-                                <div class="flex items-center gap-2">
-                                    <span class="font-medium">{{ repo.name }}</span>
-                                    <Badge v-if="repo.language" variant="secondary" class="text-xs">
-                                        {{ repo.language }}
-                                    </Badge>
-                                </div>
-                                <p v-if="repo.description" class="line-clamp-2 text-sm text-muted-foreground">
-                                    {{ repo.description }}
-                                </p>
-                                <div class="mt-1 flex items-center gap-4 text-xs text-muted-foreground">
-                                    <span class="flex items-center gap-1">
-                                        <AlertCircle class="h-3 w-3" />
-                                        {{ repo.open_issues_count }} issues
-                                    </span>
-                                    <span>{{ formatDate(repo.updated_at) }}</span>
+                            <div
+                                class="px-items-start flex min-h-[80px] w-full gap-3 rounded-2xl p-2 text-gray-900 hover:bg-white/90 dark:text-gray-100 dark:hover:bg-white/10"
+                            >
+                                <div class="mt-1 ml-3 h-2 w-2 rounded-full bg-green-500" :title="repo.language"></div>
+
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-medium">{{ repo.name }}</span>
+                                        <Badge v-if="repo.language" variant="secondary" class="text-xs">
+                                            {{ repo.language }}
+                                        </Badge>
+                                    </div>
+
+                                    <p v-if="repo.description" class="line-clamp-2 text-sm text-muted-foreground">
+                                        {{ repo.description }}
+                                    </p>
+
+                                    <div class="mt-1 flex items-center gap-4 text-xs text-muted-foreground">
+                                        <span class="flex items-center gap-1">
+                                            <AlertCircle class="h-3 w-3" />
+                                            {{ repo.open_issues_count }} issues
+                                        </span>
+                                        <span>{{ formatDate(repo.updated_at) }}</span>
+                                    </div>
                                 </div>
                             </div>
                         </button>
@@ -338,7 +343,7 @@ watch(
             </div>
 
             <!-- Selected Repository Display -->
-            <div v-if="selectedRepo" class="rounded-lg border bg-accent/10 p-3">
+            <div v-if="selectedRepo" class="rounded-2xl border border-gray-300 p-3">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
                         <div class="h-2 w-2 rounded-full bg-green-500" :title="selectedRepo.language"></div>
@@ -378,58 +383,69 @@ watch(
                 </div>
 
                 <!-- Issues Dropdown -->
+
                 <div
                     v-if="showIssueDropdown && (filteredIssues.length > 0 || issueLoading)"
-                    class="absolute z-40 mt-1 w-full rounded-md border bg-popover shadow-lg"
+                    class="mt-[2px] rounded-2xl border bg-white/40 text-sm font-medium shadow-sm backdrop-blur-xl backdrop-saturate-150 sm:backdrop-blur-2xl dark:bg-white/10"
                 >
                     <div v-if="issueLoading" class="p-3 text-center">
                         <Loader2 class="mx-auto h-4 w-4 animate-spin" />
                         <p class="text-sm text-muted-foreground">Loading issues...</p>
                     </div>
+
                     <div v-else-if="filteredIssues.length === 0" class="p-3 text-center">
                         <p class="text-sm text-muted-foreground">
                             {{ issueSearchQuery.trim() ? 'No matching issues found' : 'No open issues found' }}
                         </p>
                     </div>
+
                     <div v-else class="max-h-60 overflow-y-auto">
                         <button
                             v-for="issue in filteredIssues"
                             :key="issue.id"
                             type="button"
-                            class="flex w-full items-start gap-3 p-3 text-left transition-colors hover:bg-accent"
+                            class="flex w-full items-start gap-3 text-left"
                             @click="selectIssue(issue)"
                         >
-                            <div class="mt-1 flex-shrink-0">
-                                <AlertCircle class="h-4 w-4 text-green-600" />
-                            </div>
-                            <div class="min-w-0 flex-1">
-                                <div class="flex items-start gap-2">
-                                    <span class="text-sm font-medium">#{{ issue.number }}</span>
-                                    <span class="flex-1 text-sm">{{ issue.title }}</span>
+                            <div
+                                class="flex min-h-[80px] w-full gap-3 rounded-2xl p-2 text-gray-900 hover:bg-white/80 dark:text-gray-100 dark:hover:bg-white/10"
+                            >
+                                <div class="mt-1 ml-3 flex-shrink-0">
+                                    <AlertCircle class="h-3 w-3 text-green-600" />
                                 </div>
-                                <p v-if="issue.body" class="mt-1 line-clamp-2 text-sm text-muted-foreground">
-                                    {{ issue.body }}
-                                </p>
-                                <div class="mt-2 flex items-center gap-4 text-xs text-muted-foreground">
-                                    <span>{{ issue.user.login }}</span>
-                                    <span class="flex items-center gap-1">
-                                        <MessageCircle class="h-3 w-3" />
-                                        {{ issue.comments }}
-                                    </span>
-                                    <span>{{ formatDate(issue.updated_at) }}</span>
-                                </div>
-                                <div v-if="issue.labels.length > 0" class="mt-2 flex flex-wrap gap-1">
-                                    <span
-                                        v-for="label in issue.labels.slice(0, 3)"
-                                        :key="label.name"
-                                        class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
-                                        :style="`background-color: #${label.color}20; color: #${label.color}`"
-                                    >
-                                        {{ label.name }}
-                                    </span>
-                                    <span v-if="issue.labels.length > 3" class="text-xs text-muted-foreground">
-                                        +{{ issue.labels.length - 3 }} more
-                                    </span>
+
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-medium">#{{ issue.number }}</span>
+                                        <span class="truncate font-medium">{{ issue.title }}</span>
+                                    </div>
+
+                                    <p v-if="issue.body" class="line-clamp-2 text-sm text-muted-foreground">
+                                        {{ issue.body }}
+                                    </p>
+
+                                    <div class="mt-1 flex items-center gap-4 text-xs text-muted-foreground">
+                                        <span>{{ issue.user.login }}</span>
+                                        <span class="flex items-center gap-1">
+                                            <MessageCircle class="h-3 w-3" />
+                                            {{ issue.comments }} comments
+                                        </span>
+                                        <span>{{ formatDate(issue.updated_at) }}</span>
+                                    </div>
+
+                                    <div v-if="issue.labels.length > 0" class="mt-2 flex flex-wrap gap-1">
+                                        <span
+                                            v-for="label in issue.labels.slice(0, 3)"
+                                            :key="label.name"
+                                            class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
+                                            :style="`background-color: #${label.color}20; color: #${label.color}`"
+                                        >
+                                            {{ label.name }}
+                                        </span>
+                                        <span v-if="issue.labels.length > 3" class="text-xs text-muted-foreground">
+                                            +{{ issue.labels.length - 3 }} more
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </button>
@@ -438,7 +454,7 @@ watch(
             </div>
 
             <!-- Selected Issue Display -->
-            <div v-if="selectedIssue" class="rounded-lg border bg-accent/10 p-3">
+            <div v-if="selectedIssue" class="rounded-2xl border border-gray-300 p-3">
                 <div class="flex items-start justify-between">
                     <div class="flex min-w-0 flex-1 items-start gap-3">
                         <AlertCircle class="mt-1 h-4 w-4 flex-shrink-0 text-green-600" />
@@ -473,13 +489,13 @@ watch(
         <!-- Quick Actions -->
         <div
             v-if="selectedRepo && !selectedIssue && !issueLoading"
-            class="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950"
+            class="rounded-lg border border-purple-200 bg-blue-50 p-4 dark:border-purple-800 dark:bg-purple-950"
         >
             <div class="flex items-center gap-3">
-                <Info class="h-5 w-5 flex-shrink-0 text-blue-600 dark:text-blue-400" />
+                <Info class="h-5 w-5 flex-shrink-0 text-purple-600 dark:text-purple-400" />
                 <div>
-                    <h4 class="font-medium text-blue-800 dark:text-blue-200">Select an Issue</h4>
-                    <p class="text-sm text-blue-700 dark:text-blue-300">
+                    <h4 class="font-medium text-purple-800 dark:text-purple-200">Select an Issue</h4>
+                    <p class="text-sm text-purple-700 dark:text-purple-300">
                         Choose an open issue from <strong>{{ selectedRepo.name }}</strong> to create a bounty for.
                         {{ props.issues.length > 0 ? `${props.issues.length} open issues available.` : 'No open issues found.' }}
                     </p>

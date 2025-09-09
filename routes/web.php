@@ -9,16 +9,16 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GitHubSkillController;
 use App\Http\Controllers\SubmissionController;
 use App\Http\Controllers\SubmissionStatusController;
+use App\Http\Controllers\ReviewController;
 use Illuminate\Support\Facades\Route;
-
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
-Route::get('/', function () {
-    return Inertia::render('Welcome');
-})->name('home');
+Route::get('/', [DashboardController::class, 'index'])->name('home');
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard');
 });
 
 Route::middleware('auth')->group(function () {
@@ -27,6 +27,8 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/users/{user}/follow', [FollowerController::class, 'store'])->name('users.follow');
     Route::delete('/users/{user}/follow', [FollowerController::class, 'destroy'])->name('users.unfollow');
+
+    Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
 });
 
 Route::middleware('auth')->group(function () {
@@ -69,8 +71,15 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::get('/admin/xp-events/export', [AdminController::class, 'exportXpEvents'])->name('admin.xp-events.export');
 });
 
-Route::middleware('auth')->group(function () {
-    Route::get('/leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard');
+// API Routes
+Route::get('/api/xp-settings/last-update', function () {
+    $general = DB::table('general_settings')->max('updated_at');
+    $thresholds = DB::table('level_thresholds')->max('updated_at');
+    $skills = DB::table('user_skills')->max('updated_at');
+
+    $latest = collect([$general, $thresholds, $skills])->filter()->max();
+
+    return response()->json(['updated_at' => $latest]);
 });
 
 require __DIR__.'/settings.php';

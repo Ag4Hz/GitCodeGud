@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import FollowModal from '@/components/FollowModal.vue';
-import Toast from '@/components/Toast.vue';
+import ReviewForm from '@/components/ReviewForm.vue';
+import ReviewList from '@/components/ReviewList.vue';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -10,12 +11,11 @@ import { useToast } from '@/composables/useToast';
 import { useXP } from '@/composables/useXP';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem, type User } from '@/types';
+import { type ReviewsPayload } from '@/types/review';
 import { getXPSyncMessage } from '@/utils/toastMessages';
 import { Head, router } from '@inertiajs/vue3';
-import { Code, Database, Settings, Star, Target, Trophy, Zap } from 'lucide-vue-next';
+import { Code, Database, MessageSquareMore, Settings, Star, Target, Trophy, Zap } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
-import ReviewList from '@/components/ReviewList.vue';
-import { type ReviewsPayload } from '@/types/review'
 
 const { success: showSuccess, error: showError } = useToast();
 
@@ -49,7 +49,9 @@ interface Props {
         next_page_url: string | null;
         avatar: string | null;
     };
-    reviews: ReviewsPayload
+    canReview?: boolean;
+    reviews: ReviewsPayload;
+    ratingAvg: number
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -57,7 +59,6 @@ const props = withDefaults(defineProps<Props>(), {
     followers: Object,
     reviews: () => ({ data: [], current_page: 1, last_page: 1, next_page_url: null, prev_page_url: null }),
 });
-
 
 const isOwner = computed(() => props.isOwner);
 
@@ -175,26 +176,23 @@ function unfollow() {
     <AppLayout :breadcrumbs="breadcrumbItems">
         <Head :title="isOwner ? 'My Profile' : `${user.name}'s Profile`" />
         <div class="px-4 py-6">
-            <div class="mx-auto max-w-4xl space-y-6">
+            <div class="mx-auto max-w-4xl space-y-6 px-4 sm:px-6 lg:px-8">
                 <!-- Profile Header -->
-                <Card>
+                <Card class="border-gray-200 bg-white/40 dark:border-white/10 dark:bg-white/5">
                     <CardHeader>
                         <div class="flex items-center gap-6">
                             <div class="relative">
-                                <Avatar class="h-20 w-20 overflow-hidden rounded-lg">
+                                <Avatar class="overflow-hidden rounded-full sm:h-15 sm:w-15 md:h-18 md:w-18 lg:h-22 lg:w-22">
                                     <AvatarImage v-if="user.avatar" :src="user.avatar" :alt="user.name" />
-                                    <AvatarFallback
-                                        class="rounded-lg bg-neutral-200 text-2xl font-semibold text-black dark:bg-neutral-700 dark:text-white"
-                                    >
+                                    <AvatarFallback class="rounded-lg bg-neutral-200 font-semibold text-black dark:bg-neutral-700 dark:text-white">
                                         {{ getInitials(user.name) }}
                                     </AvatarFallback>
                                 </Avatar>
 
                                 <!-- Large XP Level Badge -->
-                                <div class="absolute -right-2 -bottom-2 flex items-center justify-center">
+                                <div class="absolute -right-1 -bottom-1 flex items-center justify-center">
                                     <Badge
-                                        variant="secondary"
-                                        class="h-8 min-w-8 border-3 border-white bg-orange-500 px-2 text-sm font-bold text-white shadow-lg dark:border-gray-900"
+                                        class="h-6 min-w-6 border-3 border-white bg-purple-600 px-2 text-sm font-bold text-white shadow-lg dark:border-gray-900"
                                     >
                                         {{ user.level }}
                                     </Badge>
@@ -202,20 +200,29 @@ function unfollow() {
                             </div>
 
                             <div class="flex-1">
-                                <CardTitle class="text-2xl">{{ user.name }}</CardTitle>
-                                <CardDescription class="text-base">{{ user.email }}</CardDescription>
-                                <div class="mt-2 flex items-center gap-4">
-                                    <div class="flex items-center gap-1 text-sm font-medium">
+                                <CardTitle class="text-xs sm:text-sm md:text-lg lg:text-2xl">
+                                    {{ user.name }}
+                                </CardTitle>
+
+                                <CardDescription class="text-[11px] sm:text-sm md:text-base lg:text-base">
+                                    {{ user.email }}
+                                </CardDescription>
+
+                                <div class="mt-2 flex flex-wrap items-center gap-4">
+                                    <div class="flex items-center gap-1 text-[11px] font-medium sm:text-sm md:text-base">
                                         <Trophy class="h-4 w-4 text-orange-500" />
                                         Level {{ user.level }}
                                     </div>
-                                    <div class="flex items-center gap-1 text-sm font-medium">
-                                        <Zap class="h-4 w-4 text-blue-500" />
+
+                                    <div class="flex items-center gap-1 text-[11px] font-medium sm:text-sm md:text-base">
+                                        <Zap class="h-4 w-4 text-purple-600" />
                                         {{ formatXP(user.total_xp) }} XP
                                     </div>
 
-                                    <FollowModal prop-name="followers" title="Followers" :count="user.followers_count" />
-                                    <FollowModal prop-name="followings" title="Followings" :count="user.followings_count" />
+                                    <div class="flex gap-2 text-[10px] sm:gap-3 sm:text-sm md:text-base lg:gap-4">
+                                        <FollowModal prop-name="followers" title="Followers" :count="user.followers_count" />
+                                        <FollowModal prop-name="followings" title="Followings" :count="user.followings_count" />
+                                    </div>
                                 </div>
                             </div>
 
@@ -243,11 +250,15 @@ function unfollow() {
                                 </Button>
                             </div>
                         </div>
+
+                        <div class="mt-3 text-sm font-medium text-gray-800 dark:text-gray-200">
+                            Rating: {{ Number(props.ratingAvg ?? 0).toFixed(1) }}
+                        </div>
                     </CardHeader>
                 </Card>
 
                 <!-- XP Progress -->
-                <Card>
+                <Card class="border-gray-200 bg-white/40 dark:border-white/10 dark:bg-white/5">
                     <CardHeader>
                         <CardTitle class="flex items-center gap-2">
                             <Target class="h-5 w-5" />
@@ -261,7 +272,7 @@ function unfollow() {
                         <div class="space-y-2">
                             <div class="h-3 w-full rounded-full bg-gray-200 dark:bg-gray-700">
                                 <div
-                                    class="h-3 rounded-full bg-blue-600 transition-all duration-300 ease-in-out"
+                                    class="h-3 rounded-full bg-purple-600 transition-all duration-300 ease-in-out"
                                     :style="`width: ${levelProgress.percentage}%`"
                                 ></div>
                             </div>
@@ -278,9 +289,9 @@ function unfollow() {
                 <!-- Skills Section -->
                 <div class="space-y-6">
                     <!-- Skills organized by categories -->
-                    <Card v-if="user.skills && user.skills.length > 0">
+                    <Card v-if="user.skills && user.skills.length > 0" class="border-gray-200 bg-white/40 dark:border-white/10 dark:bg-white/5">
                         <CardHeader>
-                            <div class="flex items-center justify-between">
+                            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                                 <div>
                                     <CardTitle class="flex items-center gap-2">
                                         <Star class="h-5 w-5" />
@@ -288,12 +299,8 @@ function unfollow() {
                                     </CardTitle>
                                     <CardDescription>{{ isOwner ? 'Sync your skills from GitHub repositories!' : `${user.name} hasn't earned any skills yet.` }}</CardDescription>
                                 </div>
-                                <button
+                                <Button @click="syncGitHubSkills" :disabled="syncing" class="inline-flex items-center gap-2" variant="button">
                                     v-if="isOwner"
-                                    @click="syncGitHubSkills"
-                                    :disabled="syncing"
-                                    class="inline-flex items-center gap-2 rounded-md bg-gray-900 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800 focus:ring-2 focus:ring-gray-500 focus:outline-none disabled:opacity-50"
-                                >
                                     <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
                                         <path
                                             fill-rule="evenodd"
@@ -302,17 +309,17 @@ function unfollow() {
                                         ></path>
                                     </svg>
                                     {{ syncing ? 'Syncing...' : 'Sync from GitHub' }}
-                                </button>
+                                </Button>
                             </div>
                         </CardHeader>
                         <CardContent class="space-y-6">
                             <!-- Skill Categories -->
                             <div v-for="(skills, type) in skillsByType" :key="type" class="space-y-3">
-                                <div class="rounded-lg border p-4">
+                                <div class="rounded-lg border-gray-200 p-4 dark:border-white/10">
                                     <div class="mb-4 flex items-center gap-2">
-                                        <component :is="getTypeIcon(type)" class="h-5 w-5 text-blue-600" />
+                                        <component :is="getTypeIcon(type)" class="h-5 w-5 text-purple-600" />
                                         <h3 class="text-lg font-semibold">{{ getTypeDisplayName(type) }}</h3>
-                                        <Badge variant="outline" class="ml-auto">
+                                        <Badge variant="custom" class="ml-auto rounded-lg py-1">
                                             {{ skills.length }} {{ skills.length === 1 ? 'skill' : 'skills' }}
                                         </Badge>
                                     </div>
@@ -320,7 +327,7 @@ function unfollow() {
                                         <div
                                             v-for="skill in skills"
                                             :key="skill.skill_name"
-                                            class="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted/50"
+                                            class="flex items-center justify-between rounded-lg border border-gray-200 p-3 transition-colors hover:bg-white/90 dark:border-white/10 dark:hover:bg-white/10"
                                         >
                                             <div class="min-w-0 flex-1">
                                                 <h4 class="truncate font-medium">{{ skill.skill_name }}</h4>
@@ -328,7 +335,7 @@ function unfollow() {
                                             </div>
                                             <Badge
                                                 variant="secondary"
-                                                class="ml-2 bg-blue-100 font-semibold text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                                                class="ml-2 bg-blue-100 font-semibold text-purple-800 dark:bg-purple-900 dark:text-purple-200"
                                             >
                                                 L{{ skill.level }}
                                             </Badge>
@@ -340,9 +347,9 @@ function unfollow() {
                     </Card>
 
                     <!-- No Skills Message with GitHub Sync -->
-                    <Card v-else>
+                    <Card v-else class="border-gray-200 bg-white/40 dark:border-white/10 dark:bg-white/5">
                         <CardHeader>
-                            <div class="flex items-center justify-between">
+                            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                                 <div>
                                     <CardTitle class="flex items-center gap-2">
                                         <Star class="h-5 w-5" />
@@ -350,12 +357,8 @@ function unfollow() {
                                     </CardTitle>
                                     <CardDescription>Sync your skills from GitHub repositories!</CardDescription>
                                 </div>
-                                <button
+                                <Button @click="syncGitHubSkills" :disabled="syncing" class="inline-flex items-center gap-2" variant="button">
                                     v-if="isOwner"
-                                    @click="syncGitHubSkills"
-                                    :disabled="syncing"
-                                    class="inline-flex items-center gap-2 rounded-md bg-gray-900 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800 focus:ring-2 focus:ring-gray-500 focus:outline-none disabled:opacity-50"
-                                >
                                     <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
                                         <path
                                             fill-rule="evenodd"
@@ -364,7 +367,7 @@ function unfollow() {
                                         ></path>
                                     </svg>
                                     {{ syncing ? 'Syncing...' : 'Sync from GitHub' }}
-                                </button>
+                                </Button>
                             </div>
                         </CardHeader>
                         <CardContent>
@@ -375,11 +378,35 @@ function unfollow() {
                         </CardContent>
                     </Card>
                 </div>
-                <ReviewList :reviews="props.reviews" />
+
+                <Card v-if="!isOwner && canReview" class="rounded-xl border-gray-200 bg-white/40 dark:border-white/10 dark:bg-white/5">
+                    <CardHeader>
+                        <CardTitle class="flex items-center gap-2">
+                            <MessageSquareMore class="h-5 w-5" />
+                            Write a review for {{ user.name }}
+                        </CardTitle>
+                        <CardDescription> Share your experience collaborating with {{ user.nickname }} on an issue! </CardDescription>
+                    </CardHeader>
+
+                    <ReviewForm :reviewee-id="user.id" class="px-6 pb-6" />
+                    <ReviewList :reviews="props.reviews" class="px-6" />
+                </Card>
+
+                <Card v-else class="rounded-xl border-gray-200 bg-white/40 dark:border-white/10 dark:bg-white/5">
+                    <CardHeader>
+                        <CardTitle class="flex items-center gap-2">
+                            <MessageSquareMore class="h-5 w-5" />
+                            {{ isOwner ? 'Your reviews' : `${user.name}'s reviews` }}
+                        </CardTitle>
+
+                        <CardDescription v-if="!isOwner && !canReview">
+                            You can write a review after at least one submission has been shared between you and {{ user.name }}.
+                        </CardDescription>
+                    </CardHeader>
+
+                    <ReviewList :reviews="props.reviews" class="px-6" />
+                </Card>
             </div>
         </div>
-
-        <!-- Toast Notifications -->
-        <Toast />
     </AppLayout>
 </template>

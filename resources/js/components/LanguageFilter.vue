@@ -26,16 +26,21 @@ const handleLanguageSelect = (language: string) => {
 </script>
 
 <template>
-    <div class="sm:w-48">
+    <div>
         <DropdownMenu>
             <DropdownMenuTrigger as-child>
-                <Button variant="outline" class="w-full justify-between">
+                <Button
+                    variant="outline"
+                    class="w-full rounded-[10px] border border-gray-200 bg-white/40 text-sm dark:border-white/10 dark:bg-white/5 dark:text-gray-500 dark:hover:bg-white/10"
+                >
                     {{ selectedLanguage || placeholder }}
                     <ChevronDown class="h-4 w-4 opacity-50" />
                 </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent class="w-48">
-                <DropdownMenuItem @click="handleLanguageSelect('')" :class="{ 'bg-accent': !selectedLanguage }">
+            <DropdownMenuContent
+                class="w-48 rounded-[10px] border border-gray-200 bg-white/40 backdrop-blur-sm backdrop-saturate-150 sm:backdrop-blur-sm dark:border-white/10 dark:bg-white/5 dark:text-gray-200"
+            >
+                <DropdownMenuItem @click="handleLanguageSelect('')">
                     {{ placeholder }}
                 </DropdownMenuItem>
                 <DropdownMenuItem
