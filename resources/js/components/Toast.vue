@@ -6,7 +6,7 @@ const { toasts, removeToast } = useToast();
 </script>
 
 <template>
-    <div class="fixed top-20 left-1/2 z-50 flex -translate-x-1/2 flex-col content-center gap-2">
+    <div class="fixed right-4 bottom-4 z-50 flex flex-col content-center gap-2">
         <div
             v-for="toast in toasts"
             :key="toast.id"

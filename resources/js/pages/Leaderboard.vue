@@ -91,7 +91,7 @@ const changeSort = (dir: Dir) => {
                         >
                             Sort: {{ sortDir }}
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" class="bg-white dark:bg-white/6 backdrop-blur-xl">
+                        <DropdownMenuContent align="end" class="bg-white backdrop-blur-xl dark:bg-white/6">
                             <DropdownMenuItem @click="changeSort('asc')">Ascending</DropdownMenuItem>
                             <DropdownMenuItem @click="changeSort('desc')">Descending</DropdownMenuItem>
                         </DropdownMenuContent>

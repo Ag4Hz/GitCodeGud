@@ -62,7 +62,8 @@ watch(search, () => {
                     </ComboboxOption>
                 </template>
 
-                <div v-else
+                <div
+                    v-else
                     class="flex min-h-[44px] items-center px-3 py-2 text-sm text-gray-500 sm:px-4 sm:py-3 sm:text-base md:px-6 md:py-4 md:text-base dark:text-gray-300"
                 >
                     No buddies found

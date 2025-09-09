@@ -3,12 +3,13 @@ import Icon from '@/components/Icon.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { DialogFooter, DialogHeader } from '@/components/ui/dialog';
 import { useToast } from '@/composables/useToast';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { getAdminMessage } from '@/utils/toastMessages';
 import { Head, useForm } from '@inertiajs/vue3';
-import { ChartArea, FolderSync, Settings } from 'lucide-vue-next';
+import { ChartArea, Settings, FolderSync } from 'lucide-vue-next';
 import { computed, h, ref } from 'vue';
 import ApexCharts from 'vue3-apexcharts';
 
@@ -54,6 +55,13 @@ const props = withDefaults(defineProps<Props>(), {
         level_thresholds: { 1: 0 },
     }),
 });
+
+const openDialog = ref(false);
+const recalcForm = useForm({});
+
+const confirmRecalculate = () => {
+    openDialog.value = true;
+};
 
 // Level distribution data
 const distributionData = computed(() => Object.entries(props.xpStats.level_distribution || {}).map(([level, users]) => ({ level, users })));
@@ -160,17 +168,15 @@ const formatNumber = (num: number) => {
 };
 
 const recalculateXp = () => {
-    if (confirm('Are you sure you want to normalize XP for all users? This action cannot be undone.')) {
-        const recalcForm = useForm({});
-        recalcForm.post(route('admin.xp-settings.recalculate'), {
-            onSuccess: () => {
-                showSuccess(getAdminMessage('success', 'recalculate', 'en'));
-            },
-            onError: () => {
-                showError(getAdminMessage('error', 'recalculate', 'en'));
-            },
-        });
-    }
+    recalcForm.post(route('admin.xp-settings.recalculate'), {
+        onSuccess: () => {
+            showSuccess(getAdminMessage('success', 'recalculate', 'en'));
+            openDialog.value = false;
+        },
+        onError: () => {
+            showError(getAdminMessage('error', 'recalculate', 'en'));
+        },
+    });
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -499,10 +505,25 @@ const xpSettingsTab = ref<XPSettingsTab>(XPSettingsTab.Base);
                     </Card>
 
                     <!-- Normalize XP for every user -->
-                    <Button variant="destructive" class="bg-red-600 hover:bg-red-700 md:col-span-2 lg:col-span-1" @click="recalculateXp">
-                        <FolderSync />
+                    <Button variant="destructive" @click="confirmRecalculate">
+                        <FolderSync/>
                         Normalize XP for All Users
                     </Button>
+                    <!-- Confirmation dialog -->
+                    <Dialog v-model:open="openDialog" class="fixed top-12 left-1/2 -translate-x-1/2 max-w-md rounded-xl p-2 bg-red-400/40 backdrop-blur dark:bg-red-90/40">
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle class="text-black dark:text-white">Are you sure?</DialogTitle>
+                            </DialogHeader>
+                            <p class="text-sm text-muted-foreground">
+                                This action will normalize XP for all users and cannot be undone.
+                            </p>
+                            <DialogFooter class="flex justify-end gap-2">
+                                <Button variant="secondary" @click="openDialog = false"> Cancel </Button>
+                                <Button variant="destructive" @click="recalculateXp" :disabled="recalcForm.processing"> Confirm </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
                 </div>
 
                 <!-- Fine tuning -->
