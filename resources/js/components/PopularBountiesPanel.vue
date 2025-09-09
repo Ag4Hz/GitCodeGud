@@ -69,7 +69,7 @@ const sortedBounties = computed(() => {
 </script>
 
 <template>
-    <Card class="gap-0 rounded-2xl border border-gray-200 bg-white/40 p-0 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-white/5">
+    <Card class="gap-0 p-0 rounded-2xl border-gray-200 bg-white/40 dark:border-white/10 dark:bg-white/5">
         <CardHeader class="rounded-t-2xl bg-white/40 px-2 py-4 backdrop-blur-xl sm:px-5 md:px-6 dark:bg-white/5">
             <CardTitle class="font-medium text-gray-600 dark:text-gray-300">
                 {{ props.title }}

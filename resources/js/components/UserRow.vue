@@ -21,7 +21,7 @@ const initials = computed(() => getInitials(user.name || user.nickname || ''));
         :class="[
             'flex cursor-pointer items-center gap-3 rounded-md px-3 py-3 mt-2' +
              ' select-none',
-            active ? 'bg-gray-100/60 text-white dark:bg-white/10' : 'text-gray-900 hover:bg-gray-100/60 dark:text-gray-100 dark:hover:bg-white/10',
+            active ? 'bg-gray-100/60 text-black dark:text-white dark:bg-white/10' : 'text-gray-900 hover:bg-white/50 dark:text-gray-100 dark:hover:bg-white/10',
         ]"
     >
         <div class="relative">

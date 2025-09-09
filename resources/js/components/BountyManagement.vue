@@ -260,7 +260,7 @@ const restoreBounty = (bounty: Bounty) => {
                 <div
                     v-for="bounty in currentBounties"
                     :key="bounty.id"
-                    class="bg-whie/40dark:bg-white/5 rounded-2xl border p-4 transition-colors"
+                    class="bg-whie/40 dark:bg-white/5 rounded-2xl border p-4 transition-colors"
                     :class="[
                         editingBounty === bounty.id
                             ? 'border-primary bg-accent/30'
@@ -311,7 +311,7 @@ const restoreBounty = (bounty: Bounty) => {
                                         maxlength="2000"
                                         rows="4"
                                         placeholder="Detailed description of what needs to be done..."
-                                        class="flex min-h-[80px] w-full rounded-2xl border border-gray-300 bg-white/40 p-4 text-sm font-medium shadow-sm backdrop-blur-xl backdrop-saturate-150 placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed sm:backdrop-blur-2xl dark:bg-white/10"
+                                    class="flex min-h-[80px] w-full rounded-2xl border bg-white/40 border-gray-200 p-4 text-sm font-medium shadow-sm backdrop-blur-xl backdrop-saturate-150 placeholder:text-muted-foreground sm:backdrop-blur-2xl dark:border-white/10 dark:bg-white/10 dark:text-gray-100 focus-visible:outline-none focus-visible:border-green-500 focus-visible:ring-2 focus-visible:ring-green-500/50 dark:focus-visible:border-ring dark:focus-visible:ring-ring/50"
                                         :class="editForm.errors.description && 'border-red-800 focus-visible:ring-red-800'"
                                         :disabled="editForm.processing"
                                     />
