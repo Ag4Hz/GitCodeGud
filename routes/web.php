@@ -15,11 +15,8 @@ use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 Route::get('/', [DashboardController::class, 'index'])->name('home');
-
-Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard');
-});
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+Route::get('/leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
@@ -71,7 +68,6 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::get('/admin/xp-events/export', [AdminController::class, 'exportXpEvents'])->name('admin.xp-events.export');
 });
 
-// API Routes
 Route::get('/api/xp-settings/last-update', function () {
     $general = DB::table('general_settings')->max('updated_at');
     $thresholds = DB::table('level_thresholds')->max('updated_at');
