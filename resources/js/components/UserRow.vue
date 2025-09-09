@@ -10,7 +10,23 @@ type User = {
     name?: string | null;
 };
 
-const { user, active, rank } = defineProps<{ user: User; active?: boolean; rank?: number }>();
+const { user, active, rank, orderDirection, total } = defineProps<{
+    user: User;
+    active?: boolean;
+    rank?: number;
+    orderDirection?: 'asc' | 'desc';
+    total: number;
+}>();
+
+const showCrown = computed(() => {
+    if (!rank || !total) return false;
+
+    if (orderDirection === 'asc') {
+        return rank > total - 3;
+    }
+    return rank <= 3;
+});
+
 const { getInitials } = useInitials();
 
 const initials = computed(() => getInitials(user.name || user.nickname || ''));
@@ -35,12 +51,12 @@ const initials = computed(() => getInitials(user.name || user.nickname || ''));
             </div>
 
             <span
-                v-if="rank && rank <= 3"
+                v-if="showCrown"
                 class="absolute -top-1 -right-1 grid h-5 w-5 place-items-center rounded-full ring-2 ring-white backdrop-blur dark:ring-neutral-900"
                 :class="{
-                    'bg-yellow-400/90 text-yellow-950': rank === 1,
-                    'bg-gray-300/90 text-gray-900': rank === 2,
-                    'bg-amber-500/90 text-amber-950': rank === 3,
+                    'bg-yellow-400/90 text-yellow-950': orderDirection === 'desc' ? rank === 1 : rank === total,
+                    'bg-gray-300/90 text-gray-900': orderDirection === 'desc' ? rank === 2 : rank === total - 1,
+                    'bg-amber-500/90 text-amber-950': orderDirection === 'desc' ? rank === 3 : rank === total - 2,
                 }"
                 aria-label="Top 3"
             >

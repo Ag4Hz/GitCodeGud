@@ -17,9 +17,12 @@ const props = withDefaults(
     defineProps<{
         users: { data: User[]; links?: any[] };
         selectedLanguage?: string;
+        sortDir?: 'asc' | 'desc';
+        total?: number;
     }>(),
     {
         selectedLanguage: '',
+        sortDir: 'desc',
     },
 );
 
@@ -77,6 +80,8 @@ const displayXP = (user: User) => (showLevel.value ? formatXP(user.skill_xp ?? 0
                                         :user="{ id: user.id, nickname: user.nickname, avatar: user.avatar, name: user.name }"
                                         :rank="(user as any).rank"
                                         :active="false"
+                                        :order-direction="props.sortDir"
+                                        :total="props.total"
                                         class="!rounded-none !px-0 !py-0 hover:!bg-transparent dark:hover:!bg-transparent"
                                     />
                                 </ul>
