@@ -23,13 +23,26 @@ class SubmissionController extends Controller
             abort(403, 'You must be logged in to submit.');
         }
 
-        $this->authorize('create', [Submission::class, $bounty]);
+        if ($bounty->issue->repo->user_id === $user->id) {
+            abort(403, 'You cannot submit to your own bounty.');
+        }
+
+        if ($bounty->status !== 'open') {
+            abort(403, 'This bounty is not accepting submissions.');
+        }
+
+        $existingSubmission = $bounty->submissions()
+            ->where('user_id', $user->id)
+            ->first();
+
+        if ($existingSubmission && $existingSubmission->status !== 'rejected') {
+            abort(403, 'You have already submitted a solution for this bounty.');
+        }
 
         return Inertia::render('submissions/Create', [
             'bounty' => $bounty->load(['issue.repo']),
         ]);
     }
-
     public function store(SubmissionStoreRequest $request): RedirectResponse
     {
         $validated = $request->validated();
@@ -37,6 +50,7 @@ class SubmissionController extends Controller
         $user = $request->user();
 
         $this->authorize('create', [Submission::class, $bounty]);
+
         $existingSubmission = $bounty->submissions()
             ->where('user_id', $user->id)
             ->first();
@@ -51,17 +65,17 @@ class SubmissionController extends Controller
             return redirect()
                 ->route('bounties.show', $bounty)
                 ->with('success', 'Solution resubmitted successfully! Your submission is now pending review.');
-        } else {
-            Submission::create([
-                'bounty_id' => $validated['bounty_id'],
-                'user_id' => $user->id,
-                'pr_url' => $validated['pr_url'],
-                'status' => 'pending',
-            ]);
-
-            return redirect()
-                ->route('bounties.show', $bounty)
-                ->with('success', 'Solution submitted successfully! Your submission is now pending review.');
         }
+
+        Submission::create([
+            'bounty_id' => $validated['bounty_id'],
+            'user_id' => $user->id,
+            'pr_url' => $validated['pr_url'],
+            'status' => 'pending',
+        ]);
+
+        return redirect()
+            ->route('bounties.show', $bounty)
+            ->with('success', 'Solution submitted successfully! Your submission is now pending review.');
     }
 }

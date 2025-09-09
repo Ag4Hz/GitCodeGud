@@ -5,42 +5,38 @@ namespace Database\Seeders;
 use App\Models\Bounty;
 use App\Models\Submission;
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class SubmissionSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        $bounties = Bounty::with('issue.repo')->get();
+        $bounties = Bounty::whereDoesntHave('submissions')->pluck('id');
 
         if ($bounties->isEmpty()) {
-            $this->command->info('No bounties found. Please run BountySeeder first.');
             return;
         }
 
-        $users = User::all();
+        $userIds = User::pluck('id');
 
-        if ($users->isEmpty()) {
-            $this->command->info('No users found. Creating some users first.');
-            $users = User::factory(10)->create();
+        if ($userIds->isEmpty()) {
+            $userIds = User::factory(10)->create()->pluck('id');
         }
 
-        foreach ($bounties as $bounty) {
-            if ($bounty->submissions()->count() === 0) {
-                $submissionCount = rand(1, 3);
-                $selectedUsers = $users->random(min($submissionCount, $users->count()));
+        $submissions = $bounties->flatMap(function ($bountyId) use ($userIds) {
+            $submissionCount = rand(1, 3);
+            $selectedUserIds = $userIds->random(min($submissionCount, $userIds->count()));
 
-                foreach ($selectedUsers as $user) {
-                    Submission::factory()->create([
-                        'bounty_id' => $bounty->id,
-                        'user_id' => $user->id,
-                    ]);
-                }
-            }
-        }
+            return $selectedUserIds->map(fn($userId) => [
+                'bounty_id' => $bountyId,
+                'user_id' => $userId,
+                'pr_url' => fake()->url(),
+                'status' => fake()->randomElement(['pending', 'accepted', 'rejected']),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        })->toArray();
+
+        Submission::insert($submissions);
     }
 }

@@ -31,13 +31,13 @@ class SubmissionStatusController extends Controller
         ]);
 
         if ($request->status === 'accepted' && $oldStatus !== 'accepted') {
-                XPHelper::awardSubmissionXP($submission);
-                $message = 'Submission accepted successfully! XP awarded to contributor.';
-        } else {
-            $message = $request->status === 'accepted'
-                ? 'Submission accepted successfully!'
-                : 'Submission rejected.';
+            XPHelper::awardSubmissionXP($submission);
+            return redirect()->back()->with('success', 'Submission accepted successfully! XP awarded to contributor.');
         }
+
+        $message = $request->status === 'accepted'
+            ? 'Submission accepted successfully!'
+            : 'Submission rejected.';
 
         return redirect()->back()->with('success', $message);
     }
