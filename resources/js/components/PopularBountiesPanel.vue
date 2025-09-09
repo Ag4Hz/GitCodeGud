@@ -150,9 +150,6 @@ const sortedBounties = computed(() => {
                                     >
                                         {{ language }}
                                     </Badge>
-                                    <span v-if="bounty.languages.length > 2" class="text-xs text-gray-600 dark:text-gray-300">
-                                        {{ bounty.languages.length - 2 }}
-                                    </span>
                                 </template>
                             </div>
                         </div>
