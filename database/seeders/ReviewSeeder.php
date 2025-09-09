@@ -27,6 +27,7 @@ class ReviewSeeder extends Seeder
             Review::create([
                 'user_id' => $reviewer->id,
                 'reviewee_id' => $reviewee->id,
+                'rating' => rand(1, 5),
                 'comment' => fake()->sentence(rand(5, 20), true),
                 'date' => fake()->dateTimeBetween('-5 years', 'now'),
             ]);

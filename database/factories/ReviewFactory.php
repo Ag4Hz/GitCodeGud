@@ -21,6 +21,7 @@ class ReviewFactory extends Factory
             'user_id' => User::inRandomOrder()->first()?->id ?? User::factory(),
             'reviewee_id' => User::inRandomOrder()->first()?->id ?? User::factory(),
             'comment' => $this->faker->sentence($nbWords = 15, $variableNbWords = true),
+            'rating' => $this->faker->numberBetween(1,5),
             'date' => $this->faker->dateTimeBetween('-5 years', 'now'),
         ];
     }
