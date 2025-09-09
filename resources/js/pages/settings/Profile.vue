@@ -60,7 +60,7 @@ const cancel = () => {
                 <HeadingSmall title="Profile information" description="Update your profile information and settings" />
 
                 <!-- Avatar Section -->
-                <div class="flex items-center gap-6 rounded-lg border border-border bg-card p-6">
+                <div class="flex items-center gap-6 rounded-lg border-gray-200 bg-white/40 dark:border-white/10 dark:bg-white/5 p-6">
                     <div class="relative">
                         <Avatar class="h-20 w-20 overflow-hidden rounded-lg">
                             <AvatarImage v-if="user.avatar" :src="user.avatar" :alt="user.name" />
@@ -100,7 +100,7 @@ const cancel = () => {
                         <div class="relative">
                             <textarea
                                 id="description"
-                                class="w-full resize-none rounded-md border border-border px-3 py-2 shadow-sm placeholder:text-muted-foreground focus:border-transparent focus:ring-2 focus:ring-ring focus:outline-none"
+                                class=" rounded-lg w-full border bg-white/40 border-gray-200 p-4 text-sm font-medium shadow-sm backdrop-blur-xl backdrop-saturate-150 placeholder:text-muted-foreground sm:backdrop-blur-2xl dark:border-white/10 dark:bg-white/10 dark:text-gray-100 focus-visible:outline-none focus-visible:border-green-500 focus-visible:ring-2 focus-visible:ring-green-500/50 dark:focus-visible:border-ring dark:focus-visible:ring-ring/50'"
                                 :class="{ 'border-red-500 focus:ring-red-500': isDescriptionTooLong }"
                                 v-model="form.description"
                                 placeholder="Tell others about yourself..."
