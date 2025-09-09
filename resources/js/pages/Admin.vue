@@ -9,7 +9,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { getAdminMessage } from '@/utils/toastMessages';
 import { Head, useForm } from '@inertiajs/vue3';
-import { ChartArea, Settings, FolderSync } from 'lucide-vue-next';
+import { ChartArea, FolderSync, Settings } from 'lucide-vue-next';
 import { computed, h, ref } from 'vue';
 import ApexCharts from 'vue3-apexcharts';
 
@@ -413,18 +413,19 @@ const xpSettingsTab = ref<XPSettingsTab>(XPSettingsTab.Base);
 
                     <!-- Normalize XP for every user -->
                     <Button variant="destructive" @click="confirmRecalculate">
-                        <FolderSync/>
+                        <FolderSync />
                         Normalize XP for All Users
                     </Button>
                     <!-- Confirmation dialog -->
-                    <Dialog v-model:open="openDialog" class="fixed top-12 left-1/2 -translate-x-1/2 max-w-md rounded-xl p-2 bg-red-400/40 backdrop-blur dark:bg-red-90/40">
+                    <Dialog
+                        v-model:open="openDialog"
+                        class="dark:bg-red-90/40 fixed top-12 left-1/2 max-w-md -translate-x-1/2 rounded-xl bg-red-400/40 p-2 backdrop-blur"
+                    >
                         <DialogContent>
                             <DialogHeader>
                                 <DialogTitle class="text-black dark:text-white">Are you sure?</DialogTitle>
                             </DialogHeader>
-                            <p class="text-sm text-muted-foreground">
-                                This action will normalize XP for all users and cannot be undone.
-                            </p>
+                            <p class="text-sm text-muted-foreground">This action will normalize XP for all users and cannot be undone.</p>
                             <DialogFooter class="flex justify-end gap-2">
                                 <Button variant="secondary" @click="openDialog = false"> Cancel </Button>
                                 <Button variant="destructive" @click="recalculateXp" :disabled="recalcForm.processing"> Confirm </Button>
