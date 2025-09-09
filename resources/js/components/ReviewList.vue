@@ -30,7 +30,11 @@ useIntersect(landmark, loadMoreItems, { rootMargin: '0px 0px 150px 0px' });
     <div class="space-y-4">
         <div v-if="!items.length" class="text-sm text-gray-500 dark:text-gray-400">No reviews yet.</div>
 
-        <div v-for="review in items" :key="review.id" class="rounded-xl border border-gray-200 bg-white/50 p-4 dark:border-white/10 dark:bg-white/5">
+        <div
+            v-for="review in items"
+            :key="review.id"
+            class="rounded-xl border border-gray-200 bg-white/50 p-4 hover:bg-white/90 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
+        >
             <div @click="goToProfile(review.reviewer)" class="cursor-pointer">
                 <UserRow :user="review.reviewer" class="!rounded-none !px-0 !py-0 hover:!bg-transparent dark:hover:!bg-transparent" />
             </div>

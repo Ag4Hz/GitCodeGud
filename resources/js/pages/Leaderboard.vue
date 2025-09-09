@@ -63,7 +63,7 @@ const changeSort = (dir: Dir) => {
     <Head title="Leaderboard" />
 
     <AppLayout :breadcrumbs="[{ title: 'Leaderboard', href: '/leaderboard' }]">
-        <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <div class="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
             <div class="mb-6 flex items-end justify-between gap-4">
                 <h1 class="text-2xl font-semibold tracking-tight text-gray-900 md:text-3xl dark:text-gray-100">Leaderboard</h1>
             </div>
@@ -75,7 +75,7 @@ const changeSort = (dir: Dir) => {
             <h2 class="mt-28 mb-6 text-center text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl md:text-4xl dark:text-gray-100">
                 Hunt bugs. Fix code. Earn XP.
             </h2>
-            <p class="mb-28 text-center text-base text-gray-600 sm:text-lg md:text-xl dark:text-gray-300">
+            <p class="mb-28 text-center text-base text-muted-foreground sm:text-lg md:text-xl">
                 Welcome to the battleground where developers rise and legends are made.
             </p>
 
@@ -87,11 +87,11 @@ const changeSort = (dir: Dir) => {
                 <div>
                     <DropdownMenu>
                         <DropdownMenuTrigger
-                            class="rounded-md border px-3 py-2 text-sm font-medium shadow-sm hover:bg-gray-100 dark:hover:bg-gray-800"
+                            class="rounded-md border px-3 py-2 text-sm font-medium shadow-sm hover:bg-gray-100 dark:hover:bg-white/10"
                         >
                             Sort: {{ sortDir }}
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" class="bg-white dark:bg-gray-900">
+                        <DropdownMenuContent align="end" class="bg-white dark:bg-white/6 backdrop-blur-xl">
                             <DropdownMenuItem @click="changeSort('asc')">Ascending</DropdownMenuItem>
                             <DropdownMenuItem @click="changeSort('desc')">Descending</DropdownMenuItem>
                         </DropdownMenuContent>

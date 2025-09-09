@@ -52,7 +52,7 @@ const setRating = (value: number) => {
                 rows="4"
                 required
                 placeholder="Write your review..."
-                class="mt-1 block w-full rounded-md border border-gray-300 p-2"
+                class="w-full rounded-xl border border-gray-200 bg-white/50 p-4 hover:bg-white/90 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
             />
             <p v-if="form.errors.comment" class="mt-1 text-sm text-red-600">
                 {{ form.errors.comment }}
@@ -62,7 +62,7 @@ const setRating = (value: number) => {
             </p>
         </div>
 
-        <Button type="submit" :disabled="form.processing">
+        <Button type="submit" :disabled="form.processing" variant="button">
             {{ form.processing ? 'Creating...' : 'Create Review' }}
         </Button>
     </form>

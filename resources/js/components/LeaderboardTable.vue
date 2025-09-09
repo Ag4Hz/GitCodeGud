@@ -34,13 +34,17 @@ const displayXP = (user: User) => (showLevel.value ? formatXP(user.skill_xp ?? 0
 </script>
 
 <template>
-    <div class="overflow-x-auto rounded-2xl border border-gray-200 bg-white/40 dark:border-white/10 dark:bg-white/5">
-        <table class="w-full min-w-[320px] text-xs sm:min-w-[560px] sm:text-sm md:min-w-[760px] md:text-base lg:min-w-[900px]">
+    <div class="mx-auto w-full max-w-7xl overflow-x-auto rounded-2xl border border-gray-200 bg-white/40 dark:border-white/10 dark:bg-white/5">
+        <table class="w-full table-fixed text-xs sm:text-sm md:text-base">
             <thead class="bg-white/40 backdrop-blur md:sticky md:top-0 md:z-10 dark:bg-white/10">
                 <tr>
-                    <th class="px-3 py-2 text-center font-medium text-gray-600 sm:px-4 sm:py-3 md:px-6 md:py-4 dark:text-gray-300">Position</th>
-                    <th class="px-3 py-2 text-left font-medium text-gray-600 sm:px-4 sm:py-3 md:px-6 md:py-4 dark:text-gray-300">User</th>
-                    <th class="px-3 py-2 text-right font-medium text-gray-600 sm:px-4 sm:py-3 md:px-6 md:py-4 dark:text-gray-300">{{ xpHeader }}</th>
+                    <th class="w-[15%] px-3 py-2 text-center font-medium text-gray-600 sm:px-4 sm:py-3 md:px-6 md:py-4 dark:text-gray-300">
+                        Position
+                    </th>
+                    <th class="w-[60%] px-3 py-2 text-left font-medium text-gray-600 sm:px-4 sm:py-3 md:px-6 md:py-4 dark:text-gray-300">User</th>
+                    <th class="w-[30%] px-3 py-2 text-right font-medium text-gray-600 sm:px-4 sm:py-3 md:px-6 md:py-4 dark:text-gray-300">
+                        {{ xpHeader }}
+                    </th>
                 </tr>
             </thead>
 
@@ -59,15 +63,17 @@ const displayXP = (user: User) => (showLevel.value ? formatXP(user.skill_xp ?? 0
                         {{ (user as any).rank }}
                     </td>
 
-                    <td class="px-3 py-2 sm:px-4 sm:py-3 md:px-6 md:py-4">
-                        <Link :href="`/users/${user.id}`" class="block focus:outline-none" @click.stop>
-                            <ul class="m-0 list-none p-0">
-                                <UserRow
-                                    :user="{ id: user.id, nickname: user.nickname, avatar: user.avatar, name: user.name }"
-                                    :active="false"
-                                    class="!rounded-none !px-0 !py-0 hover:!bg-transparent dark:hover:!bg-transparent"
-                                />
-                            </ul>
+                    <td class="min-w-0 px-3 py-2 sm:px-4 sm:py-3 md:px-6 md:py-4">
+                        <Link :href="`/users/${user.id}`" class="block min-w-0 focus:outline-none" @click.stop>
+                            <div class="min-w-0 truncate">
+                                <ul class="m-0 list-none p-0">
+                                    <UserRow
+                                        :user="{ id: user.id, nickname: user.nickname, avatar: user.avatar, name: user.name }"
+                                        :active="false"
+                                        class="!rounded-none !px-0 !py-0 hover:!bg-transparent dark:hover:!bg-transparent"
+                                    />
+                                </ul>
+                            </div>
                         </Link>
                     </td>
 

@@ -68,10 +68,6 @@ const loadingComments = ref(false);
 
 const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
     {
-        title: 'Dashboard',
-        href: '/dashboard',
-    },
-    {
         title: 'Bounty Details',
         href: `/bounties/${props.bounty.id}`,
     },
@@ -198,8 +194,10 @@ const shouldShowPagination = computed(() => {
         <div class="px-4 py-6">
             <div class="mx-auto max-w-4xl space-y-6">
                 <!-- Main Bounty Card -->
-                <Card>
-                    <CardHeader>
+                <Card
+                    class="gap-0 rounded-2xl border border-gray-200 bg-white/40 p-0 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-white/5"
+                >
+                    <CardHeader class="rounded-t-2xl bg-white/40 px-2 py-4 backdrop-blur-xl sm:px-5 md:px-6 dark:bg-white/5">
                         <div class="flex items-start justify-between">
                             <div class="space-y-2">
                                 <div class="flex items-center gap-3">
@@ -207,12 +205,6 @@ const shouldShowPagination = computed(() => {
                                     <Badge :class="getStatusColor(bounty.status)" class="text-sm">
                                         {{ getStatusDisplayText(bounty.status) }}
                                     </Badge>
-                                </div>
-
-                                <!-- Reward XP -->
-                                <div class="flex items-center gap-2 text-lg font-semibold text-green-600">
-                                    <DollarSign class="h-5 w-5" />
-                                    <span>{{ bounty.reward_xp }} XP Reward</span>
                                 </div>
                             </div>
 
@@ -245,18 +237,24 @@ const shouldShowPagination = computed(() => {
                         </div>
                     </CardHeader>
 
-                    <CardContent class="space-y-6">
+                    <CardContent class="mt-6 space-y-6">
+                        <!-- Reward XP -->
+                        <div class="flex animate-pulse items-center justify-center gap-1 text-2xl font-semibold text-green-600">
+                            <DollarSign class="h-7 w-7" />
+                            <span>{{ bounty.reward_xp }} XP Reward</span>
+                        </div>
+
                         <!-- User Submission Info (if exists) -->
-                        <div v-if="userSubmission" class="rounded-lg border-l-4 border-l-blue-500 bg-blue-50 p-4 dark:bg-blue-900/20">
+                        <div v-if="userSubmission" class="rounded-lg border-l-4 border-l-purple-500 bg-purple-50 p-4 dark:bg-purple-900/20">
                             <div class="flex items-start justify-between">
                                 <div>
-                                    <h4 class="mb-1 font-semibold text-blue-800 dark:text-blue-200">Your Submission</h4>
-                                    <p class="mb-2 text-sm text-blue-700 dark:text-blue-300">Status: {{ submissionStatusText }}</p>
+                                    <h4 class="mb-1 font-semibold text-purple-800 dark:text-purple-200">Your Submission</h4>
+                                    <p class="mb-2 text-sm text-purple-700 dark:text-purple-300">Status: {{ submissionStatusText }}</p>
                                     <div class="flex items-center gap-2">
                                         <a
                                             :href="userSubmission.pr_url"
                                             target="_blank"
-                                            class="flex items-center gap-1 text-sm text-blue-600 transition-colors hover:text-blue-800"
+                                            class="flex items-center gap-1 text-sm text-purple-600 transition-colors hover:text-purple-800"
                                         >
                                             <ExternalLink class="h-3 w-3" />
                                             View Pull Request
@@ -274,7 +272,7 @@ const shouldShowPagination = computed(() => {
                                 Bounty Description
                             </h3>
                             <div class="prose prose-sm max-w-none">
-                                <div class="rounded-lg border bg-gray-50 p-4 dark:bg-gray-900">
+                                <div class="w-full rounded-xl border border-gray-200 bg-white/40 p-4 dark:border-white/10 dark:bg-white/5">
                                     <p
                                         v-if="bounty.description && bounty.description.trim()"
                                         class="leading-relaxed whitespace-pre-wrap text-muted-foreground"
@@ -295,12 +293,14 @@ const shouldShowPagination = computed(() => {
 
                             <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
                                 <!-- Repository Link -->
-                                <Card class="group border-l-4 border-l-blue-500 transition-all duration-300 hover:shadow-lg">
+                                <Card
+                                    class="group border-l-4 border-l-purple-500 bg-white/40 transition-all duration-300 hover:shadow-lg dark:bg-white/10"
+                                >
                                     <CardContent class="p-6">
                                         <div class="space-y-4">
                                             <div class="flex items-start gap-3">
-                                                <div class="rounded-lg bg-blue-100 p-2 dark:bg-blue-900">
-                                                    <GitBranch class="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                                                <div class="rounded-lg bg-purple-100 p-2 dark:bg-purple-900">
+                                                    <GitBranch class="h-5 w-5 text-purple-600 dark:text-purple-400" />
                                                 </div>
                                                 <div class="min-w-0 flex-1">
                                                     <h4 class="mb-1 text-lg font-semibold">Repository</h4>
@@ -315,14 +315,14 @@ const shouldShowPagination = computed(() => {
                                                 :href="bounty.issue?.repo?.url || '#'"
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                class="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-3 text-sm font-medium text-white transition-all duration-200 group-hover:scale-105 hover:bg-blue-700"
+                                                class="flex w-full items-center justify-center gap-2 rounded-lg bg-purple-600 px-4 py-3 text-sm font-medium text-white transition-all duration-200 group-hover:scale-105 hover:bg-purple-700"
                                             >
                                                 <ExternalLink class="h-4 w-4" />
                                                 View Repository
                                             </a>
                                             <div
                                                 v-else
-                                                class="flex w-full items-center justify-center gap-2 rounded-lg bg-gray-100 px-4 py-3 text-sm text-gray-500 dark:bg-gray-800"
+                                                class="flex w-full items-center justify-center gap-2 rounded-lg bg-white/40 px-4 py-3 text-sm text-gray-500 dark:bg-white/10"
                                             >
                                                 <span>Invalid Repository URL</span>
                                             </div>
@@ -331,11 +331,13 @@ const shouldShowPagination = computed(() => {
                                 </Card>
 
                                 <!-- Issue Link -->
-                                <Card class="group border-l-4 border-l-green-500 transition-all duration-300 hover:shadow-lg">
+                                <Card
+                                    class="group border-l-4 border-l-green-800 bg-white/40 transition-all duration-300 hover:shadow-lg dark:bg-white/10"
+                                >
                                     <CardContent class="p-6">
                                         <div class="space-y-4">
                                             <div class="flex items-start gap-3">
-                                                <div class="rounded-lg bg-green-100 p-2 dark:bg-green-900">
+                                                <div class="rounded-lg bg-green-100 p-2 dark:bg-green-800">
                                                     <Target class="h-5 w-5 text-green-600 dark:text-green-400" />
                                                 </div>
                                                 <div class="min-w-0 flex-1">
@@ -349,14 +351,14 @@ const shouldShowPagination = computed(() => {
                                                 :href="bounty.issue?.url || '#'"
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                class="flex w-full items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-3 text-sm font-medium text-white transition-all duration-200 group-hover:scale-105 hover:bg-green-700"
+                                                class="flex w-full items-center justify-center gap-2 rounded-lg bg-green-800 px-4 py-3 text-sm font-medium text-white transition-all duration-200 group-hover:scale-105 hover:bg-green-700"
                                             >
                                                 <ExternalLink class="h-4 w-4" />
                                                 View Issue
                                             </a>
                                             <div
                                                 v-else
-                                                class="flex w-full items-center justify-center gap-2 rounded-lg bg-gray-100 px-4 py-3 text-sm text-gray-500 dark:bg-gray-800"
+                                                class="flex w-full items-center justify-center gap-2 rounded-lg bg-white/40 px-4 py-3 text-sm text-gray-500 dark:bg-white/10"
                                             >
                                                 <span>Invalid Issue URL</span>
                                             </div>
@@ -373,7 +375,7 @@ const shouldShowPagination = computed(() => {
                                 Bounty Owner
                             </h3>
 
-                            <Card>
+                            <Card class="w-full rounded-xl border border-gray-200 bg-white/40 p-4 dark:border-white/10 dark:bg-white/5">
                                 <CardContent class="p-4">
                                     <div class="flex items-center gap-4">
                                         <Avatar class="h-12 w-12">
@@ -393,7 +395,7 @@ const shouldShowPagination = computed(() => {
 
                                         <!-- Contact Owner Button -->
                                         <Link :href="`/users/${ownerInfo.id}`">
-                                            <Button variant="outline" size="sm" class="flex items-center gap-2">
+                                            <Button variant="button" size="sm" class="flex items-center gap-2">
                                                 <UserIcon class="h-4 w-4" />
                                                 View Profile
                                             </Button>
@@ -412,7 +414,7 @@ const shouldShowPagination = computed(() => {
 
                             <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
                                 <!-- Languages -->
-                                <Card>
+                                <Card class="w-full rounded-xl border border-gray-200 bg-white/40 p-4 dark:border-white/10 dark:bg-white/5">
                                     <CardContent class="p-4">
                                         <div class="mb-2 flex items-center gap-2">
                                             <Code class="h-4 w-4" />
@@ -430,7 +432,7 @@ const shouldShowPagination = computed(() => {
                                 </Card>
 
                                 <!-- Created Date -->
-                                <Card>
+                                <Card class="w-full rounded-xl border border-gray-200 bg-white/40 p-4 dark:border-white/10 dark:bg-white/5">
                                     <CardContent class="p-4">
                                         <div class="mb-2 flex items-center gap-2">
                                             <Calendar class="h-4 w-4" />
@@ -441,7 +443,7 @@ const shouldShowPagination = computed(() => {
                                 </Card>
 
                                 <!-- Submissions Count -->
-                                <Card>
+                                <Card class="w-full rounded-xl border border-gray-200 bg-white/40 p-4 dark:border-white/10 dark:bg-white/5">
                                     <CardContent class="p-4">
                                         <div class="mb-2 flex items-center gap-2">
                                             <Users class="h-4 w-4" />
@@ -473,7 +475,7 @@ const shouldShowPagination = computed(() => {
 
                             <!-- No Comments -->
                             <div v-else-if="!hasComments" class="py-8 text-center">
-                                <Card>
+                                <Card class="w-full rounded-xl border border-gray-200 bg-white/40 p-4 dark:border-white/10 dark:bg-white/5">
                                     <CardContent class="p-6">
                                         <MessageSquare class="mx-auto mb-3 h-12 w-12 text-muted-foreground" />
                                         <p class="text-muted-foreground">No comments yet on this GitHub issue.</p>
@@ -482,7 +484,7 @@ const shouldShowPagination = computed(() => {
                                             :href="bounty.issue?.url || '#'"
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            class="mt-2 inline-flex items-center gap-1 text-sm text-blue-600 hover:underline"
+                                            class="mt-2 inline-flex items-center gap-1 text-sm text-purple-600 hover:underline"
                                         >
                                             <ExternalLink class="h-3 w-3" />
                                             Add a comment on GitHub
@@ -493,7 +495,11 @@ const shouldShowPagination = computed(() => {
 
                             <!-- Comments List -->
                             <div v-else class="space-y-4">
-                                <Card v-for="comment in comments?.data || []" :key="comment.id" class="transition-shadow hover:shadow-md">
+                                <Card
+                                    v-for="comment in comments?.data || []"
+                                    :key="comment.id"
+                                    class="w-full rounded-xl border border-gray-200 bg-white/40 p-4 dark:border-white/10 dark:bg-white/5"
+                                >
                                     <CardContent class="p-4">
                                         <div class="flex items-start gap-3">
                                             <!-- User Avatar -->
@@ -517,7 +523,7 @@ const shouldShowPagination = computed(() => {
                                                         :href="comment.html_url"
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        class="ml-auto flex items-center gap-1 text-xs text-blue-600 hover:underline"
+                                                        class="ml-auto flex items-center gap-1 text-xs text-purple-600 hover:underline"
                                                     >
                                                         <ExternalLink class="h-3 w-3" />
                                                         View on GitHub
@@ -526,7 +532,9 @@ const shouldShowPagination = computed(() => {
 
                                                 <!-- Comment Body -->
                                                 <div class="prose prose-sm max-w-none">
-                                                    <div class="rounded-lg border bg-gray-50 p-3 dark:bg-gray-900">
+                                                    <div
+                                                        class="w-full rounded-xl border border-gray-200 bg-white/40 p-4 dark:border-white/10 dark:bg-white/5"
+                                                    >
                                                         <p class="text-sm leading-relaxed break-words whitespace-pre-wrap">
                                                             {{ comment.body || 'No content' }}
                                                         </p>
@@ -556,7 +564,7 @@ const shouldShowPagination = computed(() => {
                                 <div class="pt-4 text-center">
                                     <Button
                                         @click="refreshComments"
-                                        variant="outline"
+                                        variant="button"
                                         size="sm"
                                         class="mx-auto flex items-center gap-2"
                                         :disabled="loadingComments"
@@ -576,7 +584,11 @@ const shouldShowPagination = computed(() => {
                             </h3>
 
                             <div class="space-y-3">
-                                <Card v-for="submission in bounty.submissions" :key="submission.id" class="transition-shadow hover:shadow-md">
+                                <Card
+                                    v-for="submission in bounty.submissions"
+                                    :key="submission.id"
+                                    class="mb-6 w-full rounded-xl border border-gray-200 bg-white/40 p-4 dark:border-white/10 dark:bg-white/5"
+                                >
                                     <CardContent class="p-4">
                                         <div class="flex items-center justify-between">
                                             <div class="flex items-center gap-3">
@@ -601,7 +613,7 @@ const shouldShowPagination = computed(() => {
                                                     v-if="submission.pr_url"
                                                     :href="submission.pr_url"
                                                     target="_blank"
-                                                    class="flex items-center gap-1 text-sm text-blue-600 transition-colors hover:text-blue-800"
+                                                    class="flex items-center gap-1 text-sm text-purple-600 transition-colors hover:text-purple-800"
                                                 >
                                                     <ExternalLink class="h-3 w-3" />
                                                     PR
@@ -620,13 +632,6 @@ const shouldShowPagination = computed(() => {
                         </div>
                     </CardContent>
                 </Card>
-
-                <!-- Back to Dashboard -->
-                <div class="flex justify-center">
-                    <Link href="/dashboard">
-                        <Button variant="outline" class="flex items-center gap-2"> ← Back to Dashboard </Button>
-                    </Link>
-                </div>
             </div>
         </div>
     </AppLayout>
