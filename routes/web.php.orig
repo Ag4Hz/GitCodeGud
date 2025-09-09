@@ -9,10 +9,11 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GitHubSkillController;
 use App\Http\Controllers\SubmissionController;
 use App\Http\Controllers\SubmissionStatusController;
-use App\Http\Controllers\ReviewController;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\DB;
+
 use Inertia\Inertia;
+use App\Http\Controllers\ReviewController;
+
 
 Route::get('/', [DashboardController::class, 'index'])->name('home');
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -68,6 +69,12 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::get('/admin/xp-events/export', [AdminController::class, 'exportXpEvents'])->name('admin.xp-events.export');
 });
 
+<<<<<<< HEAD
+Route::middleware('auth')->group(function () {
+    Route::get('/leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard');
+});
+
+=======
 Route::get('/api/xp-settings/last-update', function () {
     $general = DB::table('general_settings')->max('updated_at');
     $thresholds = DB::table('level_thresholds')->max('updated_at');
@@ -78,5 +85,7 @@ Route::get('/api/xp-settings/last-update', function () {
     return response()->json(['updated_at' => $latest]);
 });
 
+
+>>>>>>> origin/develop
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

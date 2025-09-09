@@ -4,27 +4,39 @@ namespace Database\Seeders;
 
 use App\Models\Bounty;
 use App\Models\Submission;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class SubmissionSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-         $bounties = Bounty::all();
+        $bounties = Bounty::whereDoesntHave('submissions')->pluck('id');
 
         if ($bounties->isEmpty()) {
-            $this->call(BountySeeder::class);
-            $bounties = Bounty::all();
+            return;
         }
 
-        foreach ($bounties as $bounty) {
-            Submission::factory(rand(1, 3))->create([
-                'bounty_id' => $bounty->id
-            ]);
+        $userIds = User::pluck('id');
+
+        if ($userIds->isEmpty()) {
+            $userIds = User::factory(10)->create()->pluck('id');
         }
+
+        $submissions = $bounties->flatMap(function ($bountyId) use ($userIds) {
+            $submissionCount = rand(1, 3);
+            $selectedUserIds = $userIds->random(min($submissionCount, $userIds->count()));
+
+            return $selectedUserIds->map(fn($userId) => [
+                'bounty_id' => $bountyId,
+                'user_id' => $userId,
+                'pr_url' => fake()->url(),
+                'status' => fake()->randomElement(['pending', 'accepted', 'rejected']),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        })->toArray();
+
+        Submission::insert($submissions);
     }
 }

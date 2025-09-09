@@ -10,11 +10,13 @@ use Illuminate\Contracts\Validation\ValidationRule;
 class UniqueSubmissionForBounty implements ValidationRule, DataAwareRule
 {
     protected $data = [];
+
     public function setData(array $data): static
     {
         $this->data = $data;
         return $this;
     }
+
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         $bountyId = $this->data['bounty_id'] ?? null;
@@ -26,11 +28,12 @@ class UniqueSubmissionForBounty implements ValidationRule, DataAwareRule
         if (!$bounty) {
             return;
         }
+
         $existingSubmission = $bounty->submissions()
             ->where('user_id', auth()->id())
-            ->exists();
+            ->first();
 
-        if ($existingSubmission) {
+        if ($existingSubmission && $existingSubmission->status !== 'rejected') {
             $fail('You have already submitted a solution for this bounty.');
         }
     }

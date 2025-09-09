@@ -20,7 +20,7 @@ return new class extends Migration
         DB::table('general_settings')->insert([
             [
                 'key' => 'base_xp',
-                'value' => '100',
+                'value' => '0',
                 'description' => 'Base XP awarded for completing tasks',
                 'created_at' => now(),
                 'updated_at' => now(),

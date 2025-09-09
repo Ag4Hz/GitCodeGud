@@ -17,11 +17,11 @@ class SubmissionPolicy
         if ($bounty->status !== 'open') {
             return Response::deny('This bounty is not accepting submissions.');
         }
+
         $existingSubmission = $bounty->submissions()
             ->where('user_id', $user->id)
-            ->exists();
-
-        if ($existingSubmission) {
+            ->first();
+        if ($existingSubmission && $existingSubmission->status !== 'rejected') {
             return Response::deny('You have already submitted a solution for this bounty.');
         }
 
