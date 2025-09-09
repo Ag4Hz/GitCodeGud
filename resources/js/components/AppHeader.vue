@@ -80,7 +80,7 @@ const mainNavItems = computed((): NavItem[] => {
 <template>
     <div>
         <div class="border-b border-sidebar-border/80">
-            <div class="mx-auto flex h-16 items-center px-4 md:max-w-7xl">
+            <div class="mx-auto flex h-18 items-center px-4 md:max-w-7xl">
                 <!-- Mobile Menu -->
                 <div class="lg:hidden">
                     <Sheet>
@@ -120,9 +120,9 @@ const mainNavItems = computed((): NavItem[] => {
                 <div class="hidden h-full lg:flex lg:flex-1">
                     <NavigationMenu class="ml-10 flex h-full items-stretch">
                         <NavigationMenuList class="flex h-full items-stretch space-x-2">
-                            <NavigationMenuItem v-for="(item, index) in mainNavItems" :key="index" class="relative flex h-full items-center">
+                            <NavigationMenuItem v-for="(item, index) in mainNavItems" :key="index" class="relative flex h-full items-center ">
                                 <Link
-                                    :class="[navigationMenuTriggerStyle(), activeItemStyles(item.href), 'h-9 cursor-pointer px-3']"
+                                    :class="[navigationMenuTriggerStyle(), activeItemStyles(item.href), 'h-9 cursor-pointer backdrop-blur-xl bg-white/40 dark:bg-white/5']"
                                     :href="item.href"
                                 >
                                     <component v-if="item.icon" :is="item.icon" class="mr-2 h-4 w-4" />
@@ -180,7 +180,7 @@ const mainNavItems = computed((): NavItem[] => {
                                     </div>
                                 </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" class="w-56">
+                            <DropdownMenuContent align="end" class="w-56 backdrop-blur-xl bg-white/40 dark:bg-white/5">
                                 <div class="flex items-center justify-start gap-2 p-2">
                                     <div class="flex flex-col space-y-1 leading-none">
                                         <p class="font-medium">{{ auth.user.name }}</p>
