@@ -40,7 +40,7 @@ const handleLanguageSelect = (language: string) => {
             <DropdownMenuContent
                 class="w-48 rounded-[10px] border border-gray-200 bg-white/40 backdrop-blur-sm backdrop-saturate-150 sm:backdrop-blur-sm dark:border-white/10 dark:bg-white/5 dark:text-gray-200"
             >
-                <DropdownMenuItem @click="handleLanguageSelect('')" :class="{ '': !selectedLanguage }">
+                <DropdownMenuItem @click="handleLanguageSelect('')">
                     {{ placeholder }}
                 </DropdownMenuItem>
                 <DropdownMenuItem
