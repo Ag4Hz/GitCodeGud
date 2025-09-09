@@ -127,9 +127,6 @@ const renderChart = () => {
     });
 };
 
-// Global editing state
-const hasAnyChanges = ref(false);
-
 // XP Settings editing state
 const editingXPSettings = ref(false);
 const editableBaseXP = ref(0);
@@ -155,12 +152,6 @@ const thresholdForm = useForm({
 });
 const skillWeightsForm = useForm({
     skillWeights: [] as { skill_name: string; multiplier: number }[],
-});
-
-const batchForm = useForm({
-    xp_settings: {} as Record<string, number>,
-    thresholds: [] as number[],
-    skill_weights: [] as { skill_name: string; multiplier: number }[],
 });
 
 const formatNumber = (num: number) => {
@@ -196,16 +187,11 @@ const sortedSkillWeights = computed(() => {
     return Object.entries(props.xpConfig.skill_weights).sort(([a], [b]) => a.localeCompare(b));
 });
 
-const anyEditing = computed(() => {
-    return editingXPSettings.value || editingThresholds.value || editingSkillWeights.value;
-});
-
 // XP Settings functions
 const startEditingXPSettings = () => {
     editingXPSettings.value = true;
     editableBaseXP.value = props.xpConfig.base_xp;
     editableBonusMultiplier.value = props.xpConfig.bonus_multiplier;
-    updateHasChanges();
 };
 
 const saveXPSettings = () => {
@@ -242,7 +228,6 @@ const finishEditingXPField = () => {
 const startEditingThresholds = () => {
     editingThresholds.value = true;
     editableThresholds.value = Object.values(props.xpConfig.level_thresholds).map(Number);
-    updateHasChanges();
 };
 
 const addNewThreshold = () => {
@@ -291,7 +276,6 @@ const startEditingSkillWeights = () => {
         skill_name,
         multiplier: Number(multiplier),
     }));
-    updateHasChanges();
 };
 
 const addNewSkillWeight = () => {
@@ -335,61 +319,6 @@ const finishEditingSkillValue = () => {
     editingSkillIndex.value = null;
 };
 
-// Batch operations
-const updateHasChanges = () => {
-    hasAnyChanges.value = anyEditing.value;
-};
-
-const saveAllChanges = () => {
-    if (editingThresholds.value) {
-        batchForm.thresholds = [...editableThresholds.value];
-    } else {
-        batchForm.thresholds = [];
-    }
-
-    const payload: any = {};
-
-    if (editingXPSettings.value) {
-        payload.xp_settings = {
-            base_xp: editableBaseXP.value,
-            bonus_multiplier: editableBonusMultiplier.value,
-        };
-    }
-
-    if (editingThresholds.value) {
-        payload.thresholds = [...editableThresholds.value];
-    }
-
-    if (editingSkillWeights.value) {
-        payload.skill_weights = [...editableSkillWeights.value];
-    }
-
-    // Use a new form with only the data we want to send
-    const dynamicForm = useForm(payload);
-    dynamicForm.post(route('admin.settings.batch-update'), {
-        onSuccess: () => {
-            editingXPSettings.value = false;
-            editingThresholds.value = false;
-            editingSkillWeights.value = false;
-            editingXPField.value = null;
-            editingIndex.value = null;
-            editingSkillIndex.value = null;
-            showSuccess(getAdminMessage('success', 'batch_update', 'en'));
-            updateHasChanges();
-        },
-        onError: () => {
-            showError(getAdminMessage('error', 'batch_update', 'en'));
-        },
-    });
-};
-
-const cancelAllChanges = () => {
-    cancelEditingXPSettings();
-    cancelEditing();
-    cancelEditingSkillWeights();
-    hasAnyChanges.value = false;
-};
-
 enum AdminTab {
     Statistics = 'statistics',
     XPSettings = 'xp_settings',
@@ -429,28 +358,6 @@ const xpSettingsTab = ref<XPSettingsTab>(XPSettingsTab.Base);
                         <Settings />
                         XP Settings
                     </Button>
-                </div>
-
-                <!-- Batch Save Controls -->
-                <div v-if="hasAnyChanges" class="sticky top-4 z-10">
-                    <Card class="border-red-200 bg-orange-50 dark:border-red-800 dark:bg-red-950">
-                        <CardContent class="flex items-center justify-between gap-4 py-4">
-                            <div class="flex items-center gap-2">
-                                <Icon name="alert-circle" class="h-5 w-5 text-red-600" />
-                                <span class="font-medium text-red-800 dark:text-red-200">You have unsaved changes</span>
-                            </div>
-                            <div class="flex gap-2">
-                                <Button variant="outline" size="sm" @click="cancelAllChanges" :disabled="batchForm.processing">
-                                    <Icon name="x" class="mr-2 h-4 w-4" />
-                                    Cancel All
-                                </Button>
-                                <Button variant="default" size="sm" @click="saveAllChanges" :disabled="batchForm.processing">
-                                    <Icon name="check" class="mr-2 h-4 w-4" />
-                                    Save All Changes
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
                 </div>
 
                 <!-- XP Statistics -->
@@ -591,7 +498,7 @@ const xpSettingsTab = ref<XPSettingsTab>(XPSettingsTab.Base);
                                             @keyup.enter="finishEditingXPField"
                                             class="h-6 w-20 rounded border px-1 text-center font-mono text-xs"
                                             type="number"
-                                            min="1"
+                                            min="0"
                                             max="10000"
                                             autofocus
                                         />

@@ -36,7 +36,7 @@ class AdminController extends Controller
             if (isset($validated['xp_settings'])) {
                 foreach ($validated['xp_settings'] as $key => $value) {
                     $type = $key === 'base_xp' ? 'integer' : 'float';
-                    GeneralSetting::setValue($key, $value, $type);
+                    GeneralSetting::setValue($key, $value);
                 }
                 DB::table('general_settings')->update(['updated_at' => now()]);
             }
@@ -137,8 +137,8 @@ class AdminController extends Controller
     {
         $xpSettings = $request->validated();
 
-        GeneralSetting::setValue('base_xp', $xpSettings['base_xp'], 'integer');
-        GeneralSetting::setValue('bonus_multiplier', $xpSettings['bonus_multiplier'], 'float');
+        GeneralSetting::setValue('base_xp', $xpSettings['base_xp']);
+        GeneralSetting::setValue('bonus_multiplier', $xpSettings['bonus_multiplier']);
 
         XPHelper::clearCaches();
         DB::table('general_settings')->update(['updated_at' => now()]);
