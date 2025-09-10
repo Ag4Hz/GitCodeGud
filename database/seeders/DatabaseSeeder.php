@@ -13,7 +13,6 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             SkillSeeder::class,
             BadgeSeeder::class,
-            ReviewSeeder::class,
         ]);
 
         $this->call([
@@ -23,6 +22,7 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             SubmissionSeeder::class,
+            ReviewSeeder::class,
             FollowerSeeder::class,
         ]);
     }

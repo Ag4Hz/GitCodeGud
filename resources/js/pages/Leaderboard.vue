@@ -6,12 +6,12 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import UserSearch from '@/components/UserSearch.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 
 type Dir = 'asc' | 'desc';
 
 type User = { id: number; nickname: string; avatar: string; name: string; xp: number; skill_xp: number; level: number; rank: number };
-type LeaderboardUsers = { data: User[]; links: any[] };
+type LeaderboardUsers = { data: User[]; links: any[]; total: number };
 type UsersSearchPayload = { data?: User[] };
 
 type PageProps = {
@@ -57,7 +57,10 @@ const changeSort = (dir: Dir) => {
         },
     });
 };
+const totalUsers = computed(() => props.leaderboardUsers.total ?? 0);
+
 </script>
+
 
 <template>
     <Head title="Leaderboard" />
@@ -91,7 +94,7 @@ const changeSort = (dir: Dir) => {
                         >
                             Sort: {{ sortDir }}
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" class="bg-white dark:bg-white/6 backdrop-blur-xl">
+                        <DropdownMenuContent align="end" class="bg-white backdrop-blur-xl dark:bg-white/6">
                             <DropdownMenuItem @click="changeSort('asc')">Ascending</DropdownMenuItem>
                             <DropdownMenuItem @click="changeSort('desc')">Descending</DropdownMenuItem>
                         </DropdownMenuContent>
@@ -99,7 +102,7 @@ const changeSort = (dir: Dir) => {
                 </div>
             </div>
 
-            <LeaderboardTable :users="props.leaderboardUsers" :selected-language="props.filters?.language || ''" />
+            <LeaderboardTable :users="props.leaderboardUsers" :selected-language="props.filters?.language || ''" :sort-dir="sortDir"   :total="totalUsers" />
             <Pagination :links="props.leaderboardUsers.links" />
         </div>
     </AppLayout>

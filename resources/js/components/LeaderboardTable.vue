@@ -17,9 +17,12 @@ const props = withDefaults(
     defineProps<{
         users: { data: User[]; links?: any[] };
         selectedLanguage?: string;
+        sortDir?: 'asc' | 'desc';
+        total?: number;
     }>(),
     {
         selectedLanguage: '',
+        sortDir: 'desc',
     },
 );
 
@@ -27,6 +30,12 @@ const { formatXP } = useXP();
 const goToUser = (id: number) => {
     router.visit(`/users/${id}`, { preserveScroll: true });
 };
+const filteredUsers = computed(() => {
+    if (props.selectedLanguage) {
+        return props.users.data.filter(u => (u.skill_xp ?? 0) > 0);
+    }
+    return props.users.data;
+});
 
 const showLevel = computed(() => !!props.selectedLanguage);
 const xpHeader = computed(() => (showLevel.value ? `XP${props.selectedLanguage ? ` (${props.selectedLanguage})` : ''}` : 'XP'));
@@ -50,29 +59,35 @@ const displayXP = (user: User) => (showLevel.value ? formatXP(user.skill_xp ?? 0
             </thead>
 
             <tbody class="divide-y divide-gray-200 dark:divide-white/10">
-            <tr
-                v-for="user in users.data"
-                :key="user.id"
-                class="cursor-pointer transition-colors focus-within:bg-gray-50 hover:bg-white/50 dark:focus-within:bg-white/5 dark:hover:bg-white/5"
-                role="link"
-                tabindex="0"
-                :aria-label="`Open ${user.nickname || user.name} profile`"
-                @click="goToUser(user.id)"
-                @keydown.enter.prevent="goToUser(user.id)"
-            >
-                <td class="px-3 py-2 text-center whitespace-nowrap text-gray-900 tabular-nums sm:px-4 sm:py-3 md:px-6 md:py-4 dark:text-gray-100">
-                    {{ (user as any).rank }}
-                </td>
 
-                <td class="px-3 py-2 sm:px-4 sm:py-3 md:px-6 md:py-4">
-                    <Link :href="`/users/${user.id}`" class="block focus:outline-none" @click.stop>
-                        <UserRow
-                            :user="{ id: user.id, nickname: user.nickname, avatar: user.avatar, name: user.name }"
-                            :active="false"
-                            class="!rounded-none !px-0 !py-0 hover:!bg-transparent dark:hover:!bg-transparent"
-                        />
-                    </Link>
-                </td>
+                <tr v-for="user in filteredUsers" :key="user.id"
+                    class="cursor-pointer transition-colors focus-within:bg-gray-50 hover:bg-white/50 dark:focus-within:bg-white/5 dark:hover:bg-white/5"
+                    role="link"
+                    tabindex="0"
+                    :aria-label="`Open ${user.nickname || user.name} profile`"
+                    @click="goToUser(user.id)"
+                    @keydown.enter.prevent="goToUser(user.id)"
+                >
+                    <td class="px-3 py-2 text-center whitespace-nowrap text-gray-900 tabular-nums sm:px-4 sm:py-3 md:px-6 md:py-4 dark:text-gray-100">
+                        {{ (user as any).rank }}
+                    </td>
+
+                    <td class="min-w-0 px-3 py-2 sm:px-4 sm:py-3 md:px-6 md:py-4">
+                        <Link :href="`/users/${user.id}`" class="block min-w-0 focus:outline-none" @click.stop>
+                            <div class="min-w-0 truncate">
+                                <ul class="m-0 list-none p-0">
+                                    <UserRow
+                                        :user="{ id: user.id, nickname: user.nickname, avatar: user.avatar, name: user.name }"
+                                        :rank="(user as any).rank"
+                                        :active="false"
+                                        :order-direction="props.sortDir"
+                                        :total="props.total"
+                                        class="!rounded-none !px-0 !py-0 hover:!bg-transparent dark:hover:!bg-transparent"
+                                    />
+                                </ul>
+                            </div>
+                        </Link>
+                    </td>
 
                 <td
                     class="px-3 py-2 text-right font-semibold whitespace-nowrap text-gray-900 tabular-nums sm:px-4 sm:py-3 md:px-6 md:py-4 dark:text-gray-100"
