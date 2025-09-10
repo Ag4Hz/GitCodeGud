@@ -3,7 +3,9 @@ import AppLogoIcon from '@/components/AppLogoIcon.vue';
 </script>
 
 <template>
-    <div class="flex aspect-square size-15 items-center justify-center rounded-md p-1 text-sidebar-primary-foreground dark:drop-shadow-[0_0px_10px_rgba(255,255,255,0.3)] drop-shadow-[0_0px_10px_rgba(0,0,0,0.8)]">
+    <div
+        class="flex aspect-square size-15 items-center justify-center rounded-md p-1 text-sidebar-primary-foreground drop-shadow-[0_0px_10px_rgba(0,0,0,0.8)] dark:drop-shadow-[0_0px_10px_rgba(255,255,255,0.3)]"
+    >
         <AppLogoIcon class="size-5 fill-current text-white dark:text-black" />
     </div>
     <div class="ml-1 grid flex-1 text-left text-sm">

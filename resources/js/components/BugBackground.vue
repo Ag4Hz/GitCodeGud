@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import bug1 from '@/../assets/bug1.png';
 import bug2 from '@/../assets/bug2.png';
-import { ref, onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
 
 const bugImages = [bug1, bug2];
 const bugs = ref<any[]>([]);
@@ -47,12 +47,12 @@ onMounted(() => {
             :key="index"
             :src="bug.src"
             :style="{
-        top: bug.top + 'px',
-        left: bug.left + 'px',
-        width: bug.size + 'px',
-        height: bug.size + 'px',
-        transform: `rotate(${bug.rotation}deg)`,
-      }"
+                top: bug.top + 'px',
+                left: bug.left + 'px',
+                width: bug.size + 'px',
+                height: bug.size + 'px',
+                transform: `rotate(${bug.rotation}deg)`,
+            }"
             class="absolute opacity-10"
             alt="bug"
         />
