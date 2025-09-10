@@ -366,7 +366,7 @@ const hasActiveBountyFilters = computed(() => {
                         <div class="flex items-center gap-2">
                             <Button
                                 v-if="bounties.current_page > 1"
-                                variant="outline"
+                                variant="button"
                                 size="sm"
                                 @click="navigateToBountyPage(bounties.current_page - 1)"
                             >
@@ -375,7 +375,7 @@ const hasActiveBountyFilters = computed(() => {
                             <span class="px-3 text-sm text-muted-foreground"> Page {{ bounties.current_page }} of {{ bounties.last_page }} </span>
                             <Button
                                 v-if="bounties.current_page < bounties.last_page"
-                                variant="outline"
+                                variant="button"
                                 size="sm"
                                 @click="navigateToBountyPage(bounties.current_page + 1)"
                             >

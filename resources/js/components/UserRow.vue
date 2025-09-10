@@ -21,11 +21,11 @@ const { user, active, rank, orderDirection, total } = defineProps<{
 const showCrown = computed(() => {
     if (!rank || !total) return false;
 
-    if (orderDirection === 'asc') {
-        return rank > total - 3;
-    }
-    return rank <= 3;
+    return orderDirection === 'asc'
+        ? rank > (total ?? 0) - 3
+        : rank <= 3;
 });
+
 
 const { getInitials } = useInitials();
 
