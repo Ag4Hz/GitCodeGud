@@ -41,15 +41,12 @@ const initials = computed(() => getInitials(user.name || user.nickname || ''));
         ]"
     >
         <div class="relative">
-            <img v-if="user.avatar" :src="user.avatar" :alt="user.nickname || user.name || 'avatar'" class="h-10 w-10 rounded-full object-cover" />
-            <div
-                v-else
-                class="grid h-10 w-10 place-items-center rounded-full bg-neutral-200 text-[15px] font-semibold text-neutral-800 dark:bg-neutral-700 dark:text-neutral-100"
-                aria-hidden="true"
-            >
-                {{ initials }}
-            </div>
-
+            <Avatar class="h-10 w-10 flex-shrink-0">
+                <AvatarImage :src="user.avatar || ''" :alt="user.nickname || user.name || 'avatar'" />
+                <AvatarFallback class="bg-neutral-200 text-[15px] font-semibold text-neutral-800 dark:bg-neutral-700 dark:text-neutral-100">
+                    {{ initials }}
+                </AvatarFallback>
+            </Avatar>
             <span
                 v-if="showCrown"
                 class="absolute -top-1 -right-1 grid h-5 w-5 place-items-center rounded-full ring-2 ring-white backdrop-blur dark:ring-neutral-900"
