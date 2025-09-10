@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { useDateFormatter } from '@/composables/useDateFormatter';
+import { useInitials } from '@/composables/useInitials';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem, type User } from '@/types';
 import { type Bounty } from '@/types/bounty';
@@ -76,6 +77,7 @@ const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
 ]);
 
 const { formatDate } = useDateFormatter();
+const { getInitials } = useInitials();
 
 const getStatusColor = (status: string) => {
     switch (status) {
@@ -495,7 +497,7 @@ const shouldShowPagination = computed(() => {
                                         <Avatar class="h-12 w-12">
                                             <AvatarImage :src="ownerInfo.avatar || ''" :alt="ownerInfo.name" />
                                             <AvatarFallback class="text-lg">
-                                                {{ ownerInfo.name.charAt(0).toUpperCase() }}
+                                                {{ getInitials(ownerInfo.name) }}
                                             </AvatarFallback>
                                         </Avatar>
 
@@ -598,7 +600,7 @@ const shouldShowPagination = computed(() => {
                                                         :alt="submission.user.name"
                                                     />
                                                     <AvatarFallback>
-                                                        {{ submission.user.name?.charAt(0)?.toUpperCase() || 'U' }}
+                                                        {{ getInitials(submission.user.name || submission.user.nickname || '') }}
                                                     </AvatarFallback>
                                                 </Avatar>
 
@@ -691,7 +693,7 @@ const shouldShowPagination = computed(() => {
                                             <Avatar class="h-10 w-10 flex-shrink-0">
                                                 <AvatarImage :src="comment.user?.avatar_url || ''" :alt="comment.user?.login || 'User'" />
                                                 <AvatarFallback>
-                                                    {{ (comment.user?.login || 'U').charAt(0).toUpperCase() }}
+                                                    {{ getInitials(comment.user?.login || '') }}
                                                 </AvatarFallback>
                                             </Avatar>
 
