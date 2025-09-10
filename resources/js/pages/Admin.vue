@@ -3,7 +3,7 @@ import Icon from '@/components/Icon.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogTitle, DialogFooter, DialogHeader, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/composables/useToast';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
@@ -419,7 +419,9 @@ const xpSettingsTab = ref<XPSettingsTab>(XPSettingsTab.Base);
                     </Button>
                     <!-- Confirmation dialog -->
                     <Dialog v-model:open="openDialog">
-                        <DialogContent class="dark:bg-red-90/40 fixed top-36 left-1/2 max-w-md -translate-x-1/2 rounded-xl bg-red-400/40 p-2 backdrop-blur">
+                        <DialogContent
+                            class="dark:bg-red-90/40 fixed top-36 left-1/2 max-w-md -translate-x-1/2 rounded-xl bg-red-400/40 p-2 backdrop-blur"
+                        >
                             <DialogHeader>
                                 <DialogTitle class="text-black dark:text-white">Are you sure?</DialogTitle>
                             </DialogHeader>
@@ -575,10 +577,7 @@ const xpSettingsTab = ref<XPSettingsTab>(XPSettingsTab.Base);
                             </CardTitle>
                         </CardHeader>
                         <CardContent class="space-y-4">
-                            <PerfectScrollbar
-                                class="max-h-96 w-full rounded-xl"
-                                :options="{ suppressScrollX: true }"
-                            >
+                            <PerfectScrollbar class="max-h-96 w-full rounded-xl" :options="{ suppressScrollX: true }">
                                 <!-- Display Mode -->
                                 <div v-if="!editingThresholds" class="space-y-2 pr-2">
                                     <div
@@ -681,10 +680,7 @@ const xpSettingsTab = ref<XPSettingsTab>(XPSettingsTab.Base);
                             </CardTitle>
                         </CardHeader>
                         <CardContent class="space-y-4">
-                            <PerfectScrollbar
-                                class="max-h-96 w-full rounded-xl"
-                                :options="{ suppressScrollX: true }"
-                            >
+                            <PerfectScrollbar class="max-h-96 w-full rounded-xl" :options="{ suppressScrollX: true }">
                                 <!-- Display Mode -->
                                 <div v-if="!editingSkillWeights" class="space-y-2 pr-2">
                                     <div v-if="Object.keys(props.xpConfig.skill_weights).length > 0">
