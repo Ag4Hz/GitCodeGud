@@ -90,7 +90,7 @@ const totalUsers = computed(() => props.leaderboardUsers.total ?? 0);
                 <div>
                     <DropdownMenu>
                         <DropdownMenuTrigger
-                            class="rounded-md border px-3 py-2 text-sm font-medium shadow-sm hover:bg-gray-100 dark:hover:bg-white/10"
+                            class="w-full rounded-[10px] px-3 py-2 border border-gray-200 bg-white/40 text-sm dark:border-white/10 dark:bg-white/5 dark:text-gray-500 dark:hover:bg-white/10"
                         >
                             Sort: {{ sortDir }}
                         </DropdownMenuTrigger>

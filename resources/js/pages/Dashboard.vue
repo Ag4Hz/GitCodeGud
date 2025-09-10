@@ -242,9 +242,23 @@ const hasActiveBountyFilters = computed(() => {
                     <div class="mx-auto w-full max-w-4xl space-y-4">
                         <!-- Search Bar -->
                         <div class="relative flex-1">
-                            <Search class="absolute top-1/2 left-4 z-10 h-5 w-5 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
-                            <Input v-model="localSearchQuery" placeholder="Search bounties by title, description, or repository..." />
+                            <Search
+                                class="absolute top-1/2 left-4 z-10 h-5 w-5 -translate-y-1/2 text-gray-400 dark:text-gray-500"
+                            />
+                            <Input
+                                v-model="localSearchQuery"
+                                placeholder="Search bounties by title, description, or repository..."
+                            />
+
+                            <img
+                                src="/assets/images/sitting.png"
+                                alt="sitting bug"
+                                class="absolute top-[-460px] right-0 translate-x-[350px] z-50 scale-[0.25] drop-shadow-[0_-10px_15px_rgba(255,255,255,0.1)]"
+                            />
+
+
                         </div>
+
 
                         <!-- Filters Row -->
                         <div class="flex flex-wrap items-center gap-3">
