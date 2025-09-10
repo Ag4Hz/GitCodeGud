@@ -3,7 +3,7 @@ import Icon from '@/components/Icon.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DialogFooter, DialogHeader } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogFooter, DialogHeader, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/composables/useToast';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
@@ -12,6 +12,7 @@ import { Head, useForm } from '@inertiajs/vue3';
 import { ChartArea, FolderSync, Settings } from 'lucide-vue-next';
 import { computed, h, ref } from 'vue';
 import ApexCharts from 'vue3-apexcharts';
+import { PerfectScrollbar } from 'vue3-perfect-scrollbar';
 
 interface XPStats {
     total_users: number;
@@ -417,15 +418,14 @@ const xpSettingsTab = ref<XPSettingsTab>(XPSettingsTab.Base);
                         Normalize XP for All Users
                     </Button>
                     <!-- Confirmation dialog -->
-                    <Dialog
-                        v-model:open="openDialog"
-                        class="dark:bg-red-90/40 fixed top-12 left-1/2 max-w-md -translate-x-1/2 rounded-xl bg-red-400/40 p-2 backdrop-blur"
-                    >
-                        <DialogContent>
+                    <Dialog v-model:open="openDialog">
+                        <DialogContent class="dark:bg-red-90/40 fixed top-36 left-1/2 max-w-md -translate-x-1/2 rounded-xl bg-red-400/40 p-2 backdrop-blur">
                             <DialogHeader>
                                 <DialogTitle class="text-black dark:text-white">Are you sure?</DialogTitle>
                             </DialogHeader>
-                            <p class="text-sm text-muted-foreground">This action will normalize XP for all users and cannot be undone.</p>
+                            <DialogDescription>
+                                <p class="text-sm text-muted-foreground">This action will normalize XP for all users and cannot be undone.</p>
+                            </DialogDescription>
                             <DialogFooter class="flex justify-end gap-2">
                                 <Button variant="secondary" @click="openDialog = false"> Cancel </Button>
                                 <Button variant="destructive" @click="recalculateXp" :disabled="recalcForm.processing"> Confirm </Button>
@@ -575,8 +575,9 @@ const xpSettingsTab = ref<XPSettingsTab>(XPSettingsTab.Base);
                             </CardTitle>
                         </CardHeader>
                         <CardContent class="space-y-4">
-                            <div
-                                class="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-muted-foreground/20 hover:scrollbar-thumb-muted-foreground/40 max-h-72 overflow-y-auto"
+                            <PerfectScrollbar
+                                class="max-h-96 w-full rounded-xl"
+                                :options="{ suppressScrollX: true }"
                             >
                                 <!-- Display Mode -->
                                 <div v-if="!editingThresholds" class="space-y-2 pr-2">
@@ -639,7 +640,7 @@ const xpSettingsTab = ref<XPSettingsTab>(XPSettingsTab.Base);
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            </PerfectScrollbar>
 
                             <!-- Action Buttons -->
                             <div v-if="!editingThresholds" class="border-t pt-2">
@@ -680,8 +681,9 @@ const xpSettingsTab = ref<XPSettingsTab>(XPSettingsTab.Base);
                             </CardTitle>
                         </CardHeader>
                         <CardContent class="space-y-4">
-                            <div
-                                class="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-muted-foreground/20 hover:scrollbar-thumb-muted-foreground/40 max-h-72 overflow-y-auto"
+                            <PerfectScrollbar
+                                class="max-h-96 w-full rounded-xl"
+                                :options="{ suppressScrollX: true }"
                             >
                                 <!-- Display Mode -->
                                 <div v-if="!editingSkillWeights" class="space-y-2 pr-2">
@@ -749,7 +751,7 @@ const xpSettingsTab = ref<XPSettingsTab>(XPSettingsTab.Base);
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            </PerfectScrollbar>
 
                             <!-- Action Buttons -->
                             <div v-if="!editingSkillWeights" class="border-t pt-2">

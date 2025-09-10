@@ -7,6 +7,7 @@ import type { DefineComponent } from 'vue';
 import { createApp, h } from 'vue';
 import { ZiggyVue } from 'ziggy-js';
 import { initializeTheme } from './composables/useAppearance';
+import 'vue3-perfect-scrollbar/style.css';
 
 const { success: showSuccess } = useToast();
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';

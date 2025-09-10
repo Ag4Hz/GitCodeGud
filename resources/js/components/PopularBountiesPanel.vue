@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { router } from '@inertiajs/vue3';
 import { Calendar, DollarSign, Eye, Target, TrendingUp } from 'lucide-vue-next';
 import { computed } from 'vue';
+import { PerfectScrollbar } from 'vue3-perfect-scrollbar';
 
 enum BountyStatus {
     OPEN = 'open',
@@ -77,8 +78,12 @@ const sortedBounties = computed(() => {
         </CardHeader>
 
         <CardContent class="m-0 p-0">
-            <div v-if="props.bounties.length > 0" class="relative">
-                <ul class="m-0 max-h-96 divide-y divide-gray-200 overflow-y-auto dark:divide-white/10">
+            <PerfectScrollbar
+                class="max-h-96 w-full rounded-xl"
+                :options="{ suppressScrollX: true }"
+            >
+                <div v-if="props.bounties.length > 0" class="relative">
+                    <ul class="m-0 max-h-96 divide-y divide-gray-200 dark:divide-white/10">
                     <li
                         v-for="(bounty, index) in sortedBounties"
                         :key="bounty.id"
@@ -158,15 +163,16 @@ const sortedBounties = computed(() => {
                         </div>
                     </li>
                 </ul>
-            </div>
-
-            <div v-else class="flex flex-col items-center justify-center gap-3 px-6 py-16 text-center text-gray-600 dark:text-gray-300">
-                <div class="flex h-12 w-12 items-center justify-center rounded-2xl border border-dashed border-gray-300/70 dark:border-white/15">
-                    <TrendingUp class="h-6 w-6" />
                 </div>
-                <p class="text-sm">No popular bounties yet</p>
-                <p class="max-w-sm text-xs text-gray-500 dark:text-gray-400">New bounties will show up here as they gain traction.</p>
-            </div>
+
+                <div v-else class="flex flex-col items-center justify-center gap-3 px-6 py-16 text-center text-gray-600 dark:text-gray-300">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl border border-dashed border-gray-300/70 dark:border-white/15">
+                        <TrendingUp class="h-6 w-6" />
+                    </div>
+                    <p class="text-sm">No popular bounties yet</p>
+                    <p class="max-w-sm text-xs text-gray-500 dark:text-gray-400">New bounties will show up here as they gain traction.</p>
+                </div>
+            </PerfectScrollbar>
         </CardContent>
     </Card>
 </template>
