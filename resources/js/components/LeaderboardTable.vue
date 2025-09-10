@@ -23,6 +23,7 @@ const props = withDefaults(
     {
         selectedLanguage: '',
         sortDir: 'desc',
+        total: 0,
     },
 );
 
@@ -44,7 +45,15 @@ const displayXP = (user: User) => (showLevel.value ? formatXP(user.skill_xp ?? 0
 </script>
 
 <template>
-    <div class="mx-auto w-full max-w-7xl overflow-x-auto rounded-2xl border border-gray-200 bg-white/40 dark:border-white/10 dark:bg-white/5">
+    <div class="relative mx-auto w-full max-w-7xl">
+        <img
+            src="/assets/images/peek.png"
+            alt=""
+            class="absolute -top-25 left-1/2 -translate-x-1/2 h-32 w-32 z-50 drop-shadow-[0_-10px_15px_rgba(255,255,255,0.1)]"
+        />
+
+
+        <div class="mx-auto w-full max-w-7xl overflow-x-auto rounded-2xl border border-gray-200 bg-white/40 dark:border-white/10 dark:bg-white/5 z-0">
         <table class="w-full table-fixed text-xs sm:text-sm md:text-base">
             <thead class="bg-white/40 backdrop-blur md:sticky md:top-0 md:z-10 dark:bg-white/10">
             <tr>
@@ -97,5 +106,6 @@ const displayXP = (user: User) => (showLevel.value ? formatXP(user.skill_xp ?? 0
             </tr>
             </tbody>
         </table>
+    </div>
     </div>
 </template>
