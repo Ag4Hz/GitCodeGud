@@ -29,12 +29,14 @@ class UserFactory extends Factory
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
-            'oauth_provider' => fake()->randomElement(['github']),
+            'oauth_provider' => 'github',
+            'oauth_provider_id' => fake()->numberBetween(1, 999999),
             'xp' => 0,
             'remember_token' => Str::random(10),
             'role' => 'user',
         ];
     }
+
     /**
      * Indicate that the model's email address should be unverified.
      */
@@ -42,6 +44,29 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
+        ]);
+    }
+
+    /**
+     * Create a user without GitHub OAuth (no avatar).
+     */
+    public function withoutGitHub(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'oauth_provider' => null,
+            'oauth_provider_id' => null,
+        ]);
+    }
+
+    /**
+     * Create a user with a specific GitHub username for realistic avatar.
+     */
+    public function withGitHubUsername(string $username): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'nickname' => $username,
+            'oauth_provider' => 'github',
+            'oauth_provider_id' => fake()->numerify('#########'),
         ]);
     }
 }

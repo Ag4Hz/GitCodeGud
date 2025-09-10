@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->string('nickname')->after('name')->default('user');
+            $table->text('description')->nullable()->after('email');
             $table->index('nickname');
         });
     }
@@ -24,6 +25,7 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->dropIndex(['nickname']);
+            $table->dropColumn(['nickname', 'description']);
             $table->dropColumn('nickname');
         });
     }
