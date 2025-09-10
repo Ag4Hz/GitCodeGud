@@ -21,6 +21,7 @@ class Review extends Model
     {
         return [
             'date' => 'date',
+            'rating' => 'integer',
         ];
     }
     // Review - Users (reviewer)

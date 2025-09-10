@@ -269,7 +269,7 @@ watch(flashSuccess, (newValue) => {
                                 placeholder="Describe the task in detail. Include acceptance criteria, expected behavior, and any relevant context..."
                                 rows="4"
                                 :class="[
-                                    'flex min-h-[80px] w-full rounded-2xl border border-gray-300 bg-white/40 p-4 text-sm font-medium shadow-sm backdrop-blur-xl backdrop-saturate-150 placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed sm:backdrop-blur-2xl dark:bg-white/10',
+                                    'flex min-h-[80px] w-full rounded-2xl border bg-white/40 border-gray-200 p-4 text-sm font-medium shadow-sm backdrop-blur-xl backdrop-saturate-150 placeholder:text-muted-foreground sm:backdrop-blur-2xl dark:border-white/10 dark:bg-white/10 dark:text-gray-100 focus-visible:outline-none focus-visible:border-green-500 focus-visible:ring-2 focus-visible:ring-green-500/50 dark:focus-visible:border-ring dark:focus-visible:ring-ring/50',
                                     bountyForm.errors.description && 'border-red-500 focus-visible:ring-red-500',
                                 ]"
                             ></textarea>
@@ -300,6 +300,13 @@ watch(flashSuccess, (newValue) => {
                         </div>
 
                         <!-- Form Actions -->
+
+                        <img
+                            src="/assets/images/sitting-laptop.png"
+                            alt="sitting bug"
+                            class="absolute top-[-458px] [transform:rotateY(180deg)] translate-x-[-350px] z-50 scale-[0.15] -scale-x-[-1] drop-shadow-[0_-10px_15px_rgba(255,255,255,0.1)]"
+                        />
+
                         <div class="flex gap-4 border-t py-6 dark:border-t-white/30">
                             <Button type="submit" :disabled="bountyForm.processing" variant="button">
                                 {{ bountyForm.processing ? 'Creating...' : 'Create Bounty' }}

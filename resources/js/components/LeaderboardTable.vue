@@ -3,6 +3,7 @@ import UserRow from '@/components/UserRow.vue';
 import { useXP } from '@/composables/useXP';
 import { Link, router } from '@inertiajs/vue3';
 import { computed } from 'vue';
+
 type User = {
     id: number;
     nickname: string;
@@ -16,9 +17,13 @@ const props = withDefaults(
     defineProps<{
         users: { data: User[]; links?: any[] };
         selectedLanguage?: string;
+        sortDir?: 'asc' | 'desc';
+        total?: number;
     }>(),
     {
         selectedLanguage: '',
+        sortDir: 'desc',
+        total: 0,
     },
 );
 
@@ -26,6 +31,12 @@ const { formatXP } = useXP();
 const goToUser = (id: number) => {
     router.visit(`/users/${id}`, { preserveScroll: true });
 };
+const filteredUsers = computed(() => {
+    if (props.selectedLanguage) {
+        return props.users.data.filter(u => (u.skill_xp ?? 0) > 0);
+    }
+    return props.users.data;
+});
 
 const showLevel = computed(() => !!props.selectedLanguage);
 const xpHeader = computed(() => (showLevel.value ? `XP${props.selectedLanguage ? ` (${props.selectedLanguage})` : ''}` : 'XP'));
@@ -34,24 +45,31 @@ const displayXP = (user: User) => (showLevel.value ? formatXP(user.skill_xp ?? 0
 </script>
 
 <template>
-    <div class="mx-auto w-full max-w-7xl overflow-x-auto rounded-2xl border border-gray-200 bg-white/40 dark:border-white/10 dark:bg-white/5">
+    <div class="relative mx-auto w-full max-w-7xl">
+        <img
+            src="/assets/images/peek.png"
+            alt=""
+            class="absolute -top-25 left-1/2 -translate-x-1/2 h-32 w-32 z-50 drop-shadow-[0_-10px_15px_rgba(255,255,255,0.1)]"
+        />
+
+
+        <div class="mx-auto w-full max-w-7xl overflow-x-auto rounded-2xl border border-gray-200 bg-white/40 dark:border-white/10 dark:bg-white/5 z-0">
         <table class="w-full table-fixed text-xs sm:text-sm md:text-base">
             <thead class="bg-white/40 backdrop-blur md:sticky md:top-0 md:z-10 dark:bg-white/10">
-                <tr>
-                    <th class="w-[15%] px-3 py-2 text-center font-medium text-gray-600 sm:px-4 sm:py-3 md:px-6 md:py-4 dark:text-gray-300">
-                        Position
-                    </th>
-                    <th class="w-[60%] px-3 py-2 text-left font-medium text-gray-600 sm:px-4 sm:py-3 md:px-6 md:py-4 dark:text-gray-300">User</th>
-                    <th class="w-[30%] px-3 py-2 text-right font-medium text-gray-600 sm:px-4 sm:py-3 md:px-6 md:py-4 dark:text-gray-300">
-                        {{ xpHeader }}
-                    </th>
-                </tr>
+            <tr>
+                <th class="w-[15%] px-3 py-2 text-center font-medium text-gray-600 sm:px-4 sm:py-3 md:px-6 md:py-4 dark:text-gray-300">
+                    Position
+                </th>
+                <th class="w-[60%] px-3 py-2 text-left font-medium text-gray-600 sm:px-4 sm:py-3 md:px-6 md:py-4 dark:text-gray-300">User</th>
+                <th class="w-[30%] px-3 py-2 text-right font-medium text-gray-600 sm:px-4 sm:py-3 md:px-6 md:py-4 dark:text-gray-300">
+                    {{ xpHeader }}
+                </th>
+            </tr>
             </thead>
 
             <tbody class="divide-y divide-gray-200 dark:divide-white/10">
-                <tr
-                    v-for="user in users.data"
-                    :key="user.id"
+
+                <tr v-for="user in filteredUsers" :key="user.id"
                     class="cursor-pointer transition-colors focus-within:bg-gray-50 hover:bg-white/50 dark:focus-within:bg-white/5 dark:hover:bg-white/5"
                     role="link"
                     tabindex="0"
@@ -69,7 +87,10 @@ const displayXP = (user: User) => (showLevel.value ? formatXP(user.skill_xp ?? 0
                                 <ul class="m-0 list-none p-0">
                                     <UserRow
                                         :user="{ id: user.id, nickname: user.nickname, avatar: user.avatar, name: user.name }"
+                                        :rank="(user as any).rank"
                                         :active="false"
+                                        :order-direction="props.sortDir"
+                                        :total="props.total"
                                         class="!rounded-none !px-0 !py-0 hover:!bg-transparent dark:hover:!bg-transparent"
                                     />
                                 </ul>
@@ -77,13 +98,14 @@ const displayXP = (user: User) => (showLevel.value ? formatXP(user.skill_xp ?? 0
                         </Link>
                     </td>
 
-                    <td
-                        class="px-3 py-2 text-right font-semibold whitespace-nowrap text-gray-900 tabular-nums sm:px-4 sm:py-3 md:px-6 md:py-4 dark:text-gray-100"
-                    >
-                        {{ displayXP(user) }}
-                    </td>
-                </tr>
+                <td
+                    class="px-3 py-2 text-right font-semibold whitespace-nowrap text-gray-900 tabular-nums sm:px-4 sm:py-3 md:px-6 md:py-4 dark:text-gray-100"
+                >
+                    {{ displayXP(user) }}
+                </td>
+            </tr>
             </tbody>
         </table>
+    </div>
     </div>
 </template>

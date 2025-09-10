@@ -251,14 +251,16 @@ function unfollow() {
                             </div>
                         </div>
 
-                        <div class="mt-3 text-sm font-medium text-gray-800 dark:text-gray-200">
-                            Rating: {{ Number(props.ratingAvg ?? 0).toFixed(1) }}
+                        <div class="mt-2 ml-4 flex items-center gap-1 text-lg font-medium text-gray-800 dark:text-gray-200">
+                            <Star class="h-4 w-4 text-yellow-500" />
+                            <span> {{ Number(props.ratingAvg ?? 0).toFixed(1) }} </span>
                         </div>
+
                     </CardHeader>
                 </Card>
 
                 <!-- XP Progress -->
-                <Card class="border-gray-200 bg-white/40 dark:border-white/10 dark:bg-white/5">
+                <Card class="relative overflow-hidden border-gray-200 bg-white/40 dark:border-white/10 dark:bg-white/5">
                     <CardHeader>
                         <CardTitle class="flex items-center gap-2">
                             <Target class="h-5 w-5" />
@@ -268,6 +270,13 @@ function unfollow() {
                             {{ formatXP(levelProgress.progressXP) }} / {{ formatXP(levelProgress.totalNeeded) }} XP to next level
                         </CardDescription>
                     </CardHeader>
+
+                    <img
+                        src="/assets/images/bugs.png"
+                        alt="bug"
+                        class="pointer-events-none select-none absolute bottom-4 right-12 w-[164px] h-auto origin-bottom-right drop-shadow-[0_-10px_15px_rgba(0,0,0,0.2)] dark:drop-shadow-[0_-10px_15px_rgba(255,255,255,0.1)]"
+                    />
+
                     <CardContent>
                         <div class="space-y-2">
                             <div class="h-3 w-full rounded-full bg-gray-200 dark:bg-gray-700">

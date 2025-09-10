@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { useDateFormatter } from '@/composables/useDateFormatter';
+import { useInitials } from '@/composables/useInitials';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem, type User } from '@/types';
 import { type Bounty } from '@/types/bounty';
@@ -90,6 +91,7 @@ const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
 ]);
 
 const { formatDate } = useDateFormatter();
+const { getInitials } = useInitials();
 
 const getStatusColor = (status: string) => {
     switch (status) {
@@ -269,7 +271,7 @@ const shouldShowPagination = computed(() => {
                                         {{ getStatusDisplayText(bounty.status) }}
                                     </Badge>
                                 </div>
-                                <Badge variant="secondary" class="text-xs"> Will be awarded on acceptance </Badge>
+                                <Badge variant="custom" class="text-xs py-1 px-2"> Will be awarded on acceptance </Badge>
                             </div>
 
                             <!-- Action Buttons -->
@@ -509,7 +511,7 @@ const shouldShowPagination = computed(() => {
                                         <Avatar class="h-12 w-12">
                                             <AvatarImage :src="ownerInfo.avatar || ''" :alt="ownerInfo.name" />
                                             <AvatarFallback class="text-lg">
-                                                {{ ownerInfo.name.charAt(0).toUpperCase() }}
+                                                {{ getInitials(ownerInfo.name) }}
                                             </AvatarFallback>
                                         </Avatar>
 
@@ -549,7 +551,7 @@ const shouldShowPagination = computed(() => {
                                             <span class="font-medium">Languages</span>
                                         </div>
                                         <div class="flex flex-wrap gap-1">
-                                            <Badge v-for="language in bounty.languages" :key="language" variant="secondary" class="text-xs">
+                                            <Badge v-for="language in bounty.languages" :key="language" variant="custom" class="text-xs py-1 px-2">
                                                 {{ language }}
                                             </Badge>
                                             <div v-if="!bounty.languages || bounty.languages.length === 0" class="text-sm text-muted-foreground">
@@ -602,17 +604,17 @@ const shouldShowPagination = computed(() => {
                             </div>
 
                             <div class="space-y-3">
-                                <Card v-for="submission in submissions.slice(0, 3)" :key="submission.id" class="transition-shadow hover:shadow-md">
+                                <Card v-for="submission in submissions.slice(0, 3)" :key="submission.id" class="border-gray-200 bg-white/40 dark:border-white/10 dark:bg-white/5">
                                     <CardContent class="p-4">
                                         <div class="flex items-center justify-between">
                                             <div class="flex items-center gap-3">
                                                 <Avatar class="h-8 w-8">
                                                     <AvatarImage
-                                                        :src="`https://github.com/${submission.user.nickname}.png`"
+                                                        :src="submission.user.avatar || ''"
                                                         :alt="submission.user.name"
                                                     />
                                                     <AvatarFallback>
-                                                        {{ submission.user.name?.charAt(0)?.toUpperCase() || 'U' }}
+                                                        {{ getInitials(submission.user.name || submission.user.nickname || '') }}
                                                     </AvatarFallback>
                                                 </Avatar>
 
@@ -627,7 +629,7 @@ const shouldShowPagination = computed(() => {
                                                     v-if="submission.pr_url"
                                                     :href="submission.pr_url"
                                                     target="_blank"
-                                                    class="flex items-center gap-1 text-sm text-blue-600 transition-colors hover:text-blue-800"
+                                                    class="flex items-center gap-1 text-sm text-purple-600 transition-colors hover:text-purple-800"
                                                 >
                                                     <ExternalLink class="h-3 w-3" />
                                                     PR
@@ -705,7 +707,7 @@ const shouldShowPagination = computed(() => {
                                             <Avatar class="h-10 w-10 flex-shrink-0">
                                                 <AvatarImage :src="comment.user?.avatar_url || ''" :alt="comment.user?.login || 'User'" />
                                                 <AvatarFallback>
-                                                    {{ (comment.user?.login || 'U').charAt(0).toUpperCase() }}
+                                                    {{ getInitials(comment.user?.login || '') }}
                                                 </AvatarFallback>
                                             </Avatar>
 
@@ -760,7 +762,7 @@ const shouldShowPagination = computed(() => {
                                 </div>
 
                                 <!-- Refresh Button -->
-                                <div class="pt-4 text-center">
+                                <div class="pt-4 text-center mb-6">
                                     <Button
                                         @click="refreshComments"
                                         variant="button"
