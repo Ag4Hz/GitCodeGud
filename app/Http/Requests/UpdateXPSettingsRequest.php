@@ -23,7 +23,7 @@ class UpdateXPSettingsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'base_xp' => 'required|integer|min:1|max:10000',
+            'base_xp' => 'required|integer|min:0|max:10000',
             'bonus_multiplier' => 'required|numeric|min:0.1|max:10',
         ];
     }

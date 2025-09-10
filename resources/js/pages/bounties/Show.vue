@@ -10,7 +10,21 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem, type User } from '@/types';
 import { type Bounty } from '@/types/bounty';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import { Calendar, CheckCircle, Clock, Code, DollarSign, ExternalLink, GitBranch, MessageSquare, Tag, Target, User as UserIcon, Users, XCircle, } from 'lucide-vue-next';
+import {
+    Calendar,
+    CheckCircle,
+    Clock,
+    Code,
+    DollarSign,
+    ExternalLink,
+    GitBranch,
+    MessageSquare,
+    Tag,
+    Target,
+    User as UserIcon,
+    Users,
+    XCircle,
+} from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 
 interface SubmissionType {

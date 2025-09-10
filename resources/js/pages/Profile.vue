@@ -51,7 +51,7 @@ interface Props {
     };
     canReview?: boolean;
     reviews: ReviewsPayload;
-    ratingAvg: number
+    ratingAvg: number;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -306,7 +306,9 @@ function unfollow() {
                                         <Star class="h-5 w-5" />
                                         Skills & Experience
                                     </CardTitle>
-                                    <CardDescription>{{ isOwner ? 'Sync your skills from GitHub repositories!' : `${user.name} hasn't earned any skills yet.` }}</CardDescription>
+                                    <CardDescription>{{
+                                        isOwner ? 'Sync your skills from GitHub repositories!' : `${user.name} hasn't earned any skills yet.`
+                                    }}</CardDescription>
                                 </div>
                                 <Button
                                     v-if="isOwner"
@@ -392,7 +394,13 @@ function unfollow() {
                         <CardContent>
                             <div class="py-8 text-center text-muted-foreground">
                                 <Star class="mx-auto mb-4 h-12 w-12 opacity-50" />
-                                <p>{{ isOwner ? 'No skills earned yet. Sync from GitHub or complete your first bounty to start earning XP!' : `${user.name} hasn't completed any bounties yet.` }}</p>
+                                <p>
+                                    {{
+                                        isOwner
+                                            ? 'No skills earned yet. Sync from GitHub or complete your first bounty to start earning XP!'
+                                            : `${user.name} hasn't completed any bounties yet.`
+                                    }}
+                                </p>
                             </div>
                         </CardContent>
                     </Card>

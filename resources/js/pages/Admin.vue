@@ -3,6 +3,7 @@ import Icon from '@/components/Icon.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/composables/useToast';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
@@ -11,6 +12,7 @@ import { Head, useForm } from '@inertiajs/vue3';
 import { ChartArea, FolderSync, Settings } from 'lucide-vue-next';
 import { computed, h, ref } from 'vue';
 import ApexCharts from 'vue3-apexcharts';
+import { PerfectScrollbar } from 'vue3-perfect-scrollbar';
 
 interface XPStats {
     total_users: number;
@@ -54,6 +56,13 @@ const props = withDefaults(defineProps<Props>(), {
         level_thresholds: { 1: 0 },
     }),
 });
+
+const openDialog = ref(false);
+const recalcForm = useForm({});
+
+const confirmRecalculate = () => {
+    openDialog.value = true;
+};
 
 // Level distribution data
 const distributionData = computed(() => Object.entries(props.xpStats.level_distribution || {}).map(([level, users]) => ({ level, users })));
@@ -119,9 +128,6 @@ const renderChart = () => {
     });
 };
 
-// Global editing state
-const hasAnyChanges = ref(false);
-
 // XP Settings editing state
 const editingXPSettings = ref(false);
 const editableBaseXP = ref(0);
@@ -149,28 +155,20 @@ const skillWeightsForm = useForm({
     skillWeights: [] as { skill_name: string; multiplier: number }[],
 });
 
-const batchForm = useForm({
-    xp_settings: {} as Record<string, number>,
-    thresholds: [] as number[],
-    skill_weights: [] as { skill_name: string; multiplier: number }[],
-});
-
 const formatNumber = (num: number) => {
     return new Intl.NumberFormat().format(Math.round(num));
 };
 
 const recalculateXp = () => {
-    if (confirm('Are you sure you want to normalize XP for all users? This action cannot be undone.')) {
-        const recalcForm = useForm({});
-        recalcForm.post(route('admin.xp-settings.recalculate'), {
-            onSuccess: () => {
-                showSuccess(getAdminMessage('success', 'recalculate', 'en'));
-            },
-            onError: () => {
-                showError(getAdminMessage('error', 'recalculate', 'en'));
-            },
-        });
-    }
+    recalcForm.post(route('admin.xp-settings.recalculate'), {
+        onSuccess: () => {
+            showSuccess(getAdminMessage('success', 'recalculate', 'en'));
+            openDialog.value = false;
+        },
+        onError: () => {
+            showError(getAdminMessage('error', 'recalculate', 'en'));
+        },
+    });
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -190,16 +188,11 @@ const sortedSkillWeights = computed(() => {
     return Object.entries(props.xpConfig.skill_weights).sort(([a], [b]) => a.localeCompare(b));
 });
 
-const anyEditing = computed(() => {
-    return editingXPSettings.value || editingThresholds.value || editingSkillWeights.value;
-});
-
 // XP Settings functions
 const startEditingXPSettings = () => {
     editingXPSettings.value = true;
     editableBaseXP.value = props.xpConfig.base_xp;
     editableBonusMultiplier.value = props.xpConfig.bonus_multiplier;
-    updateHasChanges();
 };
 
 const saveXPSettings = () => {
@@ -236,7 +229,6 @@ const finishEditingXPField = () => {
 const startEditingThresholds = () => {
     editingThresholds.value = true;
     editableThresholds.value = Object.values(props.xpConfig.level_thresholds).map(Number);
-    updateHasChanges();
 };
 
 const addNewThreshold = () => {
@@ -285,7 +277,6 @@ const startEditingSkillWeights = () => {
         skill_name,
         multiplier: Number(multiplier),
     }));
-    updateHasChanges();
 };
 
 const addNewSkillWeight = () => {
@@ -329,61 +320,6 @@ const finishEditingSkillValue = () => {
     editingSkillIndex.value = null;
 };
 
-// Batch operations
-const updateHasChanges = () => {
-    hasAnyChanges.value = anyEditing.value;
-};
-
-const saveAllChanges = () => {
-    if (editingThresholds.value) {
-        batchForm.thresholds = [...editableThresholds.value];
-    } else {
-        batchForm.thresholds = [];
-    }
-
-    const payload: any = {};
-
-    if (editingXPSettings.value) {
-        payload.xp_settings = {
-            base_xp: editableBaseXP.value,
-            bonus_multiplier: editableBonusMultiplier.value,
-        };
-    }
-
-    if (editingThresholds.value) {
-        payload.thresholds = [...editableThresholds.value];
-    }
-
-    if (editingSkillWeights.value) {
-        payload.skill_weights = [...editableSkillWeights.value];
-    }
-
-    // Use a new form with only the data we want to send
-    const dynamicForm = useForm(payload);
-    dynamicForm.post(route('admin.settings.batch-update'), {
-        onSuccess: () => {
-            editingXPSettings.value = false;
-            editingThresholds.value = false;
-            editingSkillWeights.value = false;
-            editingXPField.value = null;
-            editingIndex.value = null;
-            editingSkillIndex.value = null;
-            showSuccess(getAdminMessage('success', 'batch_update', 'en'));
-            updateHasChanges();
-        },
-        onError: () => {
-            showError(getAdminMessage('error', 'batch_update', 'en'));
-        },
-    });
-};
-
-const cancelAllChanges = () => {
-    cancelEditingXPSettings();
-    cancelEditing();
-    cancelEditingSkillWeights();
-    hasAnyChanges.value = false;
-};
-
 enum AdminTab {
     Statistics = 'statistics',
     XPSettings = 'xp_settings',
@@ -423,28 +359,6 @@ const xpSettingsTab = ref<XPSettingsTab>(XPSettingsTab.Base);
                         <Settings />
                         XP Settings
                     </Button>
-                </div>
-
-                <!-- Batch Save Controls -->
-                <div v-if="hasAnyChanges" class="sticky top-4 z-10">
-                    <Card class="border-red-200 bg-orange-50 dark:border-red-800 dark:bg-red-950">
-                        <CardContent class="flex items-center justify-between gap-4 py-4">
-                            <div class="flex items-center gap-2">
-                                <Icon name="alert-circle" class="h-5 w-5 text-red-600" />
-                                <span class="font-medium text-red-800 dark:text-red-200">You have unsaved changes</span>
-                            </div>
-                            <div class="flex gap-2">
-                                <Button variant="outline" size="sm" @click="cancelAllChanges" :disabled="batchForm.processing">
-                                    <Icon name="x" class="mr-2 h-4 w-4" />
-                                    Cancel All
-                                </Button>
-                                <Button variant="default" size="sm" @click="saveAllChanges" :disabled="batchForm.processing">
-                                    <Icon name="check" class="mr-2 h-4 w-4" />
-                                    Save All Changes
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
                 </div>
 
                 <!-- XP Statistics -->
@@ -499,10 +413,27 @@ const xpSettingsTab = ref<XPSettingsTab>(XPSettingsTab.Base);
                     </Card>
 
                     <!-- Normalize XP for every user -->
-                    <Button variant="destructive" class="bg-red-600 hover:bg-red-700 md:col-span-2 lg:col-span-1" @click="recalculateXp">
+                    <Button variant="destructive" @click="confirmRecalculate">
                         <FolderSync />
                         Normalize XP for All Users
                     </Button>
+                    <!-- Confirmation dialog -->
+                    <Dialog v-model:open="openDialog">
+                        <DialogContent
+                            class="dark:bg-red-90/40 fixed top-36 left-1/2 max-w-md -translate-x-1/2 rounded-xl bg-red-400/40 p-2 backdrop-blur"
+                        >
+                            <DialogHeader>
+                                <DialogTitle class="text-black dark:text-white">Are you sure?</DialogTitle>
+                            </DialogHeader>
+                            <DialogDescription>
+                                <p class="text-sm text-muted-foreground">This action will normalize XP for all users and cannot be undone.</p>
+                            </DialogDescription>
+                            <DialogFooter class="flex justify-end gap-2">
+                                <Button variant="secondary" @click="openDialog = false"> Cancel </Button>
+                                <Button variant="destructive" @click="recalculateXp" :disabled="recalcForm.processing"> Confirm </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
                 </div>
 
                 <!-- Fine tuning -->
@@ -570,7 +501,7 @@ const xpSettingsTab = ref<XPSettingsTab>(XPSettingsTab.Base);
                                             @keyup.enter="finishEditingXPField"
                                             class="h-6 w-20 rounded border px-1 text-center font-mono text-xs"
                                             type="number"
-                                            min="1"
+                                            min="0"
                                             max="10000"
                                             autofocus
                                         />
@@ -646,9 +577,7 @@ const xpSettingsTab = ref<XPSettingsTab>(XPSettingsTab.Base);
                             </CardTitle>
                         </CardHeader>
                         <CardContent class="space-y-4">
-                            <div
-                                class="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-muted-foreground/20 hover:scrollbar-thumb-muted-foreground/40 max-h-72 overflow-y-auto"
-                            >
+                            <PerfectScrollbar class="max-h-96 w-full rounded-xl" :options="{ suppressScrollX: true }">
                                 <!-- Display Mode -->
                                 <div v-if="!editingThresholds" class="space-y-2 pr-2">
                                     <div
@@ -710,7 +639,7 @@ const xpSettingsTab = ref<XPSettingsTab>(XPSettingsTab.Base);
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            </PerfectScrollbar>
 
                             <!-- Action Buttons -->
                             <div v-if="!editingThresholds" class="border-t pt-2">
@@ -751,9 +680,7 @@ const xpSettingsTab = ref<XPSettingsTab>(XPSettingsTab.Base);
                             </CardTitle>
                         </CardHeader>
                         <CardContent class="space-y-4">
-                            <div
-                                class="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-muted-foreground/20 hover:scrollbar-thumb-muted-foreground/40 max-h-72 overflow-y-auto"
-                            >
+                            <PerfectScrollbar class="max-h-96 w-full rounded-xl" :options="{ suppressScrollX: true }">
                                 <!-- Display Mode -->
                                 <div v-if="!editingSkillWeights" class="space-y-2 pr-2">
                                     <div v-if="Object.keys(props.xpConfig.skill_weights).length > 0">
@@ -820,7 +747,7 @@ const xpSettingsTab = ref<XPSettingsTab>(XPSettingsTab.Base);
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            </PerfectScrollbar>
 
                             <!-- Action Buttons -->
                             <div v-if="!editingSkillWeights" class="border-t pt-2">
