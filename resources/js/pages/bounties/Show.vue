@@ -596,7 +596,7 @@ const shouldShowPagination = computed(() => {
                                             <div class="flex items-center gap-3">
                                                 <Avatar class="h-8 w-8">
                                                     <AvatarImage
-                                                        :src="`https://github.com/${submission.user.nickname}.png`"
+                                                        :src="submission.user.avatar || ''"
                                                         :alt="submission.user.name"
                                                     />
                                                     <AvatarFallback>
