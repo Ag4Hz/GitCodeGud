@@ -14,12 +14,30 @@ class PullRequestBelongsToRepository implements ValidationRule
     {
         $this->expectedRepoUrl = $expectedRepoUrl;
     }
+
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         $prInfo = GitHubApiService::parseGitHubPullRequestUrl($value);
-        $expectedRepoFullName = GitHubApiService::parseGitHubUrl($this->expectedRepoUrl)['full_name'];
+        if (!$prInfo) {
+            $fail('Invalid Pull Request URL format.');
+            return;
+        }
 
-        if ($prInfo['repo_full_name'] !== $expectedRepoFullName) {
+        $expectedRepoInfo = GitHubApiService::parseGitHubUrl($this->expectedRepoUrl);
+        if (!$expectedRepoInfo) {
+            $fail('Invalid repository URL format.');
+            return;
+        }
+
+        $prRepoFullName = $prInfo['repo_full_name'] ?? null;
+        $expectedRepoFullName = $expectedRepoInfo['full_name'] ?? null;
+
+        if (!$prRepoFullName || !$expectedRepoFullName) {
+            $fail('Unable to determine repository information.');
+            return;
+        }
+
+        if ($prRepoFullName !== $expectedRepoFullName) {
             $fail("The Pull Request must belong to the repository: {$expectedRepoFullName}");
         }
     }
