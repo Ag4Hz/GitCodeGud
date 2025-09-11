@@ -9,9 +9,9 @@ class UserService
     public static function listUser(string $term = '', ?int $page = 1, ?int $perPage = 30): LengthAwarePaginator
     {
         return User::query()
-            ->when($term, function ($query) use ($term) {
-                $query->where('nickname', 'like', "%{$term}%");
-            })
+            ->when($term, fn($query) => $query->where('nickname', 'ILIKE', "%{$term}%"))
+            ->orderByRaw('LOWER(nickname)')
+
             ->orderBy('nickname')
             ->paginate(20, ['*'], 'users_page', $page ?? 1)
             ->withQueryString()
