@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import bug1 from '@/../assets/bug1.png';
 import bug2 from '@/../assets/bug2.png';
-import { onMounted, ref } from 'vue';
+import { onBeforeUnmount, onMounted, ref } from 'vue';
 
 const bugImages = [bug1, bug2];
 const bugs = ref<any[]>([]);
@@ -25,6 +25,8 @@ function generateBugs() {
     });
 }
 
+let resizeObserver: ResizeObserver | null = null;
+
 onMounted(() => {
     const updateSize = () => {
         documentHeight.value = document.body.scrollHeight;
@@ -34,6 +36,14 @@ onMounted(() => {
 
     updateSize();
     window.addEventListener('resize', updateSize);
+
+    resizeObserver = new ResizeObserver(updateSize);
+    resizeObserver.observe(document.body);
+});
+
+onBeforeUnmount(() => {
+    window.removeEventListener('resize', generateBugs);
+    if (resizeObserver) resizeObserver.disconnect();
 });
 </script>
 
