@@ -90,9 +90,7 @@ const debouncedBountySearch = debounce(() => {
         params.set('language', localSelectedLanguage.value);
     }
 
-    if (localSearchQuery.value.trim()) {
-        params.set('search', localSearchQuery.value.trim());
-    }
+
 
     const queryString = params.toString();
     const url = queryString ? `${route('dashboard')}?${queryString}` : route('dashboard');
@@ -100,6 +98,7 @@ const debouncedBountySearch = debounce(() => {
     router.visit(url, {
         preserveState: true,
         preserveScroll: true,
+        only: ['bounties'],
         onStart: () => {
             isBountySearching.value = true;
         },

@@ -42,6 +42,7 @@ class ProfileController extends Controller
                     'followings_count' => $user->followings_count,
                 ]
             ),
+            'profileUserId' => $user->id,
             'followers'  => $this->followStatsService->getFollowers($user),
             'followings' => $this->followStatsService->getFollowings($user),
             'bounties' => BountyResource::collection($bounties),
