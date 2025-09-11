@@ -114,7 +114,8 @@ const getStatusColor = (status: string) => {
                 </div>
 
                 <!-- Submissions List -->
-                <Card>
+                <Card class="border-gray-200 bg-white/40 dark:border-white/10 dark:bg-white/5
+">
                     <CardHeader>
                         <CardTitle class="flex items-center gap-2">
                             <Users class="h-5 w-5" />
@@ -137,7 +138,7 @@ const getStatusColor = (status: string) => {
                                                 <a
                                                     :href="submission.pr_url"
                                                     target="_blank"
-                                                    class="flex items-center gap-1 text-sm text-blue-600 hover:underline"
+                                                    class="flex items-center gap-1 text-sm text-purple-600 hover:underline"
                                                 >
                                                     <ExternalLink class="h-3 w-3" />
                                                     View Pull Request
@@ -149,7 +150,7 @@ const getStatusColor = (status: string) => {
                                         </div>
                                     </div>
 
-                                    <div class="flex items-center gap-3">
+                                    <div class="flex items-center gap-12">
                                         <Badge :class="getStatusColor(submission.status)" class="flex items-center gap-1">
                                             <component :is="getStatusIcon(submission.status)" class="h-3 w-3" />
                                             {{ submission.status.toUpperCase() }}
