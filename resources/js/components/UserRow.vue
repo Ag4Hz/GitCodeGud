@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { useInitials } from '@/composables/useInitials';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useInitials } from '@/composables/useInitials';
 import { Crown } from 'lucide-vue-next';
 import { computed } from 'vue';
 type User = {
@@ -21,11 +21,8 @@ const { user, active, rank, orderDirection, total } = defineProps<{
 const showCrown = computed(() => {
     if (!rank || !total) return false;
 
-    return orderDirection === 'asc'
-        ? rank > (total ?? 0) - 3
-        : rank <= 3;
+    return orderDirection === 'asc' ? rank > (total ?? 0) - 3 : rank <= 3;
 });
-
 
 const { getInitials } = useInitials();
 
@@ -35,9 +32,10 @@ const initials = computed(() => getInitials(user.name || user.nickname || ''));
 <template>
     <li
         :class="[
-            'flex cursor-pointer items-center gap-3 rounded-md px-3 py-3 mt-2' +
-             ' select-none',
-            active ? 'bg-gray-100/60 text-black dark:text-white dark:bg-white/10' : 'text-gray-900 hover:bg-white/50 dark:text-gray-100 dark:hover:bg-white/10',
+            'mt-2 flex cursor-pointer items-center gap-3 rounded-md px-3 py-3' + ' select-none',
+            active
+                ? 'bg-gray-100/60 text-black dark:bg-white/10 dark:text-white'
+                : 'text-gray-900 hover:bg-white/50 dark:text-gray-100 dark:hover:bg-white/10',
         ]"
     >
         <div class="relative">
@@ -62,9 +60,7 @@ const initials = computed(() => getInitials(user.name || user.nickname || ''));
         </div>
 
         <div class="min-w-0 flex-1">
-            <p class="truncate text-sm leading-tight font-medium">
-                @{{ user.nickname}}
-            </p>
+            <p class="truncate text-sm leading-tight font-medium">@{{ user.nickname }}</p>
             <p class="truncate text-xs text-gray-700 dark:text-muted-foreground">
                 {{ user.name }}
             </p>

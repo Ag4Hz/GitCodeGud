@@ -88,17 +88,13 @@ const isDescriptionTruncated = computed(() => {
             <div v-if="showDescription && user.description" class="mt-1">
                 <Tooltip v-if="isDescriptionTruncated">
                     <TooltipTrigger as-child>
-                        <span class="block text-xs text-muted-foreground italic cursor-help">
-                            "{{ truncatedDescription }}"
-                        </span>
+                        <span class="block cursor-help text-xs text-muted-foreground italic"> "{{ truncatedDescription }}" </span>
                     </TooltipTrigger>
                     <TooltipContent side="bottom" align="start" class="max-w-48 break-words">
-                        <p class="whitespace-normal text-wrap">"{{ user.description }}"</p>
+                        <p class="text-wrap whitespace-normal">"{{ user.description }}"</p>
                     </TooltipContent>
                 </Tooltip>
-                <span v-else class="block text-xs text-muted-foreground italic">
-                    "{{ user.description }}"
-                </span>
+                <span v-else class="block text-xs text-muted-foreground italic"> "{{ user.description }}" </span>
             </div>
         </div>
     </div>

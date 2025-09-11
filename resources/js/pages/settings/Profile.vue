@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import HeadingSmall from '@/components/HeadingSmall.vue';
 import InputError from '@/components/InputError.vue';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -10,6 +9,7 @@ import { getInitials } from '@/composables/useInitials';
 import AppLayout from '@/layouts/AppLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
 import { type BreadcrumbItem, type User } from '@/types';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 
 interface Props {
@@ -60,7 +60,7 @@ const cancel = () => {
                 <HeadingSmall title="Profile information" description="Update your profile information and settings" />
 
                 <!-- Avatar Section -->
-                <div class="flex items-center gap-6 rounded-lg border-gray-200 bg-white/40 dark:border-white/10 dark:bg-white/5 p-6">
+                <div class="flex items-center gap-6 rounded-lg border-gray-200 bg-white/40 p-6 dark:border-white/10 dark:bg-white/5">
                     <div class="relative">
                         <Avatar class="h-20 w-20 overflow-hidden rounded-lg">
                             <AvatarImage v-if="user.avatar" :src="user.avatar" :alt="user.name" />
@@ -100,16 +100,13 @@ const cancel = () => {
                         <div class="relative">
                             <textarea
                                 id="description"
-                                class=" rounded-lg w-full border bg-white/40 border-gray-200 p-4 text-sm font-medium shadow-sm backdrop-blur-xl backdrop-saturate-150 placeholder:text-muted-foreground sm:backdrop-blur-2xl dark:border-white/10 dark:bg-white/10 dark:text-gray-100 focus-visible:outline-none focus-visible:border-green-500 focus-visible:ring-2 focus-visible:ring-green-500/50 dark:focus-visible:border-ring dark:focus-visible:ring-ring/50'"
+                                class="dark:focus-visible:ring-ring/50' w-full rounded-lg border border-gray-200 bg-white/40 p-4 text-sm font-medium shadow-sm backdrop-blur-xl backdrop-saturate-150 placeholder:text-muted-foreground focus-visible:border-green-500 focus-visible:ring-2 focus-visible:ring-green-500/50 focus-visible:outline-none sm:backdrop-blur-2xl dark:border-white/10 dark:bg-white/10 dark:text-gray-100 dark:focus-visible:border-ring"
                                 :class="{ 'border-red-500 focus:ring-red-500': isDescriptionTooLong }"
                                 v-model="form.description"
                                 placeholder="Tell others about yourself..."
                                 rows="3"
                             ></textarea>
-                            <div
-                                class="absolute right-2 bottom-2 text-xs text-muted-foreground"
-                                :class="{ 'text-red-500': isDescriptionTooLong }"
-                            >
+                            <div class="absolute right-2 bottom-2 text-xs text-muted-foreground" :class="{ 'text-red-500': isDescriptionTooLong }">
                                 {{ descriptionLength }}/{{ maxDescriptionLength }}
                             </div>
                         </div>

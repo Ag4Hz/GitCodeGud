@@ -6,7 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import UserSearch from '@/components/UserSearch.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
-import { ref, watch, computed } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 type Dir = 'asc' | 'desc';
 
@@ -58,9 +58,7 @@ const changeSort = (dir: Dir) => {
     });
 };
 const totalUsers = computed(() => props.leaderboardUsers.total ?? 0);
-
 </script>
-
 
 <template>
     <Head title="Leaderboard" />
@@ -90,7 +88,7 @@ const totalUsers = computed(() => props.leaderboardUsers.total ?? 0);
                 <div>
                     <DropdownMenu>
                         <DropdownMenuTrigger
-                            class="w-full rounded-[10px] px-3 py-2 border border-gray-200 bg-white/40 text-sm dark:border-white/10 dark:bg-white/5 dark:text-gray-500 dark:hover:bg-white/10"
+                            class="w-full rounded-[10px] border border-gray-200 bg-white/40 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/5 dark:text-gray-500 dark:hover:bg-white/10"
                         >
                             Sort: {{ sortDir }}
                         </DropdownMenuTrigger>
@@ -102,7 +100,12 @@ const totalUsers = computed(() => props.leaderboardUsers.total ?? 0);
                 </div>
             </div>
 
-            <LeaderboardTable :users="props.leaderboardUsers" :selected-language="props.filters?.language || ''" :sort-dir="sortDir"   :total="totalUsers" />
+            <LeaderboardTable
+                :users="props.leaderboardUsers"
+                :selected-language="props.filters?.language || ''"
+                :sort-dir="sortDir"
+                :total="totalUsers"
+            />
             <Pagination :links="props.leaderboardUsers.links" />
         </div>
     </AppLayout>

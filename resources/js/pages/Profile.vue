@@ -255,7 +255,6 @@ function unfollow() {
                             <Star class="h-4 w-4 text-yellow-500" />
                             <span> {{ Number(props.ratingAvg ?? 0).toFixed(1) }} </span>
                         </div>
-
                     </CardHeader>
                 </Card>
 
@@ -274,7 +273,7 @@ function unfollow() {
                     <img
                         src="/assets/images/bugs.png"
                         alt="bug"
-                        class="pointer-events-none select-none absolute bottom-4 right-12 w-[164px] h-auto origin-bottom-right drop-shadow-[0_-10px_15px_rgba(0,0,0,0.2)] dark:drop-shadow-[0_-10px_15px_rgba(255,255,255,0.1)]"
+                        class="pointer-events-none absolute right-12 bottom-4 h-auto w-[164px] origin-bottom-right drop-shadow-[0_-10px_15px_rgba(0,0,0,0.2)] select-none dark:drop-shadow-[0_-10px_15px_rgba(255,255,255,0.1)]"
                     />
 
                     <CardContent>

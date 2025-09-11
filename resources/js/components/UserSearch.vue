@@ -59,9 +59,9 @@ watch(search, () => {
             >
                 <template v-if="users.length > 0">
                     <PerfectScrollbar class="max-h-72 w-full rounded-xl" :options="{ suppressScrollX: true }">
-                    <ComboboxOption v-for="user in users" :key="user.id" :value="user" as="template" v-slot="{ active }">
-                        <UserRow :user="user" :active="active" />
-                    </ComboboxOption>
+                        <ComboboxOption v-for="user in users" :key="user.id" :value="user" as="template" v-slot="{ active }">
+                            <UserRow :user="user" :active="active" />
+                        </ComboboxOption>
                     </PerfectScrollbar>
                 </template>
 

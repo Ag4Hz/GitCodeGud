@@ -50,7 +50,7 @@ const handleLanguageSelect = (language: string) => {
                     v-for="language in languages"
                     :key="language"
                     @click="handleLanguageSelect(language)"
-                    :class="{ 'dark:bg-white/20 light:bg-white/50': selectedLanguage === language }"
+                    :class="{ 'light:bg-white/50 dark:bg-white/20': selectedLanguage === language }"
                 >
                     {{ language }}
                 </DropdownMenuItem>

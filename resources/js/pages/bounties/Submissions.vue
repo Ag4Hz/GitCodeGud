@@ -114,8 +114,7 @@ const getStatusColor = (status: string) => {
                 </div>
 
                 <!-- Submissions List -->
-                <Card class="border-gray-200 bg-white/40 dark:border-white/10 dark:bg-white/5
-">
+                <Card class="border-gray-200 bg-white/40 dark:border-white/10 dark:bg-white/5">
                     <CardHeader>
                         <CardTitle class="flex items-center gap-2">
                             <Users class="h-5 w-5" />
@@ -150,7 +149,7 @@ const getStatusColor = (status: string) => {
                                         </div>
                                     </div>
 
-                                    <div class="flex items-center gap-12">
+                                    <div class="flex items-center gap-6">
                                         <Badge :class="getStatusColor(submission.status)" class="flex items-center gap-1">
                                             <component :is="getStatusIcon(submission.status)" class="h-3 w-3" />
                                             {{ submission.status.toUpperCase() }}
