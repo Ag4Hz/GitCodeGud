@@ -85,18 +85,18 @@ const getStatusIcon = (status: string) => {
 const getStatusColor = (status: string) => {
     switch (status) {
         case 'accepted':
-            return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+            return 'bg-green-100/30 text-green-800 dark:bg-green-900/30 dark:text-green-200';
         case 'rejected':
-            return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+            return 'bg-red-100/30 text-red-800 dark:bg-red-900/30 dark:text-red-200';
         default:
-            return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+            return 'bg-yellow-100/30 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200';
     }
 };
 </script>
 
 <template>
     <AppLayout>
-        <Head title="Manage Submissions" />
+        <Head title="Manage Submissions"/>
         <div class="px-4 py-6">
             <div class="mx-auto max-w-6xl space-y-6">
                 <!-- Header -->
@@ -146,21 +146,24 @@ const getStatusColor = (status: string) => {
                                                     • Submitted {{ formatDate(submission.created_at) }}
                                                 </span>
                                             </div>
+                                            <div class="mt-2 flex items-center gap-2">
+                                                <Badge :class="getStatusColor(submission.status)" class="flex items-center gap-1">
+                                                    <component :is="getStatusIcon(submission.status)" class="h-3 w-3" />
+                                                    {{ submission.status.toUpperCase() }}
+                                                </Badge>
+                                            </div>
+
                                         </div>
                                     </div>
 
                                     <div class="flex items-center gap-6">
-                                        <Badge :class="getStatusColor(submission.status)" class="flex items-center gap-1">
-                                            <component :is="getStatusIcon(submission.status)" class="h-3 w-3" />
-                                            {{ submission.status.toUpperCase() }}
-                                        </Badge>
 
                                         <!-- Action buttons for pending submissions -->
                                         <div v-if="submission.status === 'pending'" class="flex gap-2">
                                             <Button
                                                 @click="updateStatus(submission.id, 'accepted')"
                                                 size="sm"
-                                                class="bg-green-600 text-white hover:bg-green-700"
+                                                class="bg-green-600/30 text-white hover:bg-green-700/40"
                                             >
                                                 <CheckCircle class="mr-1 h-4 w-4" />
                                                 Accept & Award XP

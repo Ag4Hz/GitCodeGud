@@ -123,12 +123,12 @@ const getSubmissionStatusIcon = (status: string) => {
 const getSubmissionStatusColor = (status: string) => {
     switch (status) {
         case 'accepted':
-            return 'text-green-600 bg-green-100 dark:bg-green-900 dark:text-green-200';
+            return 'bg-green-100/30 text-green-800 dark:bg-green-900/30 dark:text-green-200';
         case 'rejected':
-            return 'text-red-600 bg-red-100 dark:bg-red-900 dark:text-red-200';
+            return 'bg-red-100/30 text-red-800 dark:bg-red-900/30 dark:text-red-200';
         case 'pending':
         default:
-            return 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900 dark:text-yellow-200';
+            return 'bg-yellow-100/30 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200';
     }
 };
 
@@ -303,7 +303,7 @@ const shouldShowPagination = computed(() => {
 
                                 <!-- Bounty Owner Actions -->
                                 <Link v-if="isBountyOwner && hasSubmissions" :href="`/bounties/${bounty.id}/submissions`">
-                                    <Button variant="outline" class="flex items-center gap-2">
+                                    <Button variant="button" class="flex items-center gap-2">
                                         <Users class="h-4 w-4" />
                                         Manage Submissions ({{ submissions.length }})
                                     </Button>
@@ -373,8 +373,8 @@ const shouldShowPagination = computed(() => {
                         </div>
 
                         <!-- Submission Stats for Bounty Owner -->
-                        <div v-if="isBountyOwner && hasSubmissions" class="rounded-lg border bg-gray-50 p-4 dark:bg-gray-900">
-                            <h4 class="mb-3 font-semibold">Submission Overview</h4>
+                        <h3 class="mb-2  flex items-center gap-2 text-lg font-semibold">Submission Overview</h3>
+                        <div v-if="isBountyOwner && hasSubmissions" class="w-full rounded-xl border border-gray-200 bg-white/40 p-6 dark:border-white/10 dark:bg-white/5">
                             <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
                                 <div class="text-center">
                                     <div class="text-2xl font-bold">{{ submissionStats.total }}</div>
@@ -596,7 +596,7 @@ const shouldShowPagination = computed(() => {
                                     Recent Submissions ({{ submissions.length }})
                                 </h3>
                                 <Link v-if="isBountyOwner" :href="`/bounties/${bounty.id}/submissions`" class="flex items-center gap-1">
-                                    <Button size="sm" variant="outline" class="flex items-center gap-1">
+                                    <Button size="sm" variant="button" class="flex items-center gap-1 ">
                                         <Users class="h-3 w-3" />
                                         Manage All
                                     </Button>
