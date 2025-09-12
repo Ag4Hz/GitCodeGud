@@ -98,8 +98,8 @@ const getStatusColor = (status: string) => {
     <AppLayout>
         <Head title="Manage Submissions"/>
         <div class="px-4 py-6">
-            <div class="mx-auto max-w-6xl space-y-6">
-                <!-- Header -->
+            <div class="mx-auto max-w-4xl space-y-6 px-4 sm:px-6 lg:px-8">
+            <!-- Header -->
                 <div class="flex items-center justify-between">
                     <div>
                         <h1 class="text-2xl font-bold">Manage Submissions</h1>

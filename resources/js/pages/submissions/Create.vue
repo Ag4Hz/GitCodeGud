@@ -68,16 +68,16 @@ function submit() {
                         </div>
                     </CardHeader>
                     <CardContent v-if="bounty.description" class="pt-0">
-                        <div class="rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
-                            <p class="text-sm text-gray-700 dark:text-gray-300">{{ bounty.description }}</p>
+                        <div class="rounded-2xl border p-2 border-gray-200 bg-white/40 p-0 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-white/5">
+                            <p class="">{{ bounty.description }}</p>
                         </div>
                     </CardContent>
                 </Card>
 
                 <!-- Submission Form -->
-                <Card class="bg-white/40 backdrop-blur md:sticky md:top-0 md:z-10 dark:bg-white/10">
-                    <CardHeader class="border-b border-gray-200 dark:border-gray-700">
-                        <CardTitle class="text-gray-900 dark:text-white">Submit Your Solution</CardTitle>
+                <Card class="gap-0 rounded-2xl border border-gray-200 bg-white/40 p-0 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-white/5">
+                    <CardHeader class="gap-0 rounded-t-2xl bg-white/40 px-2 py-3 backdrop-blur-xl sm:px-5 md:px-6 dark:bg-white/5">
+                        <CardTitle class="my-2 text-lg dark:text-white">Submit Your Solution</CardTitle>
                     </CardHeader>
                     <CardContent class="p-6">
                         <form @submit.prevent="submit" class="space-y-6">
@@ -90,12 +90,11 @@ function submit() {
                                     type="url"
                                     placeholder="https://github.com/username/repository/pull/123"
                                     required
-                                    class="border-gray-300 bg-white/60 focus:border-gray-500 focus:bg-white dark:border-gray-600 dark:bg-gray-800/60 dark:text-white dark:focus:border-gray-400 dark:focus:bg-gray-800"
                                     :class="[form.errors.pr_url && 'border-red-500 focus:border-red-500']"
                                 />
-                                <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
+                                <div class="rounded-lg bg-white/40 p-4 backdrop-blur md:sticky md:top-0 md:z-10 dark:bg-white/10">
                                     <p class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Your Pull Request must be submitted to:</p>
-                                    <p class="rounded-md bg-black px-3 py-2 font-mono text-xs text-white dark:bg-gray-900">
+                                    <p class="rounded-2xl bg-white/40 p-4 backdrop-blur md:sticky md:top-0 md:z-10 dark:bg-white/10">
                                         {{ bounty.issue?.repo?.url || 'Repository URL not available' }}
                                     </p>
                                 </div>
@@ -111,6 +110,7 @@ function submit() {
                             <div class="flex gap-4 border-t border-gray-200 pt-6 dark:border-gray-700">
                                 <Button
                                     type="submit"
+
                                     :disabled="form.processing"
                                     class="flex items-center gap-2 border-0 bg-black text-white transition-colors duration-200 hover:bg-gray-800 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-gray-100"
                                 >
@@ -120,7 +120,7 @@ function submit() {
 
                                 <a
                                     :href="`/bounties/${bounty.id}`"
-                                    class="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-gray-700 transition-colors duration-200 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                                    class="inline-flex items-center gap-2 px-4 py-1 rounded-lg border border-gray-200 bg-white/40 p-0 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-white/5"
                                 >
                                     Cancel
                                 </a>
