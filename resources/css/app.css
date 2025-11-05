@@ -173,3 +173,44 @@ body {
 .dark body {
     background: linear-gradient(135deg, #0a0a0a 0%, #260948 100%);
 }
+
+/* Register button style (used in AppHeader.vue) */
+.btn-register {
+    background-color: #28222f;
+    color: #ffffff;
+    border-radius: 0.375rem; /* rounded-md */
+}
+
+.btn-register:hover {
+    opacity: 0.9;
+}
+
+.btn-register:focus {
+    outline: 2px solid rgba(255,255,255,0.12);
+    outline-offset: 2px;
+}
+
+/* Social connect button styles */
+.btn-social {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem; /* rounded-md */
+    font-weight: 600;
+    min-width: 200px;
+}
+
+.btn-social-active {
+    background-color: #e6e5e9;
+    color: #171717;
+}
+
+.btn-social-disabled {
+    background-color: transparent;
+    color: var(--muted-foreground);
+    border: 1px solid var(--border);
+    opacity: 0.6;
+    cursor: not-allowed;
+}
