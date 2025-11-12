@@ -23,6 +23,17 @@ class RepoFactory extends Factory
             'description' => $this->faker->sentence(),
             'url' => $this->faker->url(),
             'git_id' => (string) $this->faker->unique()->numberBetween(1000000,9999999),
+            'provider' => 'github',
         ];
+    }
+
+    public function gitlab(): self
+    {
+        return $this->state(fn () => ['provider' => 'gitlab']);
+    }
+
+    public function bitbucket(): self
+    {
+        return $this->state(fn () => ['provider' => 'bitbucket']);
     }
 }

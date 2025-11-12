@@ -17,7 +17,8 @@ class Repo extends Model
         'user_id',
         'description',
         'url',
-        'git_id'
+        'git_id',
+        'provider',
     ];
 
     public function user(): BelongsTo
