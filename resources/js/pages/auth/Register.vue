@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import AuthBase from '@/layouts/AuthLayout.vue';
 import { Head, useForm, Link } from '@inertiajs/vue3';
 import { LoaderCircle } from 'lucide-vue-next';
+import { useToast } from '@/composables/useToast';
 
 const form = useForm({
     name: '',
@@ -15,8 +16,16 @@ const form = useForm({
     password_confirmation: '',
 });
 
+const { success: showSuccess, error: showError } = useToast();
+
 const submit = () => {
     form.post(route('register'), {
+        onSuccess: () => {
+            showSuccess("Registration successful! Welcome aboard.");
+        },
+        onError: () => {
+            showError("Registration failed. Please check the errors and try again.");
+        },
         onFinish: () => form.reset('password', 'password_confirmation'),
     });
 };
