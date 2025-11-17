@@ -7,6 +7,9 @@ import { Label } from '@/components/ui/label';
 import AuthBase from '@/layouts/AuthLayout.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { LoaderCircle } from 'lucide-vue-next';
+import { useToast } from '@/composables/useToast';
+
+const { success: showSuccess, error: showError } = useToast();
 
 defineProps<{
     status?: string;
@@ -19,6 +22,12 @@ const form = useForm({
 
 const submit = () => {
     form.post(route('login'), {
+        onSuccess: () => {
+            showSuccess('Login successful! Welcome back!');
+        },
+        onError: () => {
+            showError('Login failed.');
+        },
         onFinish: () => form.reset('password'),
     });
 };
