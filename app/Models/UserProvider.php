@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class UserProvider extends Model
 {
@@ -17,8 +17,8 @@ class UserProvider extends Model
         'refresh_token',
     ];
 
-    public function providers(): HasMany
+    public function providers(): HasOne
     {
-        return $this -> hasMany(User::class);
+        return $this -> hasOne(User::class);
     }
 }
