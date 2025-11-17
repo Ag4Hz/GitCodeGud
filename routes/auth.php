@@ -43,6 +43,9 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware('auth')->group(function () {
 
+    Route::get('register/linking', [RegisteredUserController::class, 'linking'])
+        ->name('register.linking');
+
     Route::get('verify-email', EmailVerificationPromptController::class)
         ->name('verification.notice');
 

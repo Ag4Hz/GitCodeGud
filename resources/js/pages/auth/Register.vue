@@ -4,6 +4,7 @@ import TextLink from '@/components/TextLink.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useToast } from '@/composables/useToast';
 import AuthBase from '@/layouts/AuthLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import { LoaderCircle } from 'lucide-vue-next';
@@ -15,8 +16,16 @@ const form = useForm({
     password_confirmation: '',
 });
 
+const { success: showSuccess, error: showError } = useToast();
+
 const submit = () => {
     form.post(route('register'), {
+        onSuccess: () => {
+            showSuccess('Registration successful! Welcome aboard.');
+        },
+        onError: () => {
+            showError('Registration failed. Please check the errors and try again.');
+        },
         onFinish: () => form.reset('password', 'password_confirmation'),
     });
 };

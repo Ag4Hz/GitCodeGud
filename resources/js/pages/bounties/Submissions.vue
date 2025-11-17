@@ -96,10 +96,10 @@ const getStatusColor = (status: string) => {
 
 <template>
     <AppLayout>
-        <Head title="Manage Submissions"/>
+        <Head title="Manage Submissions" />
         <div class="px-4 py-6">
             <div class="mx-auto max-w-4xl space-y-6 px-4 sm:px-6 lg:px-8">
-            <!-- Header -->
+                <!-- Header -->
                 <div class="flex items-center justify-between">
                     <div>
                         <h1 class="text-2xl font-bold">Manage Submissions</h1>
@@ -152,12 +152,10 @@ const getStatusColor = (status: string) => {
                                                     {{ submission.status.toUpperCase() }}
                                                 </Badge>
                                             </div>
-
                                         </div>
                                     </div>
 
                                     <div class="flex items-center gap-6">
-
                                         <!-- Action buttons for pending submissions -->
                                         <div v-if="submission.status === 'pending'" class="flex gap-2">
                                             <Button

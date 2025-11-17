@@ -373,8 +373,11 @@ const shouldShowPagination = computed(() => {
                         </div>
 
                         <!-- Submission Stats for Bounty Owner -->
-                        <h3 class="mb-2  flex items-center gap-2 text-lg font-semibold">Submission Overview</h3>
-                        <div v-if="isBountyOwner && hasSubmissions" class="w-full rounded-xl border border-gray-200 bg-white/40 p-6 dark:border-white/10 dark:bg-white/5">
+                        <h3 class="mb-2 flex items-center gap-2 text-lg font-semibold">Submission Overview</h3>
+                        <div
+                            v-if="isBountyOwner && hasSubmissions"
+                            class="w-full rounded-xl border border-gray-200 bg-white/40 p-6 dark:border-white/10 dark:bg-white/5"
+                        >
                             <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
                                 <div class="text-center">
                                     <div class="text-2xl font-bold">{{ submissionStats.total }}</div>
@@ -596,7 +599,7 @@ const shouldShowPagination = computed(() => {
                                     Recent Submissions ({{ submissions.length }})
                                 </h3>
                                 <Link v-if="isBountyOwner" :href="`/bounties/${bounty.id}/submissions`" class="flex items-center gap-1">
-                                    <Button size="sm" variant="button" class="flex items-center gap-1 ">
+                                    <Button size="sm" variant="button" class="flex items-center gap-1">
                                         <Users class="h-3 w-3" />
                                         Manage All
                                     </Button>

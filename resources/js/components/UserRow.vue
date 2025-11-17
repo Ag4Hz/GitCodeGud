@@ -49,9 +49,9 @@ const initials = computed(() => getInitials(user.name || user.nickname || ''));
                 v-if="showCrown"
                 class="absolute -top-1 -right-1 grid h-5 w-5 place-items-center rounded-full ring-2 ring-white backdrop-blur dark:ring-neutral-900"
                 :class="{
-                    'bg-yellow-400/90 text-yellow-950': orderDirection === 'desc' ? rank === 1 : (total ? rank === total : 0),
-                    'bg-gray-300/90 text-gray-900': orderDirection === 'desc' ? rank === 2 : (total ? rank === total - 1 : 0),
-                    'bg-amber-500/90 text-amber-950': orderDirection === 'desc' ? rank === 3 : (total ? rank === total - 2 : 0)
+                    'bg-yellow-400/90 text-yellow-950': orderDirection === 'desc' ? rank === 1 : total ? rank === total : 0,
+                    'bg-gray-300/90 text-gray-900': orderDirection === 'desc' ? rank === 2 : total ? rank === total - 1 : 0,
+                    'bg-amber-500/90 text-amber-950': orderDirection === 'desc' ? rank === 3 : total ? rank === total - 2 : 0,
                 }"
                 aria-label="Top 3"
             >
