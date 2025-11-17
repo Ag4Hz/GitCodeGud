@@ -46,6 +46,14 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        return to_route('dashboard');
+        return to_route('register.linking');
+    }
+
+    /**
+     * Show the provider linking page.
+     */
+    public function linking(): Response
+    {
+        return Inertia::render('auth/ProviderLinking');
     }
 }

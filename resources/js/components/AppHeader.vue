@@ -148,12 +148,7 @@ const mainNavItems = computed((): NavItem[] => {
 
                     <!-- Register button for guests (styled through .btn-register in app.css) -->
                     <Button v-if="!isAuthenticated" variant="ghost" as-child>
-                        <Link
-                            :href="route('register')"
-                            class="btn-register flex items-center gap-2"
-                        >
-                            Register
-                        </Link>
+                        <Link :href="route('register')" class="btn-register flex items-center gap-2"> Register </Link>
                     </Button>
 
                     <template v-else>

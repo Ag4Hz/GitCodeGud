@@ -68,14 +68,18 @@ function submit() {
                         </div>
                     </CardHeader>
                     <CardContent v-if="bounty.description" class="pt-0">
-                        <div class="rounded-2xl border p-2 border-gray-200 bg-white/40 p-0 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-white/5">
+                        <div
+                            class="rounded-2xl border border-gray-200 bg-white/40 p-0 p-2 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-white/5"
+                        >
                             <p class="">{{ bounty.description }}</p>
                         </div>
                     </CardContent>
                 </Card>
 
                 <!-- Submission Form -->
-                <Card class="gap-0 rounded-2xl border border-gray-200 bg-white/40 p-0 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-white/5">
+                <Card
+                    class="gap-0 rounded-2xl border border-gray-200 bg-white/40 p-0 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-white/5"
+                >
                     <CardHeader class="gap-0 rounded-t-2xl bg-white/40 px-2 py-3 backdrop-blur-xl sm:px-5 md:px-6 dark:bg-white/5">
                         <CardTitle class="my-2 text-lg dark:text-white">Submit Your Solution</CardTitle>
                     </CardHeader>
@@ -110,7 +114,6 @@ function submit() {
                             <div class="flex gap-4 border-t border-gray-200 pt-6 dark:border-gray-700">
                                 <Button
                                     type="submit"
-
                                     :disabled="form.processing"
                                     class="flex items-center gap-2 border-0 bg-black text-white transition-colors duration-200 hover:bg-gray-800 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-gray-100"
                                 >
@@ -120,7 +123,7 @@ function submit() {
 
                                 <a
                                     :href="`/bounties/${bounty.id}`"
-                                    class="inline-flex items-center gap-2 px-4 py-1 rounded-lg border border-gray-200 bg-white/40 p-0 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-white/5"
+                                    class="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white/40 p-0 px-4 py-1 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-white/5"
                                 >
                                     Cancel
                                 </a>
