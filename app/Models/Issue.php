@@ -18,7 +18,8 @@ class Issue extends Model
         'repo_id',
         'url',
         'description',
-        'name'
+        'name',
+        'provider',
     ];
 
 

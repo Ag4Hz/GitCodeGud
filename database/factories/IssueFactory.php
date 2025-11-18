@@ -22,6 +22,17 @@ class IssueFactory extends Factory
             'repo_id' => Repo::factory(),
             'url' => $this->faker->url(),
             'description' => $this->faker->sentence(),
+            'provider' => 'github',
         ];
+    }
+
+    public function gitlab(): self
+    {
+        return $this->state(fn () => ['provider' => 'gitlab']);
+    }
+
+    public function bitbucket(): self
+    {
+        return $this->state(fn () => ['provider' => 'bitbucket']);
     }
 }

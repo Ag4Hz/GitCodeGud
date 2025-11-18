@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('description')->nullable();
             $table->string('url');
             $table->string('git_id')->unique();
+            $table->enum('provider',['github','gitlab','bitbucket'])->default('github');
             $table->timestamps();
         });
     }
