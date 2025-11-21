@@ -22,6 +22,7 @@ class IssueFactory extends Factory
             'repo_id' => Repo::factory(),
             'url' => $this->faker->url(),
             'description' => $this->faker->sentence(),
+            'git_id' => (string) $this->faker->unique()->numberBetween(1000000, 9999999),
             'provider' => 'github',
         ];
     }

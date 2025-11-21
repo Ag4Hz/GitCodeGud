@@ -14,8 +14,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
 
-    Route::get('/auth/github/redirect', ProviderRedirectController::class)->name('github.redirect');
-    Route::get('/auth/github/callback', ProviderCallbackController::class)->name('github.callback');
+    Route::get('/auth/{provider}/redirect', ProviderRedirectController::class)->where('provider', 'github|gitlab|bitbucket')->name('oauth.redirect');
+    Route::get('/auth/{provider}/callback', ProviderCallbackController::class)->where('provider', 'github|gitlab|bitbucket')->name('oauth.callback');
 
 
     Route::get('register', [RegisteredUserController::class, 'create'])
