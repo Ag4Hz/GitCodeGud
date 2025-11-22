@@ -44,7 +44,6 @@ return [
         'client_id' => env('GITLAB_CLIENT_ID'),
         'client_secret' => env('GITLAB_CLIENT_SECRET'),
         'redirect' => 'http://localhost:8000/auth/gitlab/callback',
-        'host' => env('GITLAB_HOST', 'https://gitlab.com'),
     ],
 
     'bitbucket' => [
