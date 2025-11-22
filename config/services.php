@@ -40,5 +40,17 @@ return [
         'client_secret' => env('GITHUB_CLIENT_SECRET'),
         'redirect' => 'http://localhost:8000/auth/github/callback',
     ],
+    'gitlab' => [
+        'client_id' => env('GITLAB_CLIENT_ID'),
+        'client_secret' => env('GITLAB_CLIENT_SECRET'),
+        'redirect' => 'http://localhost:8000/auth/gitlab/callback',
+    ],
+
+    'bitbucket' => [
+        'client_id' => env('BITBUCKET_CLIENT_ID'),
+        'client_secret' => env('BITBUCKET_CLIENT_SECRET'),
+        'redirect' => 'http://localhost:8000/auth/bitbucket/callback',
+        'host' => env('GITLAB_HOST', 'https://bitbucket.com'),
+    ],
 
 ];
