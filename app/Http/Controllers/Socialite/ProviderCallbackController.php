@@ -14,7 +14,6 @@ class ProviderCallbackController extends Controller
     /**
      * Handle the incoming request.
      */
-
     public function __invoke(Request $request, string $provider)
     {
         if ($request->has('error')) {
@@ -29,11 +28,7 @@ class ProviderCallbackController extends Controller
             ]);
         }
 
-        if ($provider === 'gitlab' || $provider === 'bitbucket') {
-            $providerUser = Socialite::driver($provider)->stateless()->user();
-        } else {
-            $providerUser = Socialite::driver($provider)->user();
-        }
+        $providerUser = Socialite::driver($provider)->user();
 
         $userProvider = UserProvider::where('provider', $provider)
             ->where('provider_id', (string)$providerUser->getId())
@@ -48,7 +43,7 @@ class ProviderCallbackController extends Controller
                 ]
             );
 
-            $userProvider = UserProvider::create([
+            UserProvider::create([
                 'user_id' => $user->id,
                 'provider' => $provider,
                 'provider_id' => (string)$providerUser->getId(),
@@ -59,6 +54,19 @@ class ProviderCallbackController extends Controller
             ]);
         } else {
             $user = $userProvider->user;
+
+            if (!$user) {
+                $user = User::firstOrCreate(
+                    ['email' => $providerUser->getEmail()],
+                    [
+                        'name' => $providerUser->getName(),
+                        'nickname' => $this->getNickname($providerUser, $provider),
+                    ]
+                );
+
+                $userProvider->update(['user_id' => $user->id]);
+            }
+
             $userProvider->update([
                 'token' => $providerUser->token,
                 'refresh_token' => $providerUser->refreshToken ?? null,
@@ -72,11 +80,7 @@ class ProviderCallbackController extends Controller
 
     private function getNickname($providerUser, string $provider): string
     {
-        if ($provider === 'gitlab' && method_exists($providerUser, 'getNickname')) {
-            return $providerUser->getNickname();
-        }
-
-        if ($provider === 'bitbucket' && method_exists($providerUser, 'getNickname')) {
+        if (in_array($provider, ['gitlab', 'bitbucket']) && method_exists($providerUser, 'getNickname')) {
             return $providerUser->getNickname();
         }
 
