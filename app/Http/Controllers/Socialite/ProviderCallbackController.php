@@ -29,7 +29,7 @@ class ProviderCallbackController extends Controller
             ]);
         }
 
-        if ($provider === 'gitlab') {
+        if ($provider === 'gitlab' || $provider === 'bitbucket') {
             $providerUser = Socialite::driver($provider)->stateless()->user();
         } else {
             $providerUser = Socialite::driver($provider)->user();

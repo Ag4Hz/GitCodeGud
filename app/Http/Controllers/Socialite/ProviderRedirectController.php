@@ -22,24 +22,17 @@ class ProviderRedirectController extends Controller
         $scopes = match($provider) {
             'github' => ['read:repo', 'read:issue'],
             'gitlab' => ['read_user', 'api'],
-            'bitbucket' => ['repository:read', 'user:email:read'],
+            'bitbucket' => [],
         };
 
-        try {
-            $driver = Socialite::driver($provider)->scopes($scopes);
-            if ($provider === 'gitlab') {
-                $driver = $driver->stateless();
-            }
-
-            $redirectUrl = $driver->redirect()->getTargetUrl();
-            return $driver->redirect();
-        } catch (\Exception $e) {
-            \Log::error("OAuth redirect error for {$provider}: " . $e->getMessage(), [
-                'exception' => class_basename($e),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-            ]);
-            return redirect(route('login'))->withErrors(['provider' => "Unable to connect to {$provider}."]);
+        $driver = Socialite::driver($provider);
+        if (!empty($scopes)) {
+            $driver = $driver->scopes($scopes);
         }
+        if ($provider === 'gitlab' || $provider === 'bitbucket') {
+            $driver = $driver->stateless();
+        }
+
+        return $driver->redirect();
     }
 }
