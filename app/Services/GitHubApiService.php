@@ -7,7 +7,7 @@ use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 
-class GitHubApiService
+class GitHubApiService implements GitProviderInterface
 {
     private const BASE_URL = 'https://api.github.com';
     private const USER_AGENT = 'GitCodeGud-App';
