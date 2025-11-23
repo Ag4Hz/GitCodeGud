@@ -25,8 +25,8 @@ class IssueBelongsToRepository implements ValidationRule, DataAwareRule
             return;
         }
 
-        $repoInfo = GitHubApiService::parseGitHubUrl($repoUrl);
-        $issueInfo = GitHubApiService::parseGitHubIssueUrl($value);
+        $repoInfo = GitHubApiService::parseGitUrl($repoUrl);
+        $issueInfo = GitHubApiService::parseGitIssueUrl($value);
 
         if (!$repoInfo || !$issueInfo) {
             return;

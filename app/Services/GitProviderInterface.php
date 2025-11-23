@@ -4,13 +4,13 @@ namespace App\Services;
 interface GitProviderInterface
 {
     // Static URL parsing / validation helpers
-    public static function parseGitHubUrl(string $url): ?array;
-    public static function parseGitHubIssueUrl(string $url): ?array;
-    public static function parseGitHubPullRequestUrl(string $url): ?array;
+    public static function parseGitUrl(string $url): ?array;
+    public static function parseGitIssueUrl(string $url): ?array;
+    public static function parseGitPullRequestUrl(string $url): ?array;
 
-    public static function isValidGitHubUrl(string $url): bool;
-    public static function isValidGitHubIssueUrl(string $url): bool;
-    public static function isValidGitHubPullRequestUrl(string $url): bool;
+    public static function isValidGitUrl(string $url): bool;
+    public static function isValidGitIssueUrl(string $url): bool;
+    public static function isValidGitPullRequestUrl(string $url): bool;
 
     // Token check
     public function hasValidToken(): bool;

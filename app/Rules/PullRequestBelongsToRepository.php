@@ -17,13 +17,13 @@ class PullRequestBelongsToRepository implements ValidationRule
 
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        $prInfo = GitHubApiService::parseGitHubPullRequestUrl($value);
+        $prInfo = GitHubApiService::parseGitPullRequestUrl($value);
         if (!$prInfo) {
             $fail('Invalid Pull Request URL format.');
             return;
         }
 
-        $expectedRepoInfo = GitHubApiService::parseGitHubUrl($this->expectedRepoUrl);
+        $expectedRepoInfo = GitHubApiService::parseGitUrl($this->expectedRepoUrl);
         if (!$expectedRepoInfo) {
             $fail('Invalid repository URL format.');
             return;

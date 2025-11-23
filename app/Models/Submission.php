@@ -46,7 +46,7 @@ class Submission extends Model
                     return null;
                 }
 
-                $prInfo = GitHubApiService::parseGitHubPullRequestUrl($this->pr_url);
+                $prInfo = GitHubApiService::parseGitPullRequestUrl($this->pr_url);
                 return $prInfo['pr_number'] ?? null;
             }
         );
@@ -59,7 +59,7 @@ class Submission extends Model
                     return null;
                 }
 
-                $prInfo = GitHubApiService::parseGitHubPullRequestUrl($this->pr_url);
+                $prInfo = GitHubApiService::parseGitPullRequestUrl($this->pr_url);
                 return $prInfo['repo_full_name'] ?? null;
             }
         );
@@ -72,7 +72,7 @@ class Submission extends Model
                     return null;
                 }
 
-                $prInfo = GitHubApiService::parseGitHubPullRequestUrl($this->pr_url);
+                $prInfo = GitHubApiService::parseGitPullRequestUrl($this->pr_url);
                 return $prInfo['owner'] ?? null;
             }
         );
@@ -85,14 +85,14 @@ class Submission extends Model
                     return null;
                 }
 
-                $prInfo = GitHubApiService::parseGitHubPullRequestUrl($this->pr_url);
+                $prInfo = GitHubApiService::parseGitPullRequestUrl($this->pr_url);
                 return $prInfo['name'] ?? null;
             }
         );
     }
     public function hasValidPrUrl(): bool
     {
-        return $this->pr_url && GitHubApiService::isValidGitHubPullRequestUrl($this->pr_url);
+        return $this->pr_url && GitHubApiService::isValidGitPullRequestUrl($this->pr_url);
     }
     public function canBeResubmitted(): bool
     {

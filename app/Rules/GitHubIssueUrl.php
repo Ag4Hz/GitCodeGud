@@ -10,7 +10,7 @@ class GitHubIssueUrl implements ValidationRule
 {
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        if (!GitHubApiService::isValidGitHubIssueUrl($value)) {
+        if (!GitHubApiService::isValidGitIssueUrl($value)) {
             $fail('Please enter a valid GitHub issue URL (e.g., https://github.com/user/repo/issues/123).');
         }
     }
