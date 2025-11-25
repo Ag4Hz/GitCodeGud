@@ -66,7 +66,7 @@ class BountyController extends Controller
     {
         $validated = $request->getValidatedDataForStore();
 
-        $repoInfo = GitHubApiService::parseGitHubUrl($validated['repo_url']);
+        $repoInfo = GitHubApiService::parseGitUrl($validated['repo_url']);
 
         $repo = Repo::where('git_id', $repoInfo['full_name'])->first();
 

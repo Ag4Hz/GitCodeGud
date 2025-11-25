@@ -10,7 +10,7 @@ class GitHubRepositoryUrl implements ValidationRule
 {
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        if (!GitHubApiService::isValidGitHubUrl($value)) {
+        if (!GitHubApiService::isValidGitUrl($value)) {
             $fail('Please enter a valid GitHub repository URL (e.g., https://github.com/user/repo).');
         }
     }

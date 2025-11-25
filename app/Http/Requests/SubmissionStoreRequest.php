@@ -62,7 +62,7 @@ class SubmissionStoreRequest extends FormRequest
             return;
         }
 
-        $prInfo = GitHubApiService::parseGitHubPullRequestUrl($prUrl);
+        $prInfo = GitHubApiService::parseGitPullRequestUrl($prUrl);
         if (!$prInfo) {
             return;
         }

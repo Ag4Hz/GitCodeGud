@@ -35,11 +35,11 @@ class BountyPolicy
             return false;
         }
 
-        $repoInfo = GitHubApiService::parseGitHubUrl($repoUrl);
+        $repoInfo = GitHubApiService::parseGitUrl($repoUrl);
         if (!$repoInfo) {
             return false;
         }
-        
+
         $gitId = $repoInfo['owner'] . '/' . $repoInfo['name'];
         $repoData = $githubApi->getRepository($gitId);
 

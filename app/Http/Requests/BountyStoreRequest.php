@@ -98,11 +98,11 @@ class BountyStoreRequest extends FormRequest
             return;
         }
 
-        $issueInfo = GitHubApiService::parseGitHubIssueUrl($issueUrl);
+        $issueInfo = GitHubApiService::parseGitIssueUrl($issueUrl);
         if (!$issueInfo) {
             return;
         }
-        
+
         $isOpen = $githubApi->isIssueOpen($issueInfo['repo_full_name'], $issueInfo['issue_number']);
 
         if (!$isOpen) {
