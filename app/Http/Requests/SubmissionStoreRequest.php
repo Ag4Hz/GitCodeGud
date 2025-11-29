@@ -3,12 +3,13 @@
 namespace App\Http\Requests;
 
 use App\Models\Bounty;
-use App\Rules\GitHubPullRequestUrl;
 use App\Rules\PullRequestBelongsToRepository;
 use App\Rules\UniqueSubmissionForBounty;
+use App\Rules\ValidPullRequestUrl;
 use App\Services\GitHubApiService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
+use App\Services\GitProviderFactory;
 
 class SubmissionStoreRequest extends FormRequest
 {
@@ -31,11 +32,31 @@ class SubmissionStoreRequest extends FormRequest
             'pr_url' => [
                 'required',
                 'url',
-                new GitHubPullRequestUrl(),
+                new ValidPullRequestUrl(),
                 $bounty ? new PullRequestBelongsToRepository($bounty->issue->repo->url) : '',
             ],
         ];
     }
+
+    public function provider(): string
+    {
+        $url = $this->input('pr_url');
+
+        if (str_contains($url, 'github')) {
+            return 'github';
+        }
+
+        if (str_contains($url, 'gitlab')) {
+            return 'gitlab';
+        }
+
+        if (str_contains($url, 'bitbucket')) {
+            return 'bitbucket';
+        }
+
+        return 'unknown';
+    }
+
 
     public function messages(): array
     {
@@ -62,15 +83,34 @@ class SubmissionStoreRequest extends FormRequest
             return;
         }
 
-        $prInfo = GitHubApiService::parseGitPullRequestUrl($prUrl);
-        if (!$prInfo) {
+        $provider = $this->provider();
+
+        try {
+            $service = GitProviderFactory::getProvider($provider, $user);
+        } catch (\InvalidArgumentException $e) {
+            $validator->errors()->add('pr_url', "Unsupported provider: {$provider}");
             return;
         }
 
-        $githubApi = new GitHubApiService($user);
-        $prData = $githubApi->getPullRequest($prInfo['repo_full_name'], $prInfo['pr_number']);
+        $parsed = $service::parseGitPullRequestUrl($prUrl);
+
+        if (!$parsed) {
+            $validator->errors()->add('pr_url', 'Invalid PR/MR URL format for provider: ' . $provider);
+            return;
+        }
+
+        $repoFullName = $parsed['full_name'];
+        $prNumber = $parsed['pr_number'];
+
+        $prData = $service->getPullRequest($repoFullName, $prNumber);
+
         if (empty($prData)) {
-            $validator->errors()->add('pr_url', 'Could not access the Pull Request. Please ensure it exists and you have access to it.');
+            $validator->errors()->add('pr_url', 'Could not access PR/MR from provider.');
+            return;
+        }
+
+        if (!isset($prData['state']) || !in_array(strtolower($prData['state']), ['open', 'opened'])) {
+            $validator->errors()->add('pr_url', 'PR/MR is not open.');
         }
     }
 }

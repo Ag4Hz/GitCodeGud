@@ -51,6 +51,8 @@ class SubmissionController extends Controller
 
         $this->authorize('create', [Submission::class, $bounty]);
 
+        $provider = $request->provider();
+
         $existingSubmission = $bounty->submissions()
             ->where('user_id', $user->id)
             ->first();
@@ -59,6 +61,7 @@ class SubmissionController extends Controller
             $existingSubmission->update([
                 'pr_url' => $validated['pr_url'],
                 'status' => 'pending',
+                'provider' => $provider,
                 'updated_at' => now(),
             ]);
 
@@ -72,6 +75,7 @@ class SubmissionController extends Controller
             'user_id' => $user->id,
             'pr_url' => $validated['pr_url'],
             'status' => 'pending',
+            'provider' => $provider,
         ]);
 
         return redirect()
