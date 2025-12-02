@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\User;
 use App\Models\Skill;
 use App\Models\SkillUser;
+use App\Models\UserProvider;
 use Illuminate\Support\Facades\DB;
 
 class GitHubSkillSyncService
@@ -13,9 +14,9 @@ class GitHubSkillSyncService
         private GitHubApiService $githubApi
     ) {}
 
-    public function syncUserSkillsFromGitHub(User $user): bool
+    public function syncUserSkillsFromGitHub(User $user, UserProvider $provider): bool
     {
-            $this->githubApi = new GitHubApiService($user);
+            $this->githubApi = new GitHubApiService($provider);
             if (!$this->githubApi->hasValidToken()) {
                 return false;
             }

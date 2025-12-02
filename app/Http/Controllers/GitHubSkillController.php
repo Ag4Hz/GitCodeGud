@@ -18,12 +18,15 @@ class GitHubSkillController extends Controller
     {
         /** @var User $user */
         $user = Auth::user();
+        $github = $user->providers()
+            ->where('provider', 'github')
+            ->first();
 
-        if (!$user || !$user->oauth_provider_token) {
+        if (!$user || !$github->token) {
             return redirect()->back()->with('error', 'GitHub token not available. Please reconnect your GitHub account.');
         }
 
-        $success = $this->gitHubSkillSync->syncUserSkillsFromGitHub($user);
+        $success = $this->gitHubSkillSync->syncUserSkillsFromGitHub($user, $github);
 
         if (!$success) {
             return redirect()->back()->with('error', 'Failed to sync skills from GitHub. Please try again.');
