@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\User;
 use App\Models\UserProvider;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
