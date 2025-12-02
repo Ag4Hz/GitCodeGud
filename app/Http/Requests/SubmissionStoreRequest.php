@@ -79,38 +79,56 @@ class SubmissionStoreRequest extends FormRequest
     {
         $prUrl = $this->input('pr_url');
         $user = $this->user();
+
         if (!$user || !$user->oauth_provider_token) {
             return;
         }
 
         $provider = $this->provider();
 
+        if ($provider === 'unknown') {
+            $validator->errors()->add('pr_url', 'Unsupported git provider');
+            return;
+        }
+
+        $bounty = Bounty::with('issue')->find($this->input('bounty_id'));
+
+        if (!$bounty || !$bounty->issue) {
+            return;
+        }
+
+        $issueProvider = $bounty->issue->provider;
+
+        if ($provider !== $issueProvider) {
+            $prType = $issueProvider === 'gitlab' ? 'merge request' : 'pull request';
+            $validator->errors()->add(
+                'pr_url',
+                "This bounty is for a {$issueProvider} issue. Please submit a {$issueProvider} {$prType}."
+            );
+            return;
+        }
+
         try {
             $service = GitProviderFactory::getProvider($provider, $user);
-        } catch (\InvalidArgumentException $e) {
-            $validator->errors()->add('pr_url', "Unsupported provider: {$provider}");
-            return;
-        }
 
-        $parsed = $service::parseGitPullRequestUrl($prUrl);
+            $parsed = $service::parseGitPullRequestUrl($prUrl);
 
-        if (!$parsed) {
-            $validator->errors()->add('pr_url', 'Invalid PR/MR URL format for provider: ' . $provider);
-            return;
-        }
+            if (!$parsed) {
+                $validator->errors()->add('pr_url', 'Invalid PR/MR URL format');
+                return;
+            }
 
-        $repoFullName = $parsed['full_name'];
-        $prNumber = $parsed['pr_number'];
+            $repoFullName = $parsed['full_name'];
+            $prNumber = $parsed['pr_number'];
 
-        $prData = $service->getPullRequest($repoFullName, $prNumber);
+            $isOpen = $service->isPullRequestOpen($repoFullName, $prNumber);
 
-        if (empty($prData)) {
-            $validator->errors()->add('pr_url', 'Could not access PR/MR from provider.');
-            return;
-        }
+            if (!$isOpen) {
+                $validator->errors()->add('pr_url', 'The PR/MR must be open');
+            }
 
-        if (!isset($prData['state']) || !in_array(strtolower($prData['state']), ['open', 'opened'])) {
-            $validator->errors()->add('pr_url', 'PR/MR is not open.');
+        } catch (\Exception $e) {
+            $validator->errors()->add('pr_url', 'Could not validate PR/MR: ' . $e->getMessage());
         }
     }
 }
