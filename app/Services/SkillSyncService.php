@@ -10,18 +10,18 @@ use Illuminate\Support\Facades\DB;
 
 class SkillSyncService
 {
-    public function syncUserSkillsFromGitHub(User $user, GitProviderInterface $api): bool
+    public function syncUserSkillsFromProvider(User $user, GitProviderInterface $api): bool
     {
         if (!$api->hasValidToken()) {
             return false;
         }
 
-        $repositories = $this->$api->getUserRepositories();
+        $repositories = $api->getUserRepositories();
         if (empty($repositories)) {
             return false;
         }
 
-        $languageStats = $this->getLanguageStatsFromRepos($repositories);
+        $languageStats = $this->getLanguageStatsFromRepos($api, $repositories);
 
         if (empty($languageStats)) {
             return false;
@@ -34,21 +34,32 @@ class SkillSyncService
     private function getLanguageStatsFromRepos(GitProviderInterface $api, array $repositories): array
     {
         return collect($repositories)
-            ->reject(fn($repo) => $repo['fork'] || $repo['archived'])
-            ->map(fn($repo) => [
-                'repo' => $repo['full_name'],
-                'languages' => $api->getRepositoryLanguages($repo['full_name'])
-            ])
-            ->reject(fn($repoData) => empty($repoData['languages']))
-            ->tap(function ($repoCollection) {
-                $repoCollection->each(function ($repo) {
-                });
+            ->reject(fn($repo) => ($repo['fork'] ?? false) || ($repo['archived'] ?? false))
+            ->map(function ($repo) use ($api) {
+                $fullName = $repo['full_name']
+                    ?? $repo['path_with_namespace']
+                    ?? $repo['repo_full_name']
+                    ?? null;
+
+                if (!$fullName) {
+                    return [
+                        'repo'      => null,
+                        'languages' => [],
+                    ];
+                }
+
+                return [
+                    'repo'      => $fullName,
+                    'languages' => $api->getRepositoryLanguages($fullName),
+                ];
             })
+            ->reject(fn($repoData) => empty($repoData['languages']))
             ->flatMap(fn($repoData) => $repoData['languages'])
             ->groupBy(fn($bytes, $language) => $language)
             ->map(fn($bytesCollection) => $bytesCollection->sum())
             ->toArray();
     }
+
 
     private function updateUserSkills(User $user, array $languageStats): void
     {

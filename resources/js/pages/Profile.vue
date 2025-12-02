@@ -375,14 +375,14 @@ function unfollow() {
                     <!-- Skills organized by categories -->
                     <Card v-if="user.skills && user.skills.length > 0" class="border-gray-200 bg-white/40 dark:border-white/10 dark:bg-white/5">
                         <CardHeader>
-                            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between sm:gap-4 px-4">
                                 <div>
                                     <CardTitle class="flex items-center gap-2">
                                         <Star class="h-5 w-5" />
                                         Skills & Experience
                                     </CardTitle>
                                     <CardDescription>{{
-                                            isOwner ? 'Sync your skills from repositories!' : `${user.name} hasn't earned any skills yet.`
+                                            isOwner ? 'Sync your skills' : `${user.name} hasn't earned any skills yet.`
                                         }}</CardDescription>
                                 </div>
 

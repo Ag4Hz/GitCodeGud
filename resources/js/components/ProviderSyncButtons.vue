@@ -40,7 +40,7 @@ const isSyncing = (key: string) => props.syncingProvider === key;
 
 const buttonLabel = (providerKey: string, providerLabel: string) => {
     if (isSyncing(providerKey)) {
-        return `Syncing from ${providerLabel}...`;
+        return `Syncing...`;
     }
 
     return `Sync from ${providerLabel}`;
@@ -58,7 +58,7 @@ const handleClick = (key: string) => {
             v-for="provider in allProviders"
             :key="provider.key"
             type="button"
-            class="inline-flex items-center gap-2"
+            class="inline-flex items-center justify-center gap-2 w-[170px] text-sm"
             variant="button"
             :disabled="!isConnected(provider.key) || isSyncing(provider.key)"
             @click="handleClick(provider.key)"
@@ -68,3 +68,4 @@ const handleClick = (key: string) => {
         </Button>
     </div>
 </template>
+
