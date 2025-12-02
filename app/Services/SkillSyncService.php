@@ -8,41 +8,36 @@ use App\Models\SkillUser;
 use App\Models\UserProvider;
 use Illuminate\Support\Facades\DB;
 
-class GitHubSkillSyncService
+class SkillSyncService
 {
-    public function __construct(
-        private GitHubApiService $githubApi
-    ) {}
-
-    public function syncUserSkillsFromGitHub(User $user, UserProvider $provider): bool
+    public function syncUserSkillsFromGitHub(User $user, GitProviderInterface $api): bool
     {
-            $this->githubApi = new GitHubApiService($provider);
-            if (!$this->githubApi->hasValidToken()) {
-                return false;
-            }
+        if (!$api->hasValidToken()) {
+            return false;
+        }
 
-            $repositories = $this->githubApi->getUserRepositories();
-            if (empty($repositories)) {
-                return false;
-            }
+        $repositories = $this->$api->getUserRepositories();
+        if (empty($repositories)) {
+            return false;
+        }
 
-            $languageStats = $this->getLanguageStatsFromRepos($repositories);
+        $languageStats = $this->getLanguageStatsFromRepos($repositories);
 
-            if (empty($languageStats)) {
-                return false;
-            }
+        if (empty($languageStats)) {
+            return false;
+        }
 
-            $this->updateUserSkills($user, $languageStats);
-            return true;
+        $this->updateUserSkills($user, $languageStats);
+        return true;
     }
 
-    private function getLanguageStatsFromRepos(array $repositories): array
+    private function getLanguageStatsFromRepos(GitProviderInterface $api, array $repositories): array
     {
         return collect($repositories)
             ->reject(fn($repo) => $repo['fork'] || $repo['archived'])
             ->map(fn($repo) => [
                 'repo' => $repo['full_name'],
-                'languages' => $this->githubApi->getRepositoryLanguages($repo['full_name'])
+                'languages' => $api->getRepositoryLanguages($repo['full_name'])
             ])
             ->reject(fn($repoData) => empty($repoData['languages']))
             ->tap(function ($repoCollection) {
@@ -60,6 +55,10 @@ class GitHubSkillSyncService
         // Get XP settings once per sync
         $baseXp = (int) DB::table('general_settings')->where('key', 'base_xp')->value('value') ?? 100;
         $bonusMultiplier = (float) DB::table('general_settings')->where('key', 'bonus_multiplier')->value('value') ?? 1.5;
+
+        if ($baseXp === 0) {
+            $baseXp = 100;
+        }
 
         collect($languageStats)->each(function ($bytes, $language) use ($user, $baseXp, $bonusMultiplier) {
             $skillType = $this->getSkillType($language);
