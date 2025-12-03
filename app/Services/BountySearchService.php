@@ -51,12 +51,6 @@ class BountySearchService
         });
     }
 
-
-//    public function getPaginatedBounties(Builder $query, int $perPage = 12): LengthAwarePaginator
-//    {
-//        return $query->paginate($perPage)->withQueryString();
-//    }
-
     public function getPaginatedBounties(Builder $query, int $perPage = 12): LengthAwarePaginator
     {
         $paginated = $query->paginate($perPage)->withQueryString();
