@@ -2,6 +2,7 @@
 import LanguageFilter from '@/components/LanguageFilter.vue';
 import NavFooter from '@/components/NavFooter.vue';
 import PopularBountiesPanel from '@/components/PopularBountiesPanel.vue';
+import ProviderFilter from '@/components/ProviderFilter.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -9,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { contactLinks } from '@/composables/contactLinks';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { AppPageProps, BreadcrumbItem } from '@/types';
-import { BountyStatus, type Bounty, type BountyPagination } from '@/types/bounty';
+import { BountyStatus, ProviderOption, type Bounty, type BountyPagination } from '@/types/bounty';
 import { Head, router } from '@inertiajs/vue3';
 import { Calendar, DollarSign, Eye, Loader2, Search, Target } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
@@ -18,10 +19,12 @@ type User = { id: number; nickname: string; avatar: string; name: string };
 type PageProps = AppPageProps<{
     bounties?: BountyPagination;
     availableLanguages?: string[];
+    availableProviders?: ProviderOption[];
     filters?: {
         search?: string;
         bounty_search?: string;
         language?: string;
+        provider?: string;
     };
     userFilters?: { search?: string };
     users?: { data?: User[] };
@@ -36,7 +39,8 @@ type PopularBounty = Bounty & {
 const props = withDefaults(defineProps<PageProps>(), {
     bounties: () => ({ data: [], total: 0, current_page: 1, last_page: 1 }),
     availableLanguages: () => [],
-    filters: () => ({ search: '', language: '' }),
+    availableProviders: () => [],
+    filters: () => ({ search: '', language: '', provider: '' }),
     userFilters: () => ({ search: '' }),
     users: () => ({ data: [] }),
     popularBounties: () => [],
@@ -49,11 +53,19 @@ const searchBountyQuery = computed(() => {
 const selectedBountyLanguage = computed(() => {
     return props.filters?.language ?? '';
 });
+const selectedBountyProvider = computed(() => {
+    return props.filters?.provider ?? '';
+});
+const selectedProviderDisplay = computed(() => {
+    const provider = props.availableProviders.find((p) => p.value === localSelectedProvider.value || p.name === localSelectedProvider.value);
+    return provider ? provider.name : localSelectedProvider.value;
+});
 
 const isBountySearching = ref(false);
 
 const localSearchQuery = ref(searchBountyQuery.value);
 const localSelectedLanguage = ref(selectedBountyLanguage.value);
+const localSelectedProvider = ref(selectedBountyProvider.value);
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -80,6 +92,7 @@ const debouncedBountySearch = debounce(() => {
 
     params.delete('search');
     params.delete('language');
+    params.delete('provider');
     params.delete('page');
 
     if (localSearchQuery.value.trim()) {
@@ -88,6 +101,10 @@ const debouncedBountySearch = debounce(() => {
 
     if (localSelectedLanguage.value) {
         params.set('language', localSelectedLanguage.value);
+    }
+
+    if (localSelectedProvider.value) {
+        params.set('provider', localSelectedProvider.value);
     }
 
     const queryString = params.toString();
@@ -118,9 +135,17 @@ watch(selectedBountyLanguage, (newValue) => {
     localSelectedLanguage.value = newValue;
 });
 
+watch(localSelectedProvider, () => {
+    debouncedBountySearch();
+});
+
 const clearBountyFilters = () => {
+    localSearchQuery.value = '';
+    localSelectedLanguage.value = '';
+    localSelectedProvider.value = '';
+
     router.visit(route('dashboard'), {
-        preserveState: true,
+        preserveState: false,
         preserveScroll: true,
     });
 };
@@ -182,8 +207,9 @@ const navigateToBountyPage = (page: number) => {
 };
 
 const hasActiveBountyFilters = computed(() => {
-    return localSearchQuery.value.trim() !== '' || localSelectedLanguage.value !== '';
+    return localSearchQuery.value.trim() !== '' || localSelectedLanguage.value !== '' || localSelectedProvider.value != '';
 });
+
 </script>
 
 <template>
@@ -255,6 +281,10 @@ const hasActiveBountyFilters = computed(() => {
                             <div class="sm:w-48">
                                 <LanguageFilter v-model="localSelectedLanguage" :languages="availableLanguages" placeholder="All Languages" />
                             </div>
+                            <!-- Provider Filter -->
+                            <div class="sm:w-48">
+                                <ProviderFilter v-model="localSelectedProvider" :providers="availableProviders!" placeholder="All Providers" />
+                            </div>
                             <Button v-if="hasActiveBountyFilters" @click="clearBountyFilters" variant="button" size="default" class="rounded-xl">
                                 Clear Filters
                             </Button>
@@ -267,6 +297,9 @@ const hasActiveBountyFilters = computed(() => {
                             </Badge>
                             <Badge v-if="localSelectedLanguage" variant="custom" class="flex items-center gap-1">
                                 Language: {{ localSelectedLanguage }}
+                            </Badge>
+                            <Badge v-if="localSelectedProvider" variant="custom" class="flex items-center gap-1">
+                                Provider: {{ selectedProviderDisplay }}
                             </Badge>
                         </div>
                     </div>
@@ -288,9 +321,43 @@ const hasActiveBountyFilters = computed(() => {
                             >
                                 <CardHeader class="pb-3">
                                     <div class="flex items-start justify-between gap-2">
-                                        <h3 class="line-clamp-2 text-lg leading-tight font-semibold">
-                                            {{ bounty.title }}
-                                        </h3>
+                                        <div class="flex items-center gap-2 justify-center">
+                                            <h3 class="line-clamp-2 text-lg leading-tight font-semibold">
+                                                {{ bounty.title }}
+                                            </h3>
+
+                                            <svg
+                                                v-if="bounty.issue.provider === 'github'"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                viewBox="0 0 24 24"
+                                                class="h-4 w-4"
+                                                fill="currentColor"
+                                            >
+                                                <path
+                                                    d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
+                                                />
+                                            </svg>
+
+                                            <svg
+                                                v-else-if="bounty.issue.provider === 'gitlab'"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                viewBox="0 0 24 24"
+                                                class="h-4 w-4"
+                                                fill="currentColor"
+                                            >
+                                                <path d="M2.39 9.73L12 22l9.61-12.27a.7.7 0 0 0-.25-.97L19.07 7 16.7 1.27a.7.7 0 0 0-1.32 0L12 7.33 8.62 1.27a.7.7 0 0 0-1.32 0L4.93 7 2.64 8.76a.7.7 0 0 0-.25.97Z"/>
+                                            </svg>
+
+                                            <svg
+                                                v-else
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                viewBox="0 0 24 24"
+                                                class="h-4 w-4"
+                                                fill="currentColor"
+                                            >
+                                                <path d="M2.4 3A1.3 1.3 0 0 0 1.1 4.5l2.7 15.9c.1.5.6.9 1.2.9h13a1.3 1.3 0 0 0 1.2-1.1l2.7-15.7A1.3 1.3 0 0 0 20.7 3H2.4zm9.6 12.3H9.3l-.9-6.6h7.2l-.9 6.6h-2.7z"/>
+                                            </svg>
+                                        </div>
                                         <Badge
                                             :class="getStatusColor(bounty.status)"
                                             class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
