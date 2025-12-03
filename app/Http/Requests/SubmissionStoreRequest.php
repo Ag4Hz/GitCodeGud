@@ -87,7 +87,7 @@ class SubmissionStoreRequest extends FormRequest
         $provider = $this->provider();
 
         if ($provider === 'unknown') {
-            $validator->errors()->add('pr_url', 'Unsupported git provider');
+            $validator->errors()->add('pr_url', 'Unsupported git provider.');
             return;
         }
 
