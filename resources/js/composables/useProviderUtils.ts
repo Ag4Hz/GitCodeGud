@@ -80,18 +80,14 @@ export function useProviderUtils() {
     const extractProviderFromUrl = (url: string | undefined): string => {
         if (!url) return 'github';
 
-        try {
-            const urlObj = new URL(url);
-            const hostname = urlObj.hostname.toLowerCase();
+        const urlObj = new URL(url);
+        const hostname = urlObj.hostname.toLowerCase();
 
-            if (hostname.includes('github.com')) return 'github';
-            if (hostname.includes('gitlab.com')) return 'gitlab';
-            if (hostname.includes('bitbucket.org')) return 'bitbucket';
+        if (hostname.includes('github.com')) return 'github';
+        if (hostname.includes('gitlab.com')) return 'gitlab';
+        if (hostname.includes('bitbucket.org')) return 'bitbucket';
 
-            return 'github';
-        } catch {
-            return 'github';
-        }
+        return 'github';
     };
 
     return {
