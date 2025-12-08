@@ -6,7 +6,6 @@ use App\Models\Bounty;
 use App\Rules\PullRequestBelongsToRepository;
 use App\Rules\UniqueSubmissionForBounty;
 use App\Rules\ValidPullRequestUrl;
-use App\Services\GitHubApiService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 use App\Services\GitProviderFactory;
