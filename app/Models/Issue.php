@@ -32,4 +32,35 @@ class Issue extends Model
     {
         return $this->hasOne(Bounty::class);
     }
+
+    private static function normalizeProviderName(string $provider): string
+    {
+        return match (strtolower($provider)) {
+            'github' => 'GitHub',
+            'gitlab' => 'GitLab',
+            'bitbucket' => 'Bitbucket',
+            'gitea' => 'Gitea',
+            'sourcehut', 'srht' => 'SourceHut',
+            default => ucfirst($provider),
+        };
+    }
+
+
+    public static function getAvailableProviders(): array
+    {
+        return Issue::query()
+            ->selectRaw('provider, COUNT(*) as total')
+            ->whereNotNull('provider')
+            ->groupBy('provider')
+            ->orderBy('provider')
+            ->get()
+            ->map(fn ($row) => [
+                'name' => self::normalizeProviderName($row->provider),
+                'value' => $row->provider,
+                'count' => $row->total,
+            ])
+            ->toArray();
+    }
+
+
 }

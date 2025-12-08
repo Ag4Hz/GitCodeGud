@@ -16,6 +16,7 @@ export interface Bounty {
     languages?: string[];
     issue: {
         url: string;
+        provider: 'github' | 'gitlab' | 'bitbucket';
         repo: {
             url: string;
         };
@@ -30,3 +31,10 @@ export interface BountyPagination {
     current_page: number;
     last_page: number;
 }
+
+export interface ProviderOption {
+    name: string;
+    value: string;
+    count: number;
+}
+
