@@ -80,7 +80,7 @@ class SubmissionStoreRequest extends FormRequest
         $prUrl = $this->input('pr_url');
         $user = $this->user();
 
-        if (!$user || !$user->oauth_provider_token) {
+        if (!$user) {
             return;
         }
 
