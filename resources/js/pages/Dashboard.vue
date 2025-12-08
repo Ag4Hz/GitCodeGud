@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { contactLinks } from '@/composables/contactLinks';
-import { useProviderUtils } from '@/composables/ useProviderUtils';
+import { useProviderUtils } from '@/composables/useProviderUtils';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { AppPageProps, BreadcrumbItem } from '@/types';
 import { BountyStatus, ProviderOption, type Bounty, type BountyPagination } from '@/types/bounty';
