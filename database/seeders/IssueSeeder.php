@@ -21,9 +21,29 @@ class IssueSeeder extends Seeder
         }
 
         foreach ($repos as $repo) {
-            Issue::factory(rand(1, 3))->create([
-                'repo_id' => $repo->id
-            ]);
+            $issueCount = rand(1, 3);
+
+            for ($i = 0; $i < $issueCount; $i++) {
+                $random = rand(1, 3);
+                $provider = match($random) {
+                    1 => 'github',
+                    2 => 'gitlab',
+                    3 => 'bitbucket',
+                };
+
+                $issueNumber = rand(1, 999);
+                $url = match($provider) {
+                    'github' => "https://github.com/{$repo->git_id}/issues/{$issueNumber}",
+                    'gitlab' => "https://gitlab.com/{$repo->git_id}/-/issues/{$issueNumber}",
+                    'bitbucket' => "https://bitbucket.org/{$repo->git_id}/issues/{$issueNumber}",
+                };
+
+                Issue::factory()->create([
+                    'repo_id' => $repo->id,
+                    'provider' => $provider,
+                    'url' => $url,
+                ]);
+            }
         }
     }
 }

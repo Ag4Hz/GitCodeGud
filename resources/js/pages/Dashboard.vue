@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { contactLinks } from '@/composables/contactLinks';
+import { useProviderUtils } from '@/composables/useProviderUtils';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { AppPageProps, BreadcrumbItem } from '@/types';
 import { BountyStatus, ProviderOption, type Bounty, type BountyPagination } from '@/types/bounty';
@@ -158,6 +159,8 @@ const formatDate = (dateString: string) => {
     });
 };
 
+const { getProviderConfig, getProviderBorderColor } = useProviderUtils();
+
 const getStatusColor = (status: BountyStatus) => {
     switch (status) {
         case BountyStatus.OPEN:
@@ -217,14 +220,10 @@ const hasActiveBountyFilters = computed(() => {
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div>
-            <!-- User Search at the top -->
-
             <!-- Bounty Search and Grid Section -->
             <div class="mx-auto max-w-4xl space-y-6 px-4 sm:px-6 lg:px-8">
                 <!-- Top Section - Popular and Trending Bounties -->
                 <div class="mt-12 mb-12 w-full space-y-6">
-                    <!-- Header -->
-
                     <!-- Popular Bounties Section -->
                     <div
                         :class="[
@@ -316,21 +315,21 @@ const hasActiveBountyFilters = computed(() => {
                             <Card
                                 v-for="bounty in bounties.data"
                                 :key="bounty.id"
-                                class="order-white/10 min-h-[238px] min-w-0 cursor-pointer border border-l-4 border-l-green-800 bg-white/40 backdrop-blur-xl transition-all hover:-translate-y-1 hover:shadow-lg dark:bg-white/5"
+                                :class="[
+                                    'min-h-[238px] min-w-0 cursor-pointer transition-colors border border-l-4 bg-white/40 backdrop-blur-xl transition-all hover:-translate-y-1 hover:shadow-lg dark:bg-white/5',
+                                    getProviderBorderColor(bounty.issue.provider)
+                                ]"
                                 @click="navigateToBounty(bounty)"
                             >
                                 <CardHeader class="pb-3">
                                     <div class="flex items-start justify-between gap-2">
                                         <div class="flex items-center gap-2 justify-center">
-                                            <h3 class="line-clamp-2 text-lg leading-tight font-semibold">
-                                                {{ bounty.title }}
-                                            </h3>
-
                                             <svg
                                                 v-if="bounty.issue.provider === 'github'"
                                                 xmlns="http://www.w3.org/2000/svg"
                                                 viewBox="0 0 24 24"
-                                                class="h-4 w-4"
+                                                :class="getProviderConfig(bounty.issue?.provider).color"
+                                                class="h-6 w-6 flex-shrink-0"
                                                 fill="currentColor"
                                             >
                                                 <path
@@ -342,7 +341,8 @@ const hasActiveBountyFilters = computed(() => {
                                                 v-else-if="bounty.issue.provider === 'gitlab'"
                                                 xmlns="http://www.w3.org/2000/svg"
                                                 viewBox="0 0 24 24"
-                                                class="h-4 w-4"
+                                                :class="getProviderConfig(bounty.issue?.provider).color"
+                                                class="h-6 w-6 flex-shrink-0"
                                                 fill="currentColor"
                                             >
                                                 <path d="M2.39 9.73L12 22l9.61-12.27a.7.7 0 0 0-.25-.97L19.07 7 16.7 1.27a.7.7 0 0 0-1.32 0L12 7.33 8.62 1.27a.7.7 0 0 0-1.32 0L4.93 7 2.64 8.76a.7.7 0 0 0-.25.97Z"/>
@@ -352,18 +352,30 @@ const hasActiveBountyFilters = computed(() => {
                                                 v-else
                                                 xmlns="http://www.w3.org/2000/svg"
                                                 viewBox="0 0 24 24"
-                                                class="h-4 w-4"
+                                                :class="getProviderConfig(bounty.issue?.provider).color"
+                                                class="h-6 w-6 flex-shrink-0"
                                                 fill="currentColor"
                                             >
                                                 <path d="M2.4 3A1.3 1.3 0 0 0 1.1 4.5l2.7 15.9c.1.5.6.9 1.2.9h13a1.3 1.3 0 0 0 1.2-1.1l2.7-15.7A1.3 1.3 0 0 0 20.7 3H2.4zm9.6 12.3H9.3l-.9-6.6h7.2l-.9 6.6h-2.7z"/>
                                             </svg>
+                                            <h3 class="line-clamp-2 text-lg leading-tight font-semibold">
+                                                {{ bounty.title }}
+                                            </h3>
                                         </div>
-                                        <Badge
-                                            :class="getStatusColor(bounty.status)"
-                                            class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
-                                        >
-                                            {{ getStatusDisplayText(bounty.status) }}
-                                        </Badge>
+                                        <div class="flex items-center gap-2">
+                                            <Badge
+                                                :class="getProviderConfig(bounty.issue.provider).badgeColor"
+                                                class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
+                                            >
+                                                {{ getProviderConfig(bounty.issue.provider).name }}
+                                            </Badge>
+                                            <Badge
+                                                :class="getStatusColor(bounty.status)"
+                                                class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
+                                            >
+                                                {{ getStatusDisplayText(bounty.status) }}
+                                            </Badge>
+                                        </div>
                                     </div>
                                 </CardHeader>
                                 <CardContent class="flex flex-1 flex-col space-y-4">
