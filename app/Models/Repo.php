@@ -15,6 +15,7 @@ class Repo extends Model
 
     protected $fillable = [
         'user_id',
+        'name',
         'description',
         'url',
         'git_id',

@@ -2,27 +2,29 @@
 
 namespace App\Services;
 
-use App\Models\User;
+use App\Models\UserProvider;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 
 class GitLabApiService implements GitProviderInterface
 {
+    private UserProvider $provider;
     private const BASE_URL = 'https://gitlab.com/api/v4';
     private const USER_AGENT = 'GitCodeGud-App';
     private const GITLAB_REPO_PATTERN = '/^https?:\/\/gitlab\.com\/([^\/\s]+(?:\/[^\/\s]+)*)(?:\.git)?(?:\/.*)?$/i';
     private const GITLAB_ISSUE_PATTERN = '/^https:\/\/gitlab\.com\/([^\/]+(?:\/[^\/]+)*)\/-\/issues\/(\d+)(?:\/.*)?$/i';
     private const GITLAB_MR_PATTERN = '/^https:\/\/gitlab\.com\/([^\/]+(?:\/[^\/]+)*)\/-\/merge_requests\/(\d+)(?:\/.*)?$/i';
 
-    public function __construct(
-        private User $user
-    ) {}
+    public function __construct(UserProvider $provider)
+    {
+        $this->provider = $provider;
+    }
 
     private function createClient(): PendingRequest
     {
         return Http::withHeaders([
-            'Authorization' => 'Bearer ' . $this->user->oauth_provider_token,
+            'Authorization' => 'Bearer ' . $this->provider->token,
             'User-Agent' => self::USER_AGENT,
         ])->baseUrl(self::BASE_URL);
     }
@@ -89,7 +91,7 @@ class GitLabApiService implements GitProviderInterface
 
         if (preg_match(self::GITLAB_ISSUE_PATTERN, $url, $matches)) {
             $fullPath = trim($matches[1]);
-            $issueNumber = (int) $matches[2];
+            $issueNumber = (int)$matches[2];
 
             $parts = explode('/', $fullPath);
             $name = array_pop($parts);
@@ -113,7 +115,7 @@ class GitLabApiService implements GitProviderInterface
 
         if (preg_match(self::GITLAB_MR_PATTERN, $url, $matches)) {
             $fullPath = trim($matches[1]);
-            $mrNumber = (int) $matches[2];
+            $mrNumber = (int)$matches[2];
 
             $parts = explode('/', $fullPath);
             $name = array_pop($parts);
@@ -148,7 +150,7 @@ class GitLabApiService implements GitProviderInterface
 
     public function hasValidToken(): bool
     {
-        return !empty($this->user->oauth_provider_token);
+        return !empty($this->provider->token);
     }
 
     public function getUserRepositories(array $params = []): array
@@ -177,8 +179,25 @@ class GitLabApiService implements GitProviderInterface
         return $this->handleResponse($response, "Failed to fetch project: {$repoFullName}");
     }
 
+    public function canUserWriteToRepository(string $repoFullName): bool
+    {
+        try {
+            $repoData = $this->getRepository($repoFullName);
+            $accessLevel = $repoData['permissions']['project_access']['access_level']
+                ?? $repoData['permissions']['group_access']['access_level']
+                ?? 0;
+            return $accessLevel >= 30;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
     public function getRepositoryIssues(string $repoFullName, array $params = []): array
     {
+        if (isset($params['state']) && $params['state'] === 'open') {
+            $params['state'] = 'opened';
+        }
+
         $defaultParams = [
             'state' => 'opened',
             'per_page' => 50,

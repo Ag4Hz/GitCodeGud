@@ -9,6 +9,7 @@ use App\Rules\GitHubRepositoryUrl;
 use App\Rules\IssueBelongsToRepository;
 use App\Rules\UniqueIssueForBounty;
 use App\Services\GitHubApiService;
+use App\Services\GitRepoService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
@@ -21,16 +22,18 @@ class BountyStoreRequest extends FormRequest
         }
 
         $user = $this->user();
-        $githubApi = new GitHubApiService($user);
-        if (!$githubApi->hasValidToken()) {
-            return false;
-        }
+        $provider = $this->input('provider', 'github');
 
         if ($this->filled('repository_full_name')) {
             $repositoryFullName = $this->input('repository_full_name');
-            $repoUrl = 'https://github.com/' . $repositoryFullName;
 
-            return $user->can('createForRepository', [Bounty::class, $repoUrl]);
+            $repoUrl = match ($provider) {
+                'gitlab' => "https://gitlab.com/{$repositoryFullName}",
+                'bitbucket' => "https://bitbucket.org/{$repositoryFullName}",
+                default => "https://github.com/{$repositoryFullName}",
+            };
+
+            return $user->can('createForRepository', [Bounty::class, $repoUrl, $provider]);
         }
         return false;
     }
@@ -114,13 +117,18 @@ class BountyStoreRequest extends FormRequest
     {
         $repositoryFullName = $this->input('repository_full_name');
         $issueNumber = $this->input('issue_number');
+        $provider = $this->input('provider', 'github');
 
         if (!$repositoryFullName || !$issueNumber) {
             $validator->errors()->add('repository_full_name', 'Please select both a repository and an issue.');
             return;
         }
 
-        $issueUrl = "https://github.com/{$repositoryFullName}/issues/{$issueNumber}";
+        $issueUrl = match ($provider) {
+            'gitlab' => "https://gitlab.com/{$repositoryFullName}/-/issues/{$issueNumber}",
+            'bitbucket' => "https://bitbucket.org/{$repositoryFullName}/issues/{$issueNumber}",
+            default => "https://github.com/{$repositoryFullName}/issues/{$issueNumber}",
+        };
 
         $existingIssue = Issue::where('url', $issueUrl)->first();
         if ($existingIssue) {
@@ -136,17 +144,17 @@ class BountyStoreRequest extends FormRequest
         }
 
         $user = $this->user();
-        $githubApi = new GitHubApiService($user);
+        $repoService = new GitRepoService($user);
 
-        if (!$githubApi->hasValidToken()) {
-            $validator->errors()->add('repository_full_name', 'GitHub API access is required to validate issues.');
+        if (!$repoService->hasProvider($provider)) {
+            $validator->errors()->add('repository_full_name', ucfirst($provider) . ' API access is required to validate issues.');
             return;
         }
 
-        $isOpen = $githubApi->isIssueOpen($repositoryFullName, $issueNumber);
+        $isOpen = $repoService->isIssueOpen($provider, $repositoryFullName, (int)$issueNumber);
 
         if (!$isOpen) {
-            $validator->errors()->add('issue_number', 'Only open GitHub issues can be used for bounties.');
+            $validator->errors()->add('issue_number', 'Only open issues can be used for bounties.');
         }
     }
 
@@ -155,8 +163,25 @@ class BountyStoreRequest extends FormRequest
         $validated = $this->validated();
 
         if (isset($validated['repository_full_name']) && isset($validated['issue_number'])) {
-            $validated['repo_url'] = "https://github.com/{$validated['repository_full_name']}";
-            $validated['issue_url'] = "https://github.com/{$validated['repository_full_name']}/issues/{$validated['issue_number']}";
+            $provider = $this->input('provider', 'github');
+            $repoFullName = $validated['repository_full_name'];
+            $issueNumber = $validated['issue_number'];
+
+            switch ($provider) {
+                case 'gitlab':
+                    $validated['repo_url'] = "https://gitlab.com/{$repoFullName}";
+                    $validated['issue_url'] = "https://gitlab.com/{$repoFullName}/-/issues/{$issueNumber}";
+                    break;
+                case 'bitbucket':
+                    $validated['repo_url'] = "https://bitbucket.org/{$repoFullName}";
+                    $validated['issue_url'] = "https://bitbucket.org/{$repoFullName}/issues/{$issueNumber}";
+                    break;
+                case 'github':
+                default:
+                    $validated['repo_url'] = "https://github.com/{$repoFullName}";
+                    $validated['issue_url'] = "https://github.com/{$repoFullName}/issues/{$issueNumber}";
+                    break;
+            }
 
             unset($validated['repository_full_name'], $validated['issue_number']);
         }
