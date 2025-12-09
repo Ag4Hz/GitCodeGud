@@ -22,7 +22,9 @@ class BountyController extends Controller
 
     public function __construct(
         private BountySearchService $bountySearchService
-    ) {}
+    )
+    {
+    }
 
     public function index(Request $request)
     {
@@ -258,38 +260,52 @@ class BountyController extends Controller
         $page = $request->input('page', 1);
         $perPage = 10;
 
-        $repositories = [];
 
-        if ($user && $user->oauth_provider_token) {
-            $githubApi = new GitHubApiService($user);
-            $allRepositories = $githubApi->getUserRepositories([
-                'type' => 'owner',
-                'sort' => 'updated',
-                'per_page' => $perPage,
-                'page' => $page
-            ]);
+        $emptyResponse = [
+            'repositories' => [],
+            'query' => $query,
+            'total' => 0,
+            'page' => $page,
+            'hasMore' => false,
+        ];
 
-            if (!empty($query)) {
-                $allRepositories = array_filter($allRepositories, function($repo) use ($query) {
-                    return stripos($repo['name'], $query) !== false ||
-                        stripos($repo['full_name'], $query) !== false ||
-                        (isset($repo['description']) && stripos($repo['description'], $query) !== false);
-                });
-            }
-
-            $repositories = array_map(function($repo) {
-                return [
-                    'id' => $repo['id'],
-                    'name' => $repo['name'],
-                    'full_name' => $repo['full_name'],
-                    'description' => $repo['description'] ?? '',
-                    'url' => $repo['html_url'],
-                    'language' => $repo['language'] ?? 'Unknown',
-                    'updated_at' => $repo['updated_at'],
-                    'open_issues_count' => $repo['open_issues_count'] ?? 0,
-                ];
-            }, array_values($allRepositories));
+        if (!$user) {
+            return $emptyResponse;
         }
+
+        $githubApi = new GitHubApiService($user);
+        if (!$githubApi->hasValidToken()) {
+            return $emptyResponse;
+        }
+
+        $allRepositories = $githubApi->getUserRepositories([
+            'type' => 'owner',
+            'sort' => 'updated',
+            'per_page' => $perPage,
+            'page' => $page
+        ]);
+
+        if (!empty($query)) {
+            $allRepositories = array_filter($allRepositories, function ($repo) use ($query) {
+                return stripos($repo['name'], $query) !== false ||
+                    stripos($repo['full_name'], $query) !== false ||
+                    (isset($repo['description']) && stripos($repo['description'], $query) !== false);
+            });
+        }
+
+        $repositories = array_map(function ($repo) {
+            return [
+                'id' => $repo['id'],
+                'name' => $repo['name'],
+                'full_name' => $repo['full_name'],
+                'description' => $repo['description'] ?? '',
+                'url' => $repo['html_url'],
+                'language' => $repo['language'] ?? 'Unknown',
+                'updated_at' => $repo['updated_at'],
+                'open_issues_count' => $repo['open_issues_count'] ?? 0,
+            ];
+        }, array_values($allRepositories));
+
 
         return [
             'repositories' => $repositories,
@@ -307,49 +323,61 @@ class BountyController extends Controller
         $page = $request->input('issue_page', 1);
         $perPage = 10;
 
-        $issues = [];
+        $emptyResponse = [
+            'issues' => [],
+            'repository' => $repoFullName,
+            'total' => 0,
+            'page' => $page,
+            'hasMore' => false,
+        ];
 
-        if ($user && $user->oauth_provider_token) {
-            $githubApi = new GitHubApiService($user);
-
-            if (method_exists($githubApi, 'getRepositoryIssues')) {
-                $allIssues = $githubApi->getRepositoryIssues($repoFullName, [
-                    'state' => 'open',
-                    'per_page' => $perPage,
-                    'page' => $page,
-                    'sort' => 'updated',
-                    'direction' => 'desc'
-                ]);
-
-                $allIssues = array_filter($allIssues, function($issue) {
-                    return !isset($issue['pull_request']);
-                });
-
-                $issues = array_map(function($issue) {
-                    return [
-                        'id' => $issue['id'],
-                        'number' => $issue['number'],
-                        'title' => $issue['title'],
-                        'body' => $issue['body'] ?? '',
-                        'url' => $issue['html_url'],
-                        'state' => $issue['state'],
-                        'created_at' => $issue['created_at'],
-                        'updated_at' => $issue['updated_at'],
-                        'user' => [
-                            'login' => $issue['user']['login'],
-                            'avatar_url' => $issue['user']['avatar_url']
-                        ],
-                        'labels' => array_map(function($label) {
-                            return [
-                                'name' => $label['name'],
-                                'color' => $label['color']
-                            ];
-                        }, $issue['labels'] ?? []),
-                        'comments' => $issue['comments'] ?? 0,
-                    ];
-                }, array_values($allIssues));
-            }
+        if (!$user) {
+            return $emptyResponse;
         }
+
+        $githubApi = new GitHubApiService($user);
+        if (!$githubApi->hasValidToken()) {
+            return $emptyResponse;
+        }
+
+        if (method_exists($githubApi, 'getRepositoryIssues')) {
+            $allIssues = $githubApi->getRepositoryIssues($repoFullName, [
+                'state' => 'open',
+                'per_page' => $perPage,
+                'page' => $page,
+                'sort' => 'updated',
+                'direction' => 'desc'
+            ]);
+
+            $allIssues = array_filter($allIssues, function ($issue) {
+                return !isset($issue['pull_request']);
+            });
+
+            $issues = array_map(function ($issue) {
+                return [
+                    'id' => $issue['id'],
+                    'number' => $issue['number'],
+                    'title' => $issue['title'],
+                    'body' => $issue['body'] ?? '',
+                    'url' => $issue['html_url'],
+                    'state' => $issue['state'],
+                    'created_at' => $issue['created_at'],
+                    'updated_at' => $issue['updated_at'],
+                    'user' => [
+                        'login' => $issue['user']['login'],
+                        'avatar_url' => $issue['user']['avatar_url']
+                    ],
+                    'labels' => array_map(function ($label) {
+                        return [
+                            'name' => $label['name'],
+                            'color' => $label['color']
+                        ];
+                    }, $issue['labels'] ?? []),
+                    'comments' => $issue['comments'] ?? 0,
+                ];
+            }, array_values($allIssues));
+        }
+
 
         return [
             'issues' => $issues,

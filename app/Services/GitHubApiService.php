@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\User;
 use App\Models\UserProvider;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
@@ -9,7 +10,8 @@ use Illuminate\Support\Facades\Http;
 
 class GitHubApiService implements GitProviderInterface
 {
-    private UserProvider $provider;
+    private ?UserProvider $provider;
+    private ?string $token;
     private const BASE_URL = 'https://api.github.com';
     private const USER_AGENT = 'GitCodeGud-App';
     private const API_VERSION = 'application/vnd.github.v3+json';
@@ -17,16 +19,20 @@ class GitHubApiService implements GitProviderInterface
     private const GITHUB_ISSUE_PATTERN = '/^https:\/\/github\.com\/([^\/]+)\/([^\/]+)\/issues\/(\d+)(?:\/.*)?$/i';
     private const GITHUB_PR_PATTERN = '/^https:\/\/github\.com\/([^\/]+)\/([^\/]+)\/pull\/(\d+)(?:\/.*)?$/i';
 
-    public function __construct(UserProvider $provider)
+    public function __construct(User $user)
     {
-        $this->provider = $provider;
+        $this->provider = $user->providers()
+            ->where('provider', 'github')
+            ->first();
+
+        $this->token = $this->provider->token;
     }
 
 
     private function createClient(): PendingRequest
     {
         return Http::withHeaders([
-            'Authorization' => 'token ' . $this->provider->token,
+            'Authorization' => 'token ' . $this->token,
             'Accept' => self::API_VERSION,
             'User-Agent' => self::USER_AGENT,
         ])->baseUrl(self::BASE_URL);
@@ -132,7 +138,7 @@ class GitHubApiService implements GitProviderInterface
 
     public function hasValidToken(): bool
     {
-        return !empty($this->provider->token);
+        return !empty($this->token);
     }
 
     public function getUserRepositories(array $params = []): array
