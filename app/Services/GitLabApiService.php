@@ -179,8 +179,25 @@ class GitLabApiService implements GitProviderInterface
         return $this->handleResponse($response, "Failed to fetch project: {$repoFullName}");
     }
 
+    public function canUserWriteToRepository(string $repoFullName): bool
+    {
+        try {
+            $repoData = $this->getRepository($repoFullName);
+            $accessLevel = $repoData['permissions']['project_access']['access_level']
+                ?? $repoData['permissions']['group_access']['access_level']
+                ?? 0;
+            return $accessLevel >= 30;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
     public function getRepositoryIssues(string $repoFullName, array $params = []): array
     {
+        if (isset($params['state']) && $params['state'] === 'open') {
+            $params['state'] = 'opened';
+        }
+
         $defaultParams = [
             'state' => 'opened',
             'per_page' => 50,

@@ -20,6 +20,7 @@ class Issue extends Model
         'description',
         'name',
         'provider',
+        'git_id',
     ];
 
 

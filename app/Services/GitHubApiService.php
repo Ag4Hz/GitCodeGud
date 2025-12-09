@@ -164,6 +164,17 @@ class GitHubApiService implements GitProviderInterface
         return $this->handleResponse($response, "Failed to fetch repository: {$repoFullName}");
     }
 
+    public function canUserWriteToRepository(string $repoFullName): bool
+    {
+        try {
+            $repoData = $this->getRepository($repoFullName);
+            return isset($repoData['permissions']) &&
+                ($repoData['permissions']['admin'] || $repoData['permissions']['push']);
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
     public function isIssueOpen(string $repoFullName, int $issueNumber): bool
     {
         $response = $this->createClient()->get("/repos/{$repoFullName}/issues/{$issueNumber}");

@@ -20,6 +20,7 @@ interface GitProviderInterface
     public function getRepositoryLanguages(string $repoFullName): array;
     public function getRepository(string $repoFullName): array;
     public function getRepositoryIssues(string $repoFullName, array $params = []): array;
+    public function canUserWriteToRepository(string $repoFullName): bool;
 
     // Issue endpoints
     public function isIssueOpen(string $repoFullName, int $issueNumber): bool;

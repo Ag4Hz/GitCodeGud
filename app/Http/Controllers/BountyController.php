@@ -9,6 +9,7 @@ use App\Models\Issue;
 use App\Models\Repo;
 use App\Services\BountySearchService;
 use App\Services\GitHubApiService;
+use App\Services\GitRepoService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
@@ -50,9 +51,15 @@ class BountyController extends Controller
 
         $issues = [];
         $selectedRepo = $request->input('selected_repository', '');
+        $selectedProvider = $request->input('selected_provider', 'github');
         if ($selectedRepo) {
-            [$owner, $repo] = explode('/', $selectedRepo);
-            $issues = $this->getIssueData($request, $owner, $repo)['issues'];
+            $issues = $this->getIssueData($request, $selectedRepo, $selectedProvider)['issues'];
+        }
+
+        $connectedProviders = [];
+        if ($request->user()) {
+            $repoService = new GitRepoService($request->user());
+            $connectedProviders = $repoService->getConnectedProviders();
         }
 
         return Inertia::render('bounties/CreateBounty', [
@@ -61,6 +68,8 @@ class BountyController extends Controller
             'repositoryQuery' => $repositoryQuery,
             'issues' => $issues,
             'selectedRepository' => $selectedRepo,
+            'selectedProvider' => $selectedProvider,
+            'connectedProviders' => $connectedProviders,
         ]);
     }
 
@@ -68,29 +77,40 @@ class BountyController extends Controller
     {
         $validated = $request->getValidatedDataForStore();
 
-        $repoInfo = GitHubApiService::parseGitUrl($validated['repo_url']);
+        $repoInfo = GitRepoService::parseGitUrl($validated['repo_url']);
+        $provider = $repoInfo['provider'] ?? 'github';
 
-        $repo = Repo::where('git_id', $repoInfo['full_name'])->first();
+        $repo = Repo::where('git_id', $repoInfo['full_name'])
+            ->where('provider', $provider)
+            ->first();
 
         if (!$repo) {
             $repo = Repo::create([
                 'git_id' => $repoInfo['full_name'],
-                'name' => $repoInfo['name'],
                 'url' => $validated['repo_url'],
                 'user_id' => $request->user()->id,
+                'provider' => $provider,
             ]);
         }
 
+        preg_match('/\/-\/issues\/(\d+)|\/issues\/(\d+)/', $validated['issue_url'], $matches);
+        $issueNumber = $matches[1] ?: ($matches[2] ?? null);
+
         $issue = Issue::firstOrCreate(
-            ['url' => $validated['issue_url'], 'repo_id' => $repo->id],
-            ['description' => $validated['description'] ?? '']
+            [
+                'url' => $validated['issue_url'],
+                'repo_id' => $repo->id,
+                'git_id' => $issueNumber,
+                'provider' => $provider,
+            ],
+            [
+                'description' => $validated['description'] ?? '',
+            ]
         );
 
         $user = $request->user();
-        $githubApi = new GitHubApiService($user);
-        $repoLanguages = $githubApi->hasValidToken()
-            ? $githubApi->getRepositoryLanguages($repoInfo['full_name'])
-            : [];
+        $repoService = new GitRepoService($user);
+        $repoLanguages = $repoService->getRepositoryLanguages($provider, $repoInfo['full_name']);
 
         $bounty = Bounty::create([
             'issue_id' => $issue->id,
@@ -249,6 +269,7 @@ class BountyController extends Controller
     {
         return redirect()->route('bounties.create', [
             'selected_repository' => $owner . '/' . $repo,
+            'selected_provider' => $request->input('provider', 'github'),
             'issue_page' => $request->input('page', 1)
         ]);
     }
@@ -259,7 +280,6 @@ class BountyController extends Controller
         $query = $request->input('repository_search', '');
         $page = $request->input('page', 1);
         $perPage = 10;
-
 
         $emptyResponse = [
             'repositories' => [],
@@ -273,15 +293,15 @@ class BountyController extends Controller
             return $emptyResponse;
         }
 
-        $githubApi = new GitHubApiService($user);
-        if (!$githubApi->hasValidToken()) {
+        $repoService = new GitRepoService($user);
+        $connectedProviders = $repoService->getConnectedProviders();
+
+        if (empty($connectedProviders)) {
             return $emptyResponse;
         }
 
-        $allRepositories = $githubApi->getUserRepositories([
-            'type' => 'owner',
-            'sort' => 'updated',
-            'per_page' => $perPage,
+        $allRepositories = $repoService->getAllUserRepositories([
+            'per_page' => $perPage * 3,
             'page' => $page
         ]);
 
@@ -293,39 +313,28 @@ class BountyController extends Controller
             });
         }
 
-        $repositories = array_map(function ($repo) {
-            return [
-                'id' => $repo['id'],
-                'name' => $repo['name'],
-                'full_name' => $repo['full_name'],
-                'description' => $repo['description'] ?? '',
-                'url' => $repo['html_url'],
-                'language' => $repo['language'] ?? 'Unknown',
-                'updated_at' => $repo['updated_at'],
-                'open_issues_count' => $repo['open_issues_count'] ?? 0,
-            ];
-        }, array_values($allRepositories));
-
+        $offset = ($page - 1) * $perPage;
+        $repositories = array_slice(array_values($allRepositories), $offset, $perPage);
 
         return [
             'repositories' => $repositories,
             'query' => $query,
-            'total' => count($repositories),
+            'total' => count($allRepositories),
             'page' => $page,
-            'hasMore' => count($repositories) >= $perPage,
+            'hasMore' => count($allRepositories) > ($offset + $perPage),
         ];
     }
 
-    private function getIssueData(Request $request, string $owner, string $repo): array
+    private function getIssueData(Request $request, string $repoFullName, string $provider = 'github'): array
     {
         $user = $request->user();
-        $repoFullName = $owner . '/' . $repo;
         $page = $request->input('issue_page', 1);
         $perPage = 10;
 
         $emptyResponse = [
             'issues' => [],
             'repository' => $repoFullName,
+            'provider' => $provider,
             'total' => 0,
             'page' => $page,
             'hasMore' => false,
@@ -335,53 +344,29 @@ class BountyController extends Controller
             return $emptyResponse;
         }
 
-        $githubApi = new GitHubApiService($user);
-        if (!$githubApi->hasValidToken()) {
+        $repoService = new GitRepoService($user);
+        if (!$repoService->hasProvider($provider)) {
             return $emptyResponse;
         }
 
-        if (method_exists($githubApi, 'getRepositoryIssues')) {
-            $allIssues = $githubApi->getRepositoryIssues($repoFullName, [
-                'state' => 'open',
-                'per_page' => $perPage,
-                'page' => $page,
-                'sort' => 'updated',
-                'direction' => 'desc'
-            ]);
+        $allIssues = $repoService->getRepositoryIssues($provider, $repoFullName, [
+            'state' => 'open',
+            'per_page' => $perPage,
+            'page' => $page,
+        ]);
 
+        if ($provider === 'github') {
             $allIssues = array_filter($allIssues, function ($issue) {
                 return !isset($issue['pull_request']);
             });
-
-            $issues = array_map(function ($issue) {
-                return [
-                    'id' => $issue['id'],
-                    'number' => $issue['number'],
-                    'title' => $issue['title'],
-                    'body' => $issue['body'] ?? '',
-                    'url' => $issue['html_url'],
-                    'state' => $issue['state'],
-                    'created_at' => $issue['created_at'],
-                    'updated_at' => $issue['updated_at'],
-                    'user' => [
-                        'login' => $issue['user']['login'],
-                        'avatar_url' => $issue['user']['avatar_url']
-                    ],
-                    'labels' => array_map(function ($label) {
-                        return [
-                            'name' => $label['name'],
-                            'color' => $label['color']
-                        ];
-                    }, $issue['labels'] ?? []),
-                    'comments' => $issue['comments'] ?? 0,
-                ];
-            }, array_values($allIssues));
         }
 
+        $issues = array_values($allIssues);
 
         return [
             'issues' => $issues,
             'repository' => $repoFullName,
+            'provider' => $provider,
             'total' => count($issues),
             'page' => $page,
             'hasMore' => count($issues) >= $perPage,

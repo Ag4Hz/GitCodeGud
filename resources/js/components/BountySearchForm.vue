@@ -7,6 +7,13 @@ import { Label } from '@/components/ui/label';
 import { router } from '@inertiajs/vue3';
 import { AlertCircle, Info, Loader2, MessageCircle, Search, X } from 'lucide-vue-next';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+
+// Provider icon component helper
+const providerIcons = {
+    github: 'M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z',
+    gitlab: 'M23.955 13.587l-1.342-4.135-2.664-8.189c-.135-.423-.73-.423-.867 0l-2.664 8.189H7.581L4.917 1.263c-.136-.423-.73-.423-.867 0L1.386 9.452.044 13.587c-.094.291.01.613.256.794l11.7 8.5 11.7-8.5c.246-.181.35-.503.255-.794z',
+    bitbucket: 'M.778 1.213c-.424-.023-.781.321-.744.745l3.189 19.528c.081.498.514.868 1.019.868h15.474c.379 0 .707-.274.764-.648l3.189-19.748c.037-.424-.32-.768-.744-.745H.778zm14.049 13.319H9.178l-1.108-5.817h7.863l-1.106 5.817z',
+};
 interface Repository {
     id: number;
     name: string;
@@ -16,6 +23,7 @@ interface Repository {
     language: string;
     updated_at: string;
     open_issues_count: number;
+    provider: 'github' | 'gitlab' | 'bitbucket';
 }
 
 interface Issue {
@@ -36,6 +44,7 @@ interface Issue {
         color: string;
     }>;
     comments: number;
+    provider: 'github' | 'gitlab' | 'bitbucket';
 }
 
 interface Props {
@@ -44,6 +53,7 @@ interface Props {
     issues?: Issue[];
     repositoryQuery?: string;
     selectedRepository?: string;
+    selectedProvider?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -51,6 +61,7 @@ const props = withDefaults(defineProps<Props>(), {
     issues: () => [],
     repositoryQuery: '',
     selectedRepository: '',
+    selectedProvider: 'github',
 });
 
 const emit = defineEmits<{
@@ -149,10 +160,15 @@ const searchIssues = () => {
     if (!selectedRepo.value) return;
 
     issueLoading.value = true;
-    const [owner, repo] = selectedRepo.value.full_name.split('/');
+    const [owner, ...repoParts] = selectedRepo.value.full_name.split('/');
+    const repo = repoParts.join('/');
+    const provider = selectedRepo.value.provider || 'github';
 
     router.visit(route('bounty.repository-issues', { owner, repo }), {
         method: 'get',
+        data: {
+            provider: provider,
+        },
         preserveState: true,
         preserveScroll: true,
         replace: true,
@@ -170,6 +186,7 @@ const selectRepository = (repository: Repository) => {
 
     clearIssue();
     updateFormField('repository_full_name', repository.full_name);
+    updateFormField('provider', repository.provider || 'github');
     searchIssues();
 };
 
@@ -306,7 +323,7 @@ watch(
                     <div v-else class="max-h-60 overflow-y-auto">
                         <button
                             v-for="repo in props.repositories"
-                            :key="repo.id"
+                            :key="`${repo.provider}-${repo.id}`"
                             type="button"
                             class="flex w-full items-start gap-3 text-left"
                             @click="selectRepository(repo)"
@@ -314,7 +331,12 @@ watch(
                             <div
                                 class="px-items-start flex min-h-[80px] w-full gap-3 rounded-2xl p-2 text-gray-900 hover:bg-white/90 dark:text-gray-100 dark:hover:bg-white/10"
                             >
-                                <div class="mt-1 ml-3 h-2 w-2 rounded-full bg-green-500" :title="repo.language"></div>
+                                <!-- Provider Icon -->
+                                <div class="mt-1 ml-3 flex-shrink-0">
+                                    <svg class="h-4 w-4" :class="repo.provider === 'github' ? 'text-gray-900 dark:text-gray-100' : repo.provider === 'gitlab' ? 'text-orange-500' : 'text-blue-500'" viewBox="0 0 24 24" fill="currentColor">
+                                        <path :d="providerIcons[repo.provider || 'github']" />
+                                    </svg>
+                                </div>
 
                                 <div class="min-w-0 flex-1">
                                     <div class="flex items-center gap-2">
@@ -346,12 +368,18 @@ watch(
             <div v-if="selectedRepo" class="rounded-2xl border border-gray-300 p-3">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
-                        <div class="h-2 w-2 rounded-full bg-green-500" :title="selectedRepo.language"></div>
+                        <!-- Provider Icon -->
+                        <svg class="h-5 w-5 flex-shrink-0" :class="selectedRepo.provider === 'github' ? 'text-gray-900 dark:text-gray-100' : selectedRepo.provider === 'gitlab' ? 'text-orange-500' : 'text-blue-500'" viewBox="0 0 24 24" fill="currentColor">
+                            <path :d="providerIcons[selectedRepo.provider || 'github']" />
+                        </svg>
                         <div>
                             <div class="flex items-center gap-2">
                                 <span class="font-medium">{{ selectedRepo.name }}</span>
                                 <Badge v-if="selectedRepo.language" variant="secondary" class="text-xs">
                                     {{ selectedRepo.language }}
+                                </Badge>
+                                <Badge variant="outline" class="text-xs capitalize">
+                                    {{ selectedRepo.provider || 'github' }}
                                 </Badge>
                             </div>
                             <p v-if="selectedRepo.description" class="text-sm text-muted-foreground">

@@ -22,6 +22,7 @@ interface Repository {
     language: string;
     updated_at: string;
     open_issues_count: number;
+    provider: 'github' | 'gitlab' | 'bitbucket';
 }
 
 interface Issue {
@@ -42,6 +43,7 @@ interface Issue {
         color: string;
     }>;
     comments: number;
+    provider: 'github' | 'gitlab' | 'bitbucket';
 }
 
 interface Props {
@@ -50,6 +52,8 @@ interface Props {
     issues?: Issue[];
     repositoryQuery?: string;
     selectedRepository?: string;
+    selectedProvider?: string;
+    connectedProviders?: string[];
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -58,6 +62,8 @@ const props = withDefaults(defineProps<Props>(), {
     issues: () => [],
     repositoryQuery: '',
     selectedRepository: '',
+    selectedProvider: 'github',
+    connectedProviders: () => [],
 });
 
 const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
@@ -75,6 +81,7 @@ const bountyForm = useForm({
     reward_xp: 50,
     repository_full_name: '',
     issue_number: '',
+    provider: 'github',
 });
 
 const showDuplicateBountyWarning = computed(() => {
@@ -143,6 +150,8 @@ const updateBountyForm = (field: string, value: any) => {
         bountyForm.title = value;
     } else if (field === 'description') {
         bountyForm.description = value;
+    } else if (field === 'provider') {
+        bountyForm.provider = value;
     }
 };
 
@@ -241,6 +250,7 @@ watch(flashSuccess, (newValue) => {
                             :issues="props.issues"
                             :repository-query="props.repositoryQuery"
                             :selected-repository="props.selectedRepository"
+                            :selected-provider="props.selectedProvider"
                             @updateForm="updateBountyForm"
                         />
 

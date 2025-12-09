@@ -53,6 +53,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('bounty.search-repositories');
 
     Route::get('/bounty/repositories/{owner}/{repo}/issues', [BountyController::class, 'getRepositoryIssues'])
+        ->where('repo', '.*')
         ->name('bounty.repository-issues');
 });
 
