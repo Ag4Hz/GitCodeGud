@@ -38,19 +38,19 @@ return [
     'github' => [
         'client_id' => env('GITHUB_CLIENT_ID'),
         'client_secret' => env('GITHUB_CLIENT_SECRET'),
-        'redirect' => 'http://localhost:8000/auth/github/callback',
+        'redirect' => env('GITHUB_REDIRECT_URI', 'http://localhost:8000/auth/github/callback'),
     ],
     'gitlab' => [
         'client_id' => env('GITLAB_CLIENT_ID'),
         'client_secret' => env('GITLAB_CLIENT_SECRET'),
-        'redirect' => 'http://localhost:8000/auth/gitlab/callback',
+        'redirect' => env('GITLAB_REDIRECT_URI', 'http://localhost:8000/auth/gitlab/callback'),
+        'instance_uri' => env('GITLAB_INSTANCE_URI', 'https://gitlab.com'),
     ],
 
     'bitbucket' => [
         'client_id' => env('BITBUCKET_CLIENT_ID'),
         'client_secret' => env('BITBUCKET_CLIENT_SECRET'),
-        'redirect' => 'http://localhost:8000/auth/bitbucket/callback',
-        'host' => env('GITLAB_HOST', 'https://bitbucket.com'),
+        'redirect' => env('BITBUCKET_REDIRECT_URI', 'http://localhost:8000/auth/bitbucket/callback'),
     ],
 
 ];

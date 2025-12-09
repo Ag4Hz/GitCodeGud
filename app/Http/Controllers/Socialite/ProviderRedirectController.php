@@ -20,8 +20,8 @@ class ProviderRedirectController extends Controller
         }
 
         $scopes = match($provider) {
-            'github' => ['read:repo', 'read:issue'],
-            'gitlab' => ['read_user', 'api'],
+            'github' => ['read:user', 'user:email'],
+            'gitlab' => ['read_user', 'read_api'],
             'bitbucket' => ['account', 'repository'],
         };
 

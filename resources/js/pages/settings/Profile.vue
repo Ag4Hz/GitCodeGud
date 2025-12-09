@@ -10,6 +10,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
 import { type BreadcrumbItem, type User } from '@/types';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import { GitBranch } from 'lucide-vue-next';
 import { computed } from 'vue';
 
 interface Props {
@@ -72,6 +73,22 @@ const cancel = () => {
                     <div class="flex-1">
                         <h3 class="text-lg font-semibold">{{ user.name }}</h3>
                         <p class="text-sm text-muted-foreground">{{ user.email }}</p>
+                    </div>
+                </div>
+
+                <!-- Connected Accounts Link -->
+                <div class="rounded-lg border-gray-200 bg-white/40 p-6 dark:border-white/10 dark:bg-white/5">
+                    <div class="flex items-center justify-between gap-6">
+                        <div>
+                            <h3 class="text-lg font-semibold">Connected Git Accounts</h3>
+                            <p class="text-sm text-muted-foreground">Manage your GitHub, GitLab, and Bitbucket connections</p>
+                        </div>
+                        <Button variant="outline" as-child class="shrink-0">
+                            <Link :href="route('accounts.edit')" class="inline-flex items-center gap-2">
+                                <GitBranch class="h-4 w-4" />
+                                Manage Accounts
+                            </Link>
+                        </Button>
                     </div>
                 </div>
 
