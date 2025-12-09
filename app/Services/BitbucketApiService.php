@@ -2,27 +2,29 @@
 
 namespace App\Services;
 
-use App\Models\User;
+use App\Models\UserProvider;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 
 class BitbucketApiService implements GitProviderInterface
 {
+    private UserProvider $provider;
+
     private const BASE_URL = 'https://api.bitbucket.org/2.0';
     private const USER_AGENT = 'GitCodeGud-App';
     private const BITBUCKET_REPO_PATTERN = '/^https?:\/\/bitbucket\.org\/([^\/\s]+)\/([^\/\s]+)(?:\.git)?(?:\/.*)?$/i';
     private const BITBUCKET_ISSUE_PATTERN = '/^https:\/\/bitbucket\.org\/([^\/]+)\/([^\/]+)\/issues\/(\d+)(?:\/.*)?$/i';
     private const BITBUCKET_PR_PATTERN = '/^https:\/\/bitbucket\.org\/([^\/]+)\/([^\/]+)\/pull-requests\/(\d+)(?:\/.*)?$/i';
 
-    public function __construct(
-        private User $user
-    ) {}
+    public function __construct(UserProvider $provider) {
+        $this->provider = $provider;
+    }
 
     private function createClient(): PendingRequest
     {
         return Http::withHeaders([
-            'Authorization' => 'Bearer ' . $this->user->oauth_provider_token,
+            'Authorization' => 'Bearer ' . $this->provider->token,
             'Accept' => 'application/json',
             'User-Agent' => self::USER_AGENT,
         ])->baseUrl(self::BASE_URL);
@@ -120,7 +122,7 @@ class BitbucketApiService implements GitProviderInterface
 
     public function hasValidToken(): bool
     {
-        return !empty($this->user->oauth_provider_token);
+        return !empty($this->provider->token);
     }
 
     public function getUserRepositories(array $params = []): array
@@ -130,7 +132,7 @@ class BitbucketApiService implements GitProviderInterface
             'sort' => '-updated_on',
             'pagelen' => 100
         ];
-        $response = $this->createClient()->get('/repositories/' . $this->user->oauth_provider_id, array_merge($defaultParams, $params));
+        $response = $this->createClient()->get('/repositories/' . $this->provider->provider_id, array_merge($defaultParams, $params));
         $data = $this->handleResponse($response, 'Failed to fetch Bitbucket repositories');
 
         return $data['values'] ?? [];
