@@ -25,7 +25,7 @@ class GitHubApiService implements GitProviderInterface
             ->where('provider', 'github')
             ->first();
 
-        $this->token = $this->provider->token;
+        $this->token = $this->provider?->token;
     }
 
 
