@@ -212,7 +212,6 @@ const navigateToBountyPage = (page: number) => {
 const hasActiveBountyFilters = computed(() => {
     return localSearchQuery.value.trim() !== '' || localSelectedLanguage.value !== '' || localSelectedProvider.value != '';
 });
-
 </script>
 
 <template>
@@ -316,14 +315,14 @@ const hasActiveBountyFilters = computed(() => {
                                 v-for="bounty in bounties.data"
                                 :key="bounty.id"
                                 :class="[
-                                    'min-h-[238px] min-w-0 cursor-pointer transition-colors border border-l-4 bg-white/40 backdrop-blur-xl transition-all hover:-translate-y-1 hover:shadow-lg dark:bg-white/5',
-                                    getProviderBorderColor(bounty.issue.provider)
+                                    'min-h-[238px] min-w-0 cursor-pointer border border-l-4 bg-white/40 backdrop-blur-xl transition-all transition-colors hover:-translate-y-1 hover:shadow-lg dark:bg-white/5',
+                                    getProviderBorderColor(bounty.issue.provider),
                                 ]"
                                 @click="navigateToBounty(bounty)"
                             >
                                 <CardHeader class="pb-3">
                                     <div class="flex items-start justify-between gap-2">
-                                        <div class="flex items-center gap-2 justify-center">
+                                        <div class="flex items-center justify-center gap-2">
                                             <svg
                                                 v-if="bounty.issue.provider === 'github'"
                                                 xmlns="http://www.w3.org/2000/svg"
@@ -345,7 +344,9 @@ const hasActiveBountyFilters = computed(() => {
                                                 class="h-6 w-6 flex-shrink-0"
                                                 fill="currentColor"
                                             >
-                                                <path d="M2.39 9.73L12 22l9.61-12.27a.7.7 0 0 0-.25-.97L19.07 7 16.7 1.27a.7.7 0 0 0-1.32 0L12 7.33 8.62 1.27a.7.7 0 0 0-1.32 0L4.93 7 2.64 8.76a.7.7 0 0 0-.25.97Z"/>
+                                                <path
+                                                    d="M2.39 9.73L12 22l9.61-12.27a.7.7 0 0 0-.25-.97L19.07 7 16.7 1.27a.7.7 0 0 0-1.32 0L12 7.33 8.62 1.27a.7.7 0 0 0-1.32 0L4.93 7 2.64 8.76a.7.7 0 0 0-.25.97Z"
+                                                />
                                             </svg>
 
                                             <svg
@@ -356,7 +357,9 @@ const hasActiveBountyFilters = computed(() => {
                                                 class="h-6 w-6 flex-shrink-0"
                                                 fill="currentColor"
                                             >
-                                                <path d="M2.4 3A1.3 1.3 0 0 0 1.1 4.5l2.7 15.9c.1.5.6.9 1.2.9h13a1.3 1.3 0 0 0 1.2-1.1l2.7-15.7A1.3 1.3 0 0 0 20.7 3H2.4zm9.6 12.3H9.3l-.9-6.6h7.2l-.9 6.6h-2.7z"/>
+                                                <path
+                                                    d="M2.4 3A1.3 1.3 0 0 0 1.1 4.5l2.7 15.9c.1.5.6.9 1.2.9h13a1.3 1.3 0 0 0 1.2-1.1l2.7-15.7A1.3 1.3 0 0 0 20.7 3H2.4zm9.6 12.3H9.3l-.9-6.6h7.2l-.9 6.6h-2.7z"
+                                                />
                                             </svg>
                                             <h3 class="line-clamp-2 text-lg leading-tight font-semibold">
                                                 {{ bounty.title }}

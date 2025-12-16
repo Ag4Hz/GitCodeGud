@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button/index.js';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu/index.js';
+import { ProviderOption } from '@/types/bounty';
 import { ChevronDown } from 'lucide-vue-next';
 import { computed } from 'vue';
-import { ProviderOption } from '@/types/bounty';
-
-
 
 interface Props {
     modelValue: string;
@@ -27,7 +25,7 @@ const emit = defineEmits<{
 const selectedProvider = computed(() => props.modelValue);
 
 const selectedProviderName = computed(() => {
-    const provider = props.providers.find(p => p.value === props.modelValue);
+    const provider = props.providers.find((p) => p.value === props.modelValue);
     return provider ? provider.name : '';
 });
 

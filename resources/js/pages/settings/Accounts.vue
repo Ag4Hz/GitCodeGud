@@ -1,11 +1,18 @@
 <script setup lang="ts">
-
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useToast } from '@/composables/useToast';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { getAccountMessage } from '@/utils/toastMessages';
+import { router, usePage } from '@inertiajs/vue3';
+import { ref, watch } from 'vue';
+
+const { success: showSuccess, error: showError } = useToast();
+
+const openDialog = ref(false);
+const providerToDisconnect = ref<{ id: string; name: string } | null>(null);
 
 defineOptions({
     layout: AppLayout,
@@ -54,25 +61,54 @@ const isConnected = (providerId: string) => {
 
 const handleDisconnect = (providerId: string) => {
     if (!props.canDisconnect) {
-        alert('Cannot disconnect your last provider');
+        showError(getAccountMessage('error', 'last_provider', 'en'));
         return;
     }
 
-    if (confirm(`Are you sure you want to disconnect your ${providerId} account?`)) {
-        disconnecting.value = providerId;
-        router.delete(route('accounts.disconnect', providerId), {
-            preserveScroll: true,
-            onFinish: () => {
-                disconnecting.value = null;
-            },
-        });
+    const provider = providers.find((p) => p.id === providerId);
+    if (provider) {
+        providerToDisconnect.value = { id: providerId, name: provider.name };
+        openDialog.value = true;
     }
+};
+
+const confirmDisconnect = () => {
+    if (!providerToDisconnect.value) return;
+
+    disconnecting.value = providerToDisconnect.value.id;
+    router.delete(route('accounts.disconnect', providerToDisconnect.value.id), {
+        preserveScroll: true,
+        onSuccess: () => {
+            showSuccess(getAccountMessage('success', 'disconnect', 'en'));
+        },
+        onError: () => {
+            showError(getAccountMessage('error', 'disconnect', 'en'));
+        },
+        onFinish: () => {
+            disconnecting.value = null;
+            openDialog.value = false;
+            providerToDisconnect.value = null;
+        },
+    });
 };
 
 const handleConnect = (connectUrl: string) => {
     window.location.href = connectUrl;
 };
 
+const page = usePage();
+watch(
+    () => page.props,
+    (props: any) => {
+        if (props.flash?.success) {
+            showSuccess(props.flash.success);
+        }
+        if (props.flash?.error) {
+            showError(props.flash.error);
+        }
+    },
+    { deep: true },
+);
 </script>
 
 <template>
@@ -86,9 +122,7 @@ const handleConnect = (connectUrl: string) => {
                         </div>
                         <div>
                             <CardTitle>{{ provider.name }}</CardTitle>
-                            <CardDescription v-if="!isConnected(provider.id)">
-                                Connect your {{ provider.name }} account
-                            </CardDescription>
+                            <CardDescription v-if="!isConnected(provider.id)"> Connect your {{ provider.name }} account </CardDescription>
                         </div>
                     </div>
                 </div>
@@ -104,20 +138,34 @@ const handleConnect = (connectUrl: string) => {
                         <span class="font-medium">{{ isConnected(provider.id)!.nickname || 'Unknown' }}</span>
                     </div>
 
-                    <Button
-                        variant="destructive"
-                        :disabled="!canDisconnect || disconnecting === provider.id"
-                        @click="handleDisconnect(provider.id)"
-                    >
+                    <Button variant="destructive" :disabled="!canDisconnect || disconnecting === provider.id" @click="handleDisconnect(provider.id)">
                         {{ disconnecting === provider.id ? 'Disconnecting...' : 'Disconnect' }}
                     </Button>
                 </div>
 
-                <Button v-else variant="default" @click="handleConnect(provider.connectUrl)">
-                    Connect {{ provider.name }}
-                </Button>
+                <Button v-else variant="default" @click="handleConnect(provider.connectUrl)"> Connect {{ provider.name }} </Button>
             </CardContent>
         </Card>
+
+        <!-- Confirmation Dialog -->
+        <Dialog v-model:open="openDialog">
+            <DialogContent class="fixed top-36 left-1/2 max-w-md -translate-x-1/2 rounded-xl bg-red-400/40 p-2 backdrop-blur dark:bg-red-900/40">
+                <DialogHeader>
+                    <DialogTitle class="text-black dark:text-white">Disconnect {{ providerToDisconnect?.name }} Account?</DialogTitle>
+                </DialogHeader>
+                <DialogDescription>
+                    <p class="text-sm text-muted-foreground">
+                        Are you sure you want to disconnect your {{ providerToDisconnect?.name }} account? You can reconnect it anytime.
+                    </p>
+                </DialogDescription>
+                <DialogFooter class="flex justify-end gap-2">
+                    <Button variant="secondary" @click="openDialog = false"> Cancel </Button>
+                    <Button variant="destructive" @click="confirmDisconnect" :disabled="disconnecting !== null">
+                        {{ disconnecting ? 'Disconnecting...' : 'Disconnect' }}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     </div>
 </template>
 

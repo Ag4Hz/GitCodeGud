@@ -69,6 +69,31 @@ const xpSyncMessages: XPSyncMessage = {
     },
 };
 
+type AccountMessage = {
+    [key in Locale]: {
+        success: { [action: string]: string };
+        error: { [action: string]: string };
+    };
+};
+
+const accountMessages: AccountMessage = {
+    en: {
+        success: {
+            connect: 'Account connected successfully!',
+            disconnect: 'Account disconnected successfully.',
+            github: 'GitHub account connected successfully!',
+            gitlab: 'GitLab account connected successfully!',
+            bitbucket: 'Bitbucket account connected successfully!',
+        },
+        error: {
+            connect: 'Failed to connect account.',
+            disconnect: 'Failed to disconnect account.',
+            last_provider: 'Cannot disconnect your last provider.',
+            already_linked: 'This account is already linked to another user.',
+        },
+    },
+};
+
 export function getAdminMessage(type: 'success' | 'error', action: string, locale: Locale = 'en'): string {
     return adminMessages[locale]?.[type]?.[action] || 'Operation completed.';
 }
@@ -79,4 +104,8 @@ export function getBountyMessage(type: 'success' | 'error', action: string, loca
 
 export function getXPSyncMessage(type: 'success' | 'error', action: string, locale: Locale = 'en'): string {
     return xpSyncMessages[locale]?.[type]?.[action] || 'Operation completed.';
+}
+
+export function getAccountMessage(type: 'success' | 'error', action: string, locale: Locale = 'en'): string {
+    return accountMessages[locale]?.[type]?.[action] || 'Operation completed.';
 }

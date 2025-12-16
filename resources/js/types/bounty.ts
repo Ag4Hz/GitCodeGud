@@ -37,4 +37,3 @@ export interface ProviderOption {
     value: string;
     count: number;
 }
-
