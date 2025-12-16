@@ -15,7 +15,13 @@ import { BountyStatus, ProviderOption, type Bounty, type BountyPagination } from
 import { Head, router } from '@inertiajs/vue3';
 import { Calendar, DollarSign, Eye, Loader2, Search, Target } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
-type User = { id: number; nickname: string; avatar: string; name: string };
+
+type Provider = {
+    provider: string;
+    provider_username: string;
+};
+
+type User = { id: number; nickname: string; avatar: string; name: string; providers?: Provider[] };
 
 type PageProps = AppPageProps<{
     bounties?: BountyPagination;

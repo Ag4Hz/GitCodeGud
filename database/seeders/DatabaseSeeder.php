@@ -13,17 +13,12 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             SkillSeeder::class,
             BadgeSeeder::class,
-        ]);
-
-        $this->call([
             SkillUserSeeder::class,
             BadgeUserSeeder::class,
-        ]);
-
-        $this->call([
             SubmissionSeeder::class,
             ReviewSeeder::class,
             FollowerSeeder::class,
+            UserProviderSeeder::class,
         ]);
     }
 }
