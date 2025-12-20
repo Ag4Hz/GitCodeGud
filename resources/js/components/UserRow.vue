@@ -1,13 +1,22 @@
 <script setup lang="ts">
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { useInitials } from '@/composables/useInitials';
+import { useProviderUtils } from '@/composables/useProviderUtils';
 import { Crown } from 'lucide-vue-next';
 import { computed } from 'vue';
+
+type Provider = {
+    provider: string;
+    provider_username: string;
+};
+
 type User = {
     id: number;
     nickname?: string | null;
     avatar?: string | null;
     name?: string | null;
+    providers?: Provider[];
 };
 
 const { user, active, rank, orderDirection, total } = defineProps<{
@@ -25,8 +34,20 @@ const showCrown = computed(() => {
 });
 
 const { getInitials } = useInitials();
+const { getProviderConfig } = useProviderUtils();
 
 const initials = computed(() => getInitials(user.name || user.nickname || ''));
+
+const providers = computed(() => {
+    if (!user.providers || user.providers.length === 0) return [];
+
+    return user.providers.map((p) => ({
+        provider: p.provider,
+        username: p.provider_username,
+        config: getProviderConfig(p.provider),
+    }));
+});
+
 </script>
 
 <template>
@@ -64,6 +85,18 @@ const initials = computed(() => getInitials(user.name || user.nickname || ''));
             <p class="truncate text-xs text-gray-700 dark:text-muted-foreground">
                 {{ user.name }}
             </p>
+            <div v-if="providers.length > 0" class="mt-1 flex flex-wrap gap-1">
+                <Badge
+                    v-for="provider in providers"
+                    :key="provider.provider"
+                    variant="secondary"
+                    class="h-5 gap-1 px-1.5 text-[10px] font-medium"
+                    :class="provider.config.badgeColor"
+                >
+                    <component :is="provider.config.icon" class="h-3 w-3" />
+                    <span>{{ provider.config.name }}</span>
+                </Badge>
+            </div>
         </div>
     </li>
 </template>

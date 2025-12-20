@@ -6,7 +6,12 @@ import { router } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import { PerfectScrollbar } from 'vue3-perfect-scrollbar';
 
-type User = { id: number; nickname: string; avatar: string; name: string };
+type Provider = {
+    provider: string;
+    provider_username: string;
+};
+
+type User = { id: number; nickname: string; avatar: string; name: string; providers?: Provider[] };
 
 const props = withDefaults(
     defineProps<{

@@ -80,7 +80,8 @@ class LeaderboardService
 
     private function buildLeaderboardQuery(?int $skillId, ?string $direction, ?string $language)
     {
-        $query = User::query()->select('users.*');
+        $query = User::query()->select('users.*')->with('providers');
+
         if ($skillId) {
             $query
                 ->join('user_skills', 'user_skills.user_id', '=', 'users.id')
@@ -109,7 +110,20 @@ class LeaderboardService
                 $user->setAttribute('skill_xp', 0);
             }
 
-            return $user;
+            return [
+                'id' => $user->id,
+                'nickname' => $user->nickname,
+                'avatar' => $user->avatar,
+                'name' => $user->name,
+                'xp' => $user->xp,
+                'skill_xp' => $user->getAttribute('skill_xp') ?? 0,
+                'level' => $user->level ?? 1,
+                'rank' => $user->getAttribute('rank'),
+                'providers' => $user->providers->map(fn($p) => [
+                    'provider' => $p->provider,
+                    'provider_username' => $p->provider_username,
+                ])->toArray(),
+            ];
         });
     }
 

@@ -10,7 +10,23 @@ import { computed, ref, watch } from 'vue';
 
 type Dir = 'asc' | 'desc';
 
-type User = { id: number; nickname: string; avatar: string; name: string; xp: number; skill_xp: number; level: number; rank: number };
+type Provider = {
+    provider: string;
+    provider_username: string;
+};
+
+type User = {
+    id: number;
+    nickname: string;
+    avatar: string;
+    name: string;
+    xp: number;
+    skill_xp: number;
+    level: number;
+    rank: number;
+    providers?: Provider[];
+};
+
 type LeaderboardUsers = { data: User[]; links: any[]; total: number };
 type UsersSearchPayload = { data?: User[] };
 
