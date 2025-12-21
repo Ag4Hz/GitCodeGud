@@ -68,6 +68,24 @@ const formatDate = (dateString: string) => {
     });
 };
 
+const getProviderName = (provider: string): string => {
+    const names: Record<string, string> = {
+        github: 'GitHub',
+        gitlab: 'GitLab',
+        bitbucket: 'Bitbucket',
+    };
+    return names[provider] || provider;
+};
+
+const getProviderBadgeColor = (provider: string): string => {
+    const colors: Record<string, string> = {
+        github: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100',
+        gitlab: 'bg-orange-100 text-orange-800 dark:bg-orange-900/60 dark:text-orange-200',
+        bitbucket: 'bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-200',
+    };
+    return colors[provider] || colors.github;
+};
+
 const totalRewardXP = computed(() => {
     return activeBounties.value.reduce((sum, bounty) => sum + bounty.reward_xp, 0);
 });
@@ -382,6 +400,15 @@ const restoreBounty = (bounty: Bounty) => {
                                     <h3 class="text-lg font-medium" :class="{ 'text-gray-500': bounty.deleted_at }">
                                         {{ bounty.title }}
                                     </h3>
+
+                                    <!-- Provider Badge -->
+                                    <Badge
+                                        :class="getProviderBadgeColor(bounty.issue?.provider || 'github')"
+                                        class="text-xs"
+                                    >
+                                        {{ getProviderName(bounty.issue?.provider || 'github') }}
+                                    </Badge>
+
                                     <Badge v-if="bounty.deleted_at" variant="secondary" class="text-xs"> Archived </Badge>
                                     <Badge
                                         v-else

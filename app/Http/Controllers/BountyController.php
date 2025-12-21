@@ -13,6 +13,7 @@ use App\Services\GitRepoService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -45,6 +46,7 @@ class BountyController extends Controller
 
         $repositories = [];
         $repositoryQuery = $request->input('repository_search', '');
+        $providerFilter = $request->input('provider_filter', '');
         if ($repositoryQuery) {
             $repositories = $this->getRepositoryData($request)['repositories'];
         }
@@ -66,6 +68,7 @@ class BountyController extends Controller
             'bounties' => $userBounties,
             'repositories' => $repositories,
             'repositoryQuery' => $repositoryQuery,
+            'providerFilter' => $providerFilter,
             'issues' => $issues,
             'selectedRepository' => $selectedRepo,
             'selectedProvider' => $selectedProvider,
@@ -261,6 +264,7 @@ class BountyController extends Controller
     {
         return redirect()->route('bounties.create', [
             'repository_search' => $request->input('query', ''),
+            'provider_filter' => $request->input('provider_filter', ''),
             'page' => $request->input('page', 1)
         ]);
     }
@@ -278,12 +282,14 @@ class BountyController extends Controller
     {
         $user = $request->user();
         $query = $request->input('repository_search', '');
+        $providerFilter = $request->input('provider_filter', '');
         $page = $request->input('page', 1);
-        $perPage = 10;
+        $perPage = 30;
 
         $emptyResponse = [
             'repositories' => [],
             'query' => $query,
+            'providerFilter' => $providerFilter,
             'total' => 0,
             'page' => $page,
             'hasMore' => false,
@@ -300,10 +306,19 @@ class BountyController extends Controller
             return $emptyResponse;
         }
 
-        $allRepositories = $repoService->getAllUserRepositories([
-            'per_page' => $perPage * 3,
-            'page' => $page
-        ]);
+        $cacheKey = "user_repos_{$user->id}_" . md5(implode('_', $connectedProviders));
+
+        $allRepositories = Cache::remember($cacheKey, 3600, function () use ($repoService) {
+            return $repoService->getAllUserRepositories([
+                'per_page' => 100,
+            ]);
+        });
+
+        if (!empty($providerFilter) && $providerFilter !== 'all') {
+            $allRepositories = array_filter($allRepositories, fn($repo) =>
+                ($repo['provider'] ?? 'github') === $providerFilter
+            );
+        }
 
         if (!empty($query)) {
             $allRepositories = array_filter($allRepositories, function ($repo) use ($query) {
@@ -313,15 +328,13 @@ class BountyController extends Controller
             });
         }
 
-        $offset = ($page - 1) * $perPage;
-        $repositories = array_slice(array_values($allRepositories), $offset, $perPage);
-
         return [
-            'repositories' => $repositories,
+            'repositories' => array_values($allRepositories),
             'query' => $query,
+            'providerFilter' => $providerFilter,
             'total' => count($allRepositories),
-            'page' => $page,
-            'hasMore' => count($allRepositories) > ($offset + $perPage),
+            'page' => 1,
+            'hasMore' => false,
         ];
     }
 
