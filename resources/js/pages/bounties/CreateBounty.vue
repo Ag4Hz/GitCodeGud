@@ -54,6 +54,7 @@ interface Props {
     selectedRepository?: string;
     selectedProvider?: string;
     connectedProviders?: string[];
+    providerFilter?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -64,6 +65,7 @@ const props = withDefaults(defineProps<Props>(), {
     selectedRepository: '',
     selectedProvider: 'github',
     connectedProviders: () => [],
+    providerFilter: '',
 });
 
 const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
@@ -251,6 +253,8 @@ watch(flashSuccess, (newValue) => {
                             :repository-query="props.repositoryQuery"
                             :selected-repository="props.selectedRepository"
                             :selected-provider="props.selectedProvider"
+                            :connected-providers="props.connectedProviders"
+                            :provider-filter="props.providerFilter"
                             @updateForm="updateBountyForm"
                         />
 
