@@ -144,13 +144,12 @@ const providerIcons = {
 const providerDisplay = computed(() => {
     if (!props.connectedProviders?.length) return null;
 
-    return props.connectedProviders.map(provider => ({
+    return props.connectedProviders.map((provider) => ({
         name: providerIcons[provider as keyof typeof providerIcons]?.name || provider,
         icon: providerIcons[provider as keyof typeof providerIcons]?.svg || '',
         count: props.repoCountsByProvider[provider] || 0,
     }));
 });
-
 
 const syncGitHubSkills = () => {
     syncing.value = true;
@@ -289,10 +288,7 @@ function unfollow() {
                 </Card>
 
                 <!-- Connected Providers -->
-                <Card
-                    v-if="providerDisplay && providerDisplay.length > 0"
-                    class="border-gray-200 bg-white/40 dark:border-white/10 dark:bg-white/5"
-                >
+                <Card v-if="providerDisplay && providerDisplay.length > 0" class="border-gray-200 bg-white/40 dark:border-white/10 dark:bg-white/5">
                     <CardHeader>
                         <CardTitle class="flex items-center gap-2">
                             <Code class="h-5 w-5" />
@@ -365,8 +361,8 @@ function unfollow() {
                                         Skills & Experience
                                     </CardTitle>
                                     <CardDescription>{{
-                                            isOwner ? 'Sync your skills from GitHub repositories!' : `${user.name} hasn't earned any skills yet.`
-                                        }}</CardDescription>
+                                        isOwner ? 'Sync your skills from GitHub repositories!' : `${user.name} hasn't earned any skills yet.`
+                                    }}</CardDescription>
                                 </div>
                                 <Button
                                     v-if="isOwner"

@@ -13,6 +13,8 @@ class UserProvider extends Model
         'provider_id',
         'provider_username',
         'provider_email',
+        'nickname',
+        'avatar',
         'token',
         'refresh_token',
     ];
