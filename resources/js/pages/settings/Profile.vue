@@ -64,7 +64,7 @@ const cancel = () => {
                 <div class="flex items-center gap-6 rounded-lg border-gray-200 bg-white/40 p-6 dark:border-white/10 dark:bg-white/5">
                     <div class="relative">
                         <Avatar class="h-20 w-20 overflow-hidden rounded-lg">
-                            <AvatarImage v-if="user.avatar" :src="user.avatar" :alt="user.name" />
+                            <AvatarImage v-if="user.avatar" :src="user.avatar.url" :alt="user.name" />
                             <AvatarFallback class="rounded-lg bg-neutral-200 text-2xl font-semibold text-black dark:bg-neutral-700 dark:text-white">
                                 {{ getInitials(user.name) }}
                             </AvatarFallback>
@@ -73,6 +73,10 @@ const cancel = () => {
                     <div class="flex-1">
                         <h3 class="text-lg font-semibold">{{ user.name }}</h3>
                         <p class="text-sm text-muted-foreground">{{ user.email }}</p>
+
+                        <div v-if="user.avatar" class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                            {{ user.avatar.label }}
+                        </div>
                     </div>
                 </div>
 

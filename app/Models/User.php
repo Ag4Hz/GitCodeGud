@@ -58,11 +58,40 @@ class User extends Authenticatable
     {
         return Attribute::make(
             get: function () {
-                if ($this->oauth_provider !== 'github' || !$this->oauth_provider_id) {
-                    return null;
+                $connectedProviders = $this->providers->keyBy('provider');
+
+                if ($connectedProviders->has('github')) {
+                    $p = $connectedProviders->get('github');
+                    return [
+                        'url' => "https://avatars.githubusercontent.com/u/{$p->provider_id}?v=4",
+                        'provider' => 'GitHub',
+                        'label' => 'Using GitHub avatar'
+                    ];
                 }
 
-                return "https://avatars.githubusercontent.com/u/{$this->oauth_provider_id}?v=4";
+                if ($connectedProviders->has('gitlab')) {
+                    $p = $connectedProviders->get('gitlab');
+                    return [
+                        'url' => "https://gitlab.com/uploads/-/system/user/avatar/{$p->provider_id}/avatar.png",
+                        'provider' => 'GitLab',
+                        'label' => 'Using GitLab avatar'
+                    ];
+                }
+
+                if ($connectedProviders->has('bitbucket')) {
+                    $p = $connectedProviders->get('bitbucket');
+                    return [
+                        'url' => "https://bitbucket.org/account/{$p->provider_username}/avatar/64/",
+                        'provider' => 'Bitbucket',
+                        'label' => 'Using Bitbucket avatar'
+                    ];
+                }
+
+                return [
+                    'url' => "https://ui-avatars.com/api/?name=" . urlencode($this->name),
+                    'provider' => 'system',
+                    'label' => 'No provider connected'
+                ];
             },
         );
     }

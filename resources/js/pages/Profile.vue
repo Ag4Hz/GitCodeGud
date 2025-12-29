@@ -212,7 +212,7 @@ function unfollow() {
                         <div class="flex items-center gap-6">
                             <div class="relative">
                                 <Avatar class="overflow-hidden rounded-full sm:h-15 sm:w-15 md:h-18 md:w-18 lg:h-22 lg:w-22">
-                                    <AvatarImage v-if="user.avatar" :src="user.avatar" :alt="user.name" />
+                                    <AvatarImage v-if="user.avatar" :src="user.avatar.url" :alt="user.name" />
                                     <AvatarFallback class="rounded-lg bg-neutral-200 font-semibold text-black dark:bg-neutral-700 dark:text-white">
                                         {{ getInitials(user.name) }}
                                     </AvatarFallback>
