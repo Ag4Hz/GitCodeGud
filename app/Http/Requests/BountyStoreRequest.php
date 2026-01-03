@@ -94,7 +94,13 @@ class BountyStoreRequest extends FormRequest
             return;
         }
 
-        $githubApi = new GitHubApiService($user);
+        $githubProvider = $user->providers()->where('provider', 'github')->first();
+        if (!$githubProvider) {
+            $validator->errors()->add('issue_url', 'GitHub API access is required to validate issues.');
+            return;
+        }
+
+        $githubApi = new GitHubApiService($githubProvider);
 
         if (!$githubApi->hasValidToken()) {
             $validator->errors()->add('issue_url', 'GitHub API access is required to validate issues.');

@@ -18,13 +18,10 @@ class GitHubApiService implements GitProviderInterface
     private const GITHUB_ISSUE_PATTERN = '/^https:\/\/github\.com\/([^\/]+)\/([^\/]+)\/issues\/(\d+)(?:\/.*)?$/i';
     private const GITHUB_PR_PATTERN = '/^https:\/\/github\.com\/([^\/]+)\/([^\/]+)\/pull\/(\d+)(?:\/.*)?$/i';
 
-    public function __construct(User $user)
+    public function __construct(UserProvider $provider)
     {
-        $this->provider = $user->providers()
-            ->where('provider', 'github')
-            ->first();
-
-        $this->token = $this->provider?->token;
+        $this->provider = $provider;
+        $this->token = $provider->token;
     }
 
 

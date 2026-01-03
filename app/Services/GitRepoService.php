@@ -36,7 +36,7 @@ class GitRepoService
     private function createServiceForProvider(UserProvider $userProvider): ?GitProviderInterface
     {
         return match ($userProvider->provider) {
-            'github' => new GitHubApiService($this->user),
+            'github' => new GitHubApiService($userProvider),
             'gitlab' => new GitLabApiService($userProvider),
             default => null,
         };
@@ -256,4 +256,3 @@ class GitRepoService
         }, $issues);
     }
 }
-

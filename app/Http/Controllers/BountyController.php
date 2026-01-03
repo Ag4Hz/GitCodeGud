@@ -184,7 +184,12 @@ class BountyController extends Controller
         $user = $request->user();
         if (!$user) return [];
 
-        $githubApi = new GitHubApiService($user);
+        $githubProvider = $user->providers()->where('provider', 'github')->first();
+        if (!$githubProvider) {
+            return [];
+        }
+
+        $githubApi = new GitHubApiService($githubProvider);
         if (!$githubApi->hasValidToken() || !$bounty->issue?->url) {
             return [];
         }
