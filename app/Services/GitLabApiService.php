@@ -21,6 +21,11 @@ class GitLabApiService implements GitProviderInterface
         $this->provider = $provider;
     }
 
+    public function getProviderKey(): string
+    {
+        return 'gitlab';
+    }
+
     private function createClient(): PendingRequest
     {
         return Http::withHeaders([

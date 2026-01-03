@@ -214,4 +214,19 @@ class BitbucketApiService implements GitProviderInterface
 
         return $data['values'] ?? [];
     }
+
+    public function canUserWriteToRepository(string $repoFullName): bool
+    {
+        // Bitbucket permissions are more complex; keep this conservative.
+        // If we can fetch the repo and it isn't read-only, treat as writable.
+        try {
+            $repo = $this->getRepository($repoFullName);
+
+            // Common fields: "is_private", "scm", etc. No reliable write flag in this minimal integration.
+            // Return true if repo exists and token is present.
+            return $this->hasValidToken() && !empty($repo);
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
 }

@@ -28,7 +28,8 @@ class User extends Authenticatable
         'oauth_provider_id',
         'oauth_provider',
         'oauth_provider_token',
-        'oauth_provider_refresh_token'
+        'oauth_provider_refresh_token',
+        'xp',
     ];
 
     protected $hidden = [

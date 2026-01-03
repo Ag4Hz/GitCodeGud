@@ -24,6 +24,10 @@ class GitHubApiService implements GitProviderInterface
         $this->token = $provider->token;
     }
 
+    public function getProviderKey(): string
+    {
+        return 'github';
+    }
 
     private function createClient(): PendingRequest
     {

@@ -3,6 +3,8 @@ namespace App\Services;
 
 interface GitProviderInterface
 {
+    public function getProviderKey(): string;
+
     // Static URL parsing / validation helpers
     public static function parseGitUrl(string $url): ?array;
     public static function parseGitIssueUrl(string $url): ?array;

@@ -2,10 +2,12 @@
 
 namespace App\Services;
 
+use App\Helpers\XPHelper;
 use App\Models\User;
 use App\Models\Skill;
 use App\Models\SkillUser;
 use App\Models\UserProvider;
+use App\Models\UserProviderSkill;
 use Illuminate\Support\Facades\DB;
 
 class SkillSyncService
@@ -27,7 +29,7 @@ class SkillSyncService
             return false;
         }
 
-        $this->updateUserSkills($user, $languageStats);
+        $this->updateUserSkills($user, $languageStats, $api->getProviderKey());
         return true;
     }
 
@@ -60,9 +62,16 @@ class SkillSyncService
             ->toArray();
     }
 
-
-    private function updateUserSkills(User $user, array $languageStats): void
+    private function updateUserSkills(User $user, array $languageStats, string $providerKey): void
     {
+
+        $userProvider = $user->providers()->where('provider', $providerKey)->first();
+
+        if (!$userProvider) {
+
+            return;
+        }
+
         // Get XP settings once per sync
         $baseXp = (int) DB::table('general_settings')->where('key', 'base_xp')->value('value') ?? 100;
         $bonusMultiplier = (float) DB::table('general_settings')->where('key', 'bonus_multiplier')->value('value') ?? 1.5;
@@ -71,26 +80,55 @@ class SkillSyncService
             $baseXp = 100;
         }
 
-        collect($languageStats)->each(function ($bytes, $language) use ($user, $baseXp, $bonusMultiplier) {
-            $skillType = $this->getSkillType($language);
+        DB::transaction(function () use ($user, $userProvider, $languageStats, $baseXp, $bonusMultiplier) {
+            collect($languageStats)->each(function ($bytes, $language) use ($userProvider, $baseXp, $bonusMultiplier) {
+                $skillType = $this->getSkillType($language);
 
-            $skill = Skill::firstOrCreate(
-                ['skill_name' => $language],
-                ['type' => $skillType, 'multiplier' => 1]
-            );
+                $skill = Skill::firstOrCreate(
+                    ['skill_name' => $language],
+                    ['type' => $skillType, 'multiplier' => 1]
+                );
 
-            $initialXp = (int) round($baseXp * $bonusMultiplier * $skill->multiplier);
+                $initialXp = (int) round($baseXp * $bonusMultiplier * $skill->multiplier);
 
-            SkillUser::firstOrCreate(
-                [
-                    'user_id' => $user->id,
-                    'skill_id' => $skill->id,
-                ],
-                [
-                    'xp' => $initialXp,
-                    'level' => (int) floor($initialXp / 1000),
-                ]
-            );
+                UserProviderSkill::updateOrCreate(
+                    [
+                        'user_provider_id' => $userProvider->id,
+                        'skill_id' => $skill->id,
+                    ],
+                    [
+                        'xp' => $initialXp,
+                    ]
+                );
+            });
+
+            $aggregated = DB::table('user_provider_skills as ups')
+                ->join('user_providers as up', 'up.id', '=', 'ups.user_provider_id')
+                ->where('up.user_id', $user->id)
+                ->select('ups.skill_id', DB::raw('SUM(ups.xp) as total_xp'))
+                ->groupBy('ups.skill_id')
+                ->get();
+
+            foreach ($aggregated as $row) {
+                $totalXp = (int) $row->total_xp;
+
+                SkillUser::updateOrCreate(
+                    [
+                        'user_id' => $user->id,
+                        'skill_id' => (int) $row->skill_id,
+                    ],
+                    [
+                        'xp' => $totalXp,
+                        'level' => XPHelper::calculateLevel($totalXp),
+                    ]
+                );
+            }
+
+            $user->load('skills');
+            $userWithXP = XPHelper::getUserWithXP($user);
+            $user->update(['xp' => $userWithXP['total_xp']]);
+
+            XPHelper::clearCaches();
         });
     }
 
