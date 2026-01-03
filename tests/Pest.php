@@ -65,3 +65,5 @@ function something()
 */
 
 uses(RefreshDatabase::class)->in('Feature');
+
+uses(Tests\TestCase::class, RefreshDatabase::class)->in('Feature', 'Unit');
