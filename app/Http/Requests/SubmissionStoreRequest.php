@@ -67,7 +67,12 @@ class SubmissionStoreRequest extends FormRequest
             return;
         }
 
-        $githubApi = new GitHubApiService($user);
+        $githubProvider = $user->providers()->where('provider', 'github')->first();
+        if (!$githubProvider || !$githubProvider->token) {
+            return;
+        }
+
+        $githubApi = new GitHubApiService($githubProvider);
         $prData = $githubApi->getPullRequest($prInfo['repo_full_name'], $prInfo['pr_number']);
         if (empty($prData)) {
             $validator->errors()->add('pr_url', 'Could not access the Pull Request. Please ensure it exists and you have access to it.');

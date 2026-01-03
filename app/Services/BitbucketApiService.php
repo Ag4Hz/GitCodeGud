@@ -21,6 +21,11 @@ class BitbucketApiService implements GitProviderInterface
         $this->provider = $provider;
     }
 
+    public function getProviderKey(): string
+    {
+        return 'bitbucket';
+    }
+
     private function createClient(): PendingRequest
     {
         return Http::withHeaders([
@@ -214,4 +219,19 @@ class BitbucketApiService implements GitProviderInterface
 
         return $data['values'] ?? [];
     }
+
+    public function canUserWriteToRepository(string $repoFullName): bool
+    {
+        try {
+            if (!$this->hasValidToken()) {
+                return false;
+            }
+
+            $repo = $this->getRepository($repoFullName);
+            return !empty($repo);
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
 }
