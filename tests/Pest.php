@@ -1,12 +1,14 @@
 <?php
 
-pest()->extend(Tests\DuskTestCase::class)
-//  ->use(Illuminate\Foundation\Testing\DatabaseMigrations::class)
-    ->in('Browser');
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
-pest()->extend(Tests\DuskTestCase::class)
-//  ->use(Illuminate\Foundation\Testing\DatabaseMigrations::class)
-    ->in('Browser');
+/*
+|--------------------------------------------------------------------------
+| Dusk Tests
+|--------------------------------------------------------------------------
+*/
+
+pest()->extend(Tests\DuskTestCase::class)->in('Browser');
 
 /*
 |--------------------------------------------------------------------------
@@ -19,9 +21,7 @@ pest()->extend(Tests\DuskTestCase::class)
 |
 */
 
-pest()->extend(Tests\TestCase::class)
- // ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
-    ->in('Feature');
+pest()->extend(Tests\TestCase::class)->in('Feature');
 
 /*
 |--------------------------------------------------------------------------
@@ -53,3 +53,15 @@ function something()
 {
     // ..
 }
+
+/*
+|--------------------------------------------------------------------------
+| CRITICAL: Enable RefreshDatabase for ALL Feature tests
+|--------------------------------------------------------------------------
+|
+| This automatically runs migrations before each test
+| Works with SQLite in-memory from phpunit.xml
+|
+*/
+
+uses(RefreshDatabase::class)->in('Feature');
