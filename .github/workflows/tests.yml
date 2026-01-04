@@ -50,4 +50,4 @@ jobs:
         run: npm run build
 
       - name: Run Pest Tests
-        run: ./vendor/bin/pest
+        run: php artisan test
