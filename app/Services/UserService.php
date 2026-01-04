@@ -3,19 +3,22 @@ namespace App\Services;
 
 use App\Models\User;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 
 class UserService
 {
     public static function listUser(string $term = '', ?int $page = 1, ?int $perPage = 30): LengthAwarePaginator
     {
+        $likeOperator = DB::connection()->getDriverName() === 'pgsql' ? 'ILIKE' : 'LIKE';
+
         return User::query()
-            ->when($term, function ($query) use ($term) {
-                $query->where(function ($q) use ($term) {
+            ->when($term, function ($query) use ($term, $likeOperator) {
+                $query->where(function ($q) use ($term, $likeOperator) {
                     // Search by nickname
-                    $q->where('nickname', 'ILIKE', "%{$term}%")
+                    $q->where('nickname', $likeOperator, "%{$term}%")
                         // OR search by any provider username (GitHub, GitLab, Bitbucket)
-                        ->orWhereHas('providers', function ($q) use ($term) {
-                            $q->where('provider_username', 'ILIKE', "%{$term}%");
+                        ->orWhereHas('providers', function ($q) use ($term, $likeOperator) {
+                            $q->where('provider_username', $likeOperator, "%{$term}%");
                         });
                 });
             })

@@ -19,12 +19,18 @@
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.16",
         "fakerphp/faker": "^1.23",
+        "laravel/dusk": "^8.3",
         "laravel/pail": "^1.2.2",
         "laravel/pint": "^1.18",
         "laravel/sail": "^1.41",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.6",
-        "phpunit/phpunit": "^11.5.3"
+        "pestphp/pest": "^3.8",
+        "phpunit/phpunit": "11.5.15",
+        "symfony/console": "7.4",
+        "symfony/finder": "7.4",
+        "symfony/process": "7.4",
+        "symfony/string": "7.4"
     },
     "autoload": {
         "psr-4": {
@@ -39,10 +45,6 @@
         }
     },
     "scripts": {
-        "post-autoload-dump": [
-            "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
-            "@php artisan package:discover --ansi"
-        ],
         "post-update-cmd": [
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
         ],
@@ -66,7 +68,8 @@
         "test": [
             "@php artisan config:clear --ansi",
             "@php artisan test"
-        ]
+        ],
+        "post-autoload-dump": "Illuminate\\\\Foundation\\\\ComposerScripts::postAutoloadDump"
     },
     "extra": {
         "laravel": {
