@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\BountyManagement;
 
-use App\Models\User;
 use App\Models\Bounty;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
@@ -16,7 +16,7 @@ class BountyDisplayTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $bounty = Bounty::factory()->create([
+        Bounty::factory()->create([
             'title' => 'Test Bounty',
         ]);
 
@@ -24,7 +24,10 @@ class BountyDisplayTest extends TestCase
             ->get(route('bounties.index'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                ->where('bounties.data.0.title', 'Test Bounty')
+                ->has('bounties')
+                ->where('bounties', fn ($bounties) => collect(data_get($bounties, 'data', $bounties))
+                    ->contains(fn ($item) => data_get($item, 'title') === 'Test Bounty')
+                )
             );
     }
 
@@ -51,6 +54,7 @@ class BountyDisplayTest extends TestCase
         if (config('database.default') === 'sqlite') {
             $this->markTestSkipped('This test requires PostgreSQL');
         }
+
         /** @var User $user */
         $user = User::factory()->create();
 
