@@ -3,10 +3,10 @@
 namespace App\Http\Requests;
 
 use App\Models\Bounty;
-use App\Rules\GitHubPullRequestUrl;
+use App\Rules\GitPullRequestUrl;
 use App\Rules\PullRequestBelongsToRepository;
 use App\Rules\UniqueSubmissionForBounty;
-use App\Services\GitHubApiService;
+use App\Services\GitProviderFactory;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
@@ -31,7 +31,7 @@ class SubmissionStoreRequest extends FormRequest
             'pr_url' => [
                 'required',
                 'url',
-                new GitHubPullRequestUrl(),
+                new GitPullRequestUrl(),
                 $bounty ? new PullRequestBelongsToRepository($bounty->issue->repo->url) : '',
             ],
         ];
@@ -58,24 +58,36 @@ class SubmissionStoreRequest extends FormRequest
     {
         $prUrl = $this->input('pr_url');
         $user = $this->user();
-        if (!$user || !$user->oauth_provider_token) {
+
+        if (!$user || !$prUrl) {
             return;
         }
 
-        $prInfo = GitHubApiService::parseGitPullRequestUrl($prUrl);
+        $providerKey = GitPullRequestUrl::detectProvider($prUrl);
+        if (!$providerKey) {
+            return;
+        }
+
+        $prInfo = GitPullRequestUrl::parsePullRequestUrl($prUrl);
         if (!$prInfo) {
             return;
         }
 
-        $githubProvider = $user->providers()->where('provider', 'github')->first();
-        if (!$githubProvider || !$githubProvider->token) {
+        $userProvider = $user->providers()->where('provider', $providerKey)->first();
+        if (!$userProvider || !$userProvider->token) {
             return;
         }
 
-        $githubApi = new GitHubApiService($githubProvider);
-        $prData = $githubApi->getPullRequest($prInfo['repo_full_name'], $prInfo['pr_number']);
-        if (empty($prData)) {
-            $validator->errors()->add('pr_url', 'Could not access the Pull Request. Please ensure it exists and you have access to it.');
+        try {
+            $providerService = GitProviderFactory::getProvider($providerKey, $userProvider);
+
+            $prData = $providerService->getPullRequest($prInfo['repo_full_name'], $prInfo['pr_number']);
+
+            if (empty($prData)) {
+                $validator->errors()->add('pr_url', 'Could not access the Pull Request/Merge Request. Please ensure it exists and you have access to it.');
+            }
+        } catch (\Exception $e) {
+            $validator->errors()->add('pr_url', 'Could not verify access to the Pull Request/Merge Request.');
         }
     }
 }
