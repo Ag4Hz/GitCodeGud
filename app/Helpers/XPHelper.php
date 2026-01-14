@@ -200,13 +200,26 @@ class XPHelper
 
     public static function getXPConfigs(): array
     {
+        $skills = Cache::remember('admin_skills', 3600, function () {
+            return DB::table('skills')
+                ->select('skill_name', 'multiplier', 'type')
+                ->orderBy('skill_name')
+                ->get()
+                ->map(fn($skill) => [
+                    'skill_name' => $skill->skill_name,
+                    'multiplier' => (float) $skill->multiplier,
+                    'type' => $skill->type,
+                ])
+                ->toArray();
+        });
+
         $skillWeights = Cache::remember('admin_skill_weights', 3600, function () {
             return DB::table('skills')
                 ->select('skill_name', 'multiplier')
                 ->orderBy('skill_name')
                 ->get()
                 ->keyBy('skill_name')
-                ->map(fn($skill) => $skill->multiplier)
+                ->map(fn($skill) => (float) $skill->multiplier)
                 ->toArray();
         });
 
@@ -216,6 +229,7 @@ class XPHelper
         return [
             'base_xp' => $xpSettings['base_xp'] ?? 100,
             'bonus_multiplier' => $xpSettings['bonus_multiplier'] ?? 1.5,
+            'skills' => $skills,
             'skill_weights' => $skillWeights,
             'level_thresholds' => $levelThresholds,
         ];
