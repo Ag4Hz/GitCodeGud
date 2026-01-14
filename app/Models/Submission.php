@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Services\GitHubApiService;
+use App\Rules\GitPullRequestUrl;
 use Database\Factories\SubmissionFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -47,11 +47,12 @@ class Submission extends Model
                     return null;
                 }
 
-                $prInfo = GitHubApiService::parseGitPullRequestUrl($this->pr_url);
+                $prInfo = GitPullRequestUrl::parsePullRequestUrl($this->pr_url);
                 return $prInfo['pr_number'] ?? null;
             }
         );
     }
+
     protected function repoFullName(): Attribute
     {
         return Attribute::make(
@@ -60,11 +61,12 @@ class Submission extends Model
                     return null;
                 }
 
-                $prInfo = GitHubApiService::parseGitPullRequestUrl($this->pr_url);
+                $prInfo = GitPullRequestUrl::parsePullRequestUrl($this->pr_url);
                 return $prInfo['repo_full_name'] ?? null;
             }
         );
     }
+
     protected function repoOwner(): Attribute
     {
         return Attribute::make(
@@ -73,11 +75,12 @@ class Submission extends Model
                     return null;
                 }
 
-                $prInfo = GitHubApiService::parseGitPullRequestUrl($this->pr_url);
+                $prInfo = GitPullRequestUrl::parsePullRequestUrl($this->pr_url);
                 return $prInfo['owner'] ?? null;
             }
         );
     }
+
     protected function repoName(): Attribute
     {
         return Attribute::make(
@@ -86,15 +89,21 @@ class Submission extends Model
                     return null;
                 }
 
-                $prInfo = GitHubApiService::parseGitPullRequestUrl($this->pr_url);
+                $prInfo = GitPullRequestUrl::parsePullRequestUrl($this->pr_url);
                 return $prInfo['name'] ?? null;
             }
         );
     }
+
     public function hasValidPrUrl(): bool
     {
-        return $this->pr_url && GitHubApiService::isValidGitPullRequestUrl($this->pr_url);
+        if (!$this->pr_url) {
+            return false;
+        }
+
+        return GitPullRequestUrl::detectProvider($this->pr_url) !== null;
     }
+
     public function canBeResubmitted(): bool
     {
         return $this->status === 'rejected';

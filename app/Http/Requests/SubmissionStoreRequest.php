@@ -3,12 +3,13 @@
 namespace App\Http\Requests;
 
 use App\Models\Bounty;
+
+use App\Rules\GitPullRequestUrl;
 use App\Rules\PullRequestBelongsToRepository;
 use App\Rules\UniqueSubmissionForBounty;
-use App\Rules\ValidPullRequestUrl;
+use App\Services\GitProviderFactory;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
-use App\Services\GitProviderFactory;
 
 class SubmissionStoreRequest extends FormRequest
 {
@@ -31,7 +32,8 @@ class SubmissionStoreRequest extends FormRequest
             'pr_url' => [
                 'required',
                 'url',
-                new ValidPullRequestUrl(),
+
+                new GitPullRequestUrl(),
                 $bounty ? new PullRequestBelongsToRepository($bounty->issue->repo->url) : '',
             ],
         ];
@@ -79,55 +81,35 @@ class SubmissionStoreRequest extends FormRequest
         $prUrl = $this->input('pr_url');
         $user = $this->user();
 
-        if (!$user) {
+        if (!$user || !$prUrl) {
             return;
         }
 
-        $provider = $this->provider();
-
-        if ($provider === 'unknown') {
-            $validator->errors()->add('pr_url', 'Unsupported git provider.');
+        $providerKey = GitPullRequestUrl::detectProvider($prUrl);
+        if (!$providerKey) {
             return;
         }
 
-        $bounty = Bounty::with('issue')->find($this->input('bounty_id'));
-
-        if (!$bounty || !$bounty->issue) {
+        $prInfo = GitPullRequestUrl::parsePullRequestUrl($prUrl);
+        if (!$prInfo) {
             return;
         }
 
-        $issueProvider = $bounty->issue->provider;
-
-        if ($provider !== $issueProvider) {
-            $prType = $issueProvider === 'gitlab' ? 'merge request' : 'pull request';
-            $validator->errors()->add(
-                'pr_url',
-                "This bounty is for a {$issueProvider} issue. Please submit a {$issueProvider} {$prType}."
-            );
+        $userProvider = $user->providers()->where('provider', $providerKey)->first();
+        if (!$userProvider || !$userProvider->token) {
             return;
         }
 
         try {
-            $service = GitProviderFactory::getProvider($provider, $user);
+            $providerService = GitProviderFactory::getProvider($providerKey, $userProvider);
 
-            $parsed = $service::parseGitPullRequestUrl($prUrl);
+            $prData = $providerService->getPullRequest($prInfo['repo_full_name'], $prInfo['pr_number']);
 
-            if (!$parsed) {
-                $validator->errors()->add('pr_url', 'Invalid PR/MR URL format');
-                return;
+            if (empty($prData)) {
+                $validator->errors()->add('pr_url', 'Could not access the Pull Request/Merge Request. Please ensure it exists and you have access to it.');
             }
-
-            $repoFullName = $parsed['full_name'];
-            $prNumber = $parsed['pr_number'];
-
-            $isOpen = $service->isPullRequestOpen($repoFullName, $prNumber);
-
-            if (!$isOpen) {
-                $validator->errors()->add('pr_url', 'The PR/MR must be open');
-            }
-
         } catch (\Exception $e) {
-            $validator->errors()->add('pr_url', 'Could not validate PR/MR: ' . $e->getMessage());
+            $validator->errors()->add('pr_url', 'Could not verify access to the Pull Request/Merge Request.');
         }
     }
 }

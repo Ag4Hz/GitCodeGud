@@ -2,7 +2,9 @@
 
 namespace App\Rules;
 
+use App\Services\BitbucketApiService;
 use App\Services\GitHubApiService;
+use App\Services\GitLabApiService;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 
@@ -17,13 +19,19 @@ class PullRequestBelongsToRepository implements ValidationRule
 
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        $prInfo = GitHubApiService::parseGitPullRequestUrl($value);
+        $prInfo = GitHubApiService::parseGitPullRequestUrl($value)
+               ?? GitLabApiService::parseGitPullRequestUrl($value)
+               ?? BitbucketApiService::parseGitPullRequestUrl($value);
+
         if (!$prInfo) {
-            $fail('Invalid Pull Request URL format.');
+            $fail('Invalid Pull Request/Merge Request URL format.');
             return;
         }
 
-        $expectedRepoInfo = GitHubApiService::parseGitUrl($this->expectedRepoUrl);
+        $expectedRepoInfo = GitHubApiService::parseGitUrl($this->expectedRepoUrl)
+                         ?? GitLabApiService::parseGitUrl($this->expectedRepoUrl)
+                         ?? BitbucketApiService::parseGitUrl($this->expectedRepoUrl);
+
         if (!$expectedRepoInfo) {
             $fail('Invalid repository URL format.');
             return;
@@ -37,8 +45,8 @@ class PullRequestBelongsToRepository implements ValidationRule
             return;
         }
 
-        if ($prRepoFullName !== $expectedRepoFullName) {
-            $fail("The Pull Request must belong to the repository: {$expectedRepoFullName}");
+        if (strcasecmp($prRepoFullName, $expectedRepoFullName) !== 0) {
+            $fail("The Pull Request/Merge Request must belong to the repository: {$expectedRepoFullName}");
         }
     }
 }

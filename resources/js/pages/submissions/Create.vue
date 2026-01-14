@@ -87,19 +87,22 @@ function submit() {
                         <form @submit.prevent="submit" class="space-y-6">
                             <!-- PR URL -->
                             <div class="space-y-3">
-                                <Label for="pr_url" class="font-medium text-gray-800 dark:text-gray-200">Pull Request URL *</Label>
+                                <Label for="pr_url" class="font-medium text-gray-800 dark:text-gray-200">Pull Request / Merge Request URL *</Label>
                                 <Input
                                     id="pr_url"
                                     v-model="form.pr_url"
                                     type="url"
-                                    placeholder="https://github.com/username/repository/pull/123"
+                                    placeholder="e.g., https://github.com/user/repo/pull/123 or https://gitlab.com/user/repo/-/merge_requests/123"
                                     required
                                     :class="[form.errors.pr_url && 'border-red-500 focus:border-red-500']"
                                 />
                                 <div class="rounded-lg bg-white/40 p-4 backdrop-blur md:sticky md:top-0 md:z-10 dark:bg-white/10">
-                                    <p class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Your Pull Request must be submitted to:</p>
+                                    <p class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Your Pull Request/Merge Request must be submitted to:</p>
                                     <p class="rounded-2xl bg-white/40 p-4 backdrop-blur md:sticky md:top-0 md:z-10 dark:bg-white/10">
                                         {{ bounty.issue?.repo?.url || 'Repository URL not available' }}
+                                    </p>
+                                    <p class="mt-2 text-xs text-gray-600 dark:text-gray-400">
+                                        Supported: GitHub PRs, GitLab MRs, and Bitbucket PRs
                                     </p>
                                 </div>
                                 <div

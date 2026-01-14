@@ -161,10 +161,11 @@ class GitLabApiService implements GitProviderInterface
     public function getUserRepositories(array $params = []): array
     {
         $defaultParams = [
-            'owned' => true,
+            'membership' => true,
             'order_by' => 'updated_at',
             'sort' => 'desc',
-            'per_page' => 100
+            'per_page' => 100,
+            'min_access_level' => 20
         ];
         $response = $this->createClient()->get('/projects', array_merge($defaultParams, $params));
         return $this->handleResponse($response, 'Failed to fetch GitLab projects');
