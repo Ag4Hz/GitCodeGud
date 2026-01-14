@@ -59,6 +59,7 @@ class SubmissionController extends Controller
             $existingSubmission->update([
                 'pr_url' => $validated['pr_url'],
                 'status' => 'pending',
+                'provider' => $request->provider(),
                 'updated_at' => now(),
             ]);
 
@@ -72,6 +73,7 @@ class SubmissionController extends Controller
             'user_id' => $user->id,
             'pr_url' => $validated['pr_url'],
             'status' => 'pending',
+            'provider' => $request->provider(),
         ]);
 
         return redirect()

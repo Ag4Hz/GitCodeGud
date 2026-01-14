@@ -3,12 +3,12 @@
 namespace App\Http\Requests;
 
 use App\Models\Bounty;
-use App\Rules\GitHubPullRequestUrl;
 use App\Rules\PullRequestBelongsToRepository;
 use App\Rules\UniqueSubmissionForBounty;
-use App\Services\GitHubApiService;
+use App\Rules\ValidPullRequestUrl;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
+use App\Services\GitProviderFactory;
 
 class SubmissionStoreRequest extends FormRequest
 {
@@ -31,11 +31,31 @@ class SubmissionStoreRequest extends FormRequest
             'pr_url' => [
                 'required',
                 'url',
-                new GitHubPullRequestUrl(),
+                new ValidPullRequestUrl(),
                 $bounty ? new PullRequestBelongsToRepository($bounty->issue->repo->url) : '',
             ],
         ];
     }
+
+    public function provider(): string
+    {
+        $url = $this->input('pr_url');
+
+        if (str_contains($url, 'github')) {
+            return 'github';
+        }
+
+        if (str_contains($url, 'gitlab')) {
+            return 'gitlab';
+        }
+
+        if (str_contains($url, 'bitbucket')) {
+            return 'bitbucket';
+        }
+
+        return 'unknown';
+    }
+
 
     public function messages(): array
     {
@@ -58,24 +78,56 @@ class SubmissionStoreRequest extends FormRequest
     {
         $prUrl = $this->input('pr_url');
         $user = $this->user();
-        if (!$user || !$user->oauth_provider_token) {
+
+        if (!$user) {
             return;
         }
 
-        $prInfo = GitHubApiService::parseGitPullRequestUrl($prUrl);
-        if (!$prInfo) {
+        $provider = $this->provider();
+
+        if ($provider === 'unknown') {
+            $validator->errors()->add('pr_url', 'Unsupported git provider.');
             return;
         }
 
-        $githubProvider = $user->providers()->where('provider', 'github')->first();
-        if (!$githubProvider || !$githubProvider->token) {
+        $bounty = Bounty::with('issue')->find($this->input('bounty_id'));
+
+        if (!$bounty || !$bounty->issue) {
             return;
         }
 
-        $githubApi = new GitHubApiService($githubProvider);
-        $prData = $githubApi->getPullRequest($prInfo['repo_full_name'], $prInfo['pr_number']);
-        if (empty($prData)) {
-            $validator->errors()->add('pr_url', 'Could not access the Pull Request. Please ensure it exists and you have access to it.');
+        $issueProvider = $bounty->issue->provider;
+
+        if ($provider !== $issueProvider) {
+            $prType = $issueProvider === 'gitlab' ? 'merge request' : 'pull request';
+            $validator->errors()->add(
+                'pr_url',
+                "This bounty is for a {$issueProvider} issue. Please submit a {$issueProvider} {$prType}."
+            );
+            return;
+        }
+
+        try {
+            $service = GitProviderFactory::getProvider($provider, $user);
+
+            $parsed = $service::parseGitPullRequestUrl($prUrl);
+
+            if (!$parsed) {
+                $validator->errors()->add('pr_url', 'Invalid PR/MR URL format');
+                return;
+            }
+
+            $repoFullName = $parsed['full_name'];
+            $prNumber = $parsed['pr_number'];
+
+            $isOpen = $service->isPullRequestOpen($repoFullName, $prNumber);
+
+            if (!$isOpen) {
+                $validator->errors()->add('pr_url', 'The PR/MR must be open');
+            }
+
+        } catch (\Exception $e) {
+            $validator->errors()->add('pr_url', 'Could not validate PR/MR: ' . $e->getMessage());
         }
     }
 }
