@@ -10,7 +10,6 @@ use App\Rules\UniqueSubmissionForBounty;
 use App\Services\GitProviderFactory;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
-use App\Services\GitProviderFactory;
 
 class SubmissionStoreRequest extends FormRequest
 {
