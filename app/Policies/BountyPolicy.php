@@ -4,7 +4,7 @@ namespace App\Policies;
 
 use App\Models\Bounty;
 use App\Models\User;
-use App\Services\GitHubApiService;
+use App\Services\GitRepoService;
 
 class BountyPolicy
 {
@@ -26,25 +26,22 @@ class BountyPolicy
         return auth()->check();
     }
 
-    public function createForRepository(User $user, string $repoUrl): bool
+    public function createForRepository(User $user, string $repoUrl, string $provider = 'github'): bool
     {
+        $repoService = new GitRepoService($user);
 
-        $githubApi = new GitHubApiService($user);
-
-        if (!$githubApi->hasValidToken()) {
+        if (!$repoService->hasProvider($provider)) {
             return false;
         }
 
-        $repoInfo = GitHubApiService::parseGitUrl($repoUrl);
+        $repoInfo = GitRepoService::parseGitUrl($repoUrl);
         if (!$repoInfo) {
             return false;
         }
 
         $gitId = $repoInfo['owner'] . '/' . $repoInfo['name'];
-        $repoData = $githubApi->getRepository($gitId);
 
-        return isset($repoData['permissions']) &&
-            ($repoData['permissions']['admin'] || $repoData['permissions']['push']);
+        return $repoService->canUserWriteToRepository($provider, $gitId);
     }
     public function update(User $user, Bounty $bounty): bool
     {

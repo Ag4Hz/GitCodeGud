@@ -3,7 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class UserProvider extends Model
 {
@@ -13,12 +14,19 @@ class UserProvider extends Model
         'provider_id',
         'provider_username',
         'provider_email',
+        'nickname',
+        'avatar',
         'token',
         'refresh_token',
     ];
 
-    public function providers(): HasOne
+    public function user(): BelongsTo
     {
-        return $this -> hasOne(User::class);
+        return $this->belongsTo(User::class);
+    }
+
+    public function skills(): HasMany
+    {
+        return $this->hasMany(UserProviderSkill::class);
     }
 }

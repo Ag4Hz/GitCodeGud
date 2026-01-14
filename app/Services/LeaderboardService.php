@@ -16,7 +16,7 @@ class LeaderboardService
         $filters = $this->extractFilters($request);
         $sortDirection = $this->extractSortDirection($request);
         $skillId = $this->resolveSkillId($filters['language']);
-        $leaderboardUsers = $this->getLeaderboard($sortDirection, $skillId, $filters['language']);
+        $leaderboardUsers = $this->getLeaderboard($sortDirection, $skillId, $filters['language'], $filters['provider']);
 
         $bountyData = $this->getBountyData($request);
         $userData = $this->getUserSearchData($filters['user_search']);
@@ -27,6 +27,7 @@ class LeaderboardService
             'filters' => [
                 'language' => $filters['language'],
                 'search' => $filters['search'],
+                'provider' => $filters['provider'],
             ],
             'sort' => ['dir' => $sortDirection],
             'selected' => [
@@ -38,11 +39,11 @@ class LeaderboardService
         ];
     }
 
-    public function getLeaderboard(string $direction = 'desc', ?int $skillId = null, ?string $language,): LengthAwarePaginator
+    public function getLeaderboard(string $direction = 'desc', ?int $skillId = null, ?string $language = null, ?string $provider = null): LengthAwarePaginator
     {
         $direction = $this->validateDirection($direction);
 
-        $query = $this->buildLeaderboardQuery($skillId, $direction, $language);
+        $query = $this->buildLeaderboardQuery($skillId, $direction, $language, $provider);
 
         $paginator = $query
             ->paginate(10)
@@ -57,6 +58,7 @@ class LeaderboardService
             'language' => $request->string('language')->toString(),
             'search' => $request->string('search')->toString(),
             'user_search' => $request->string('search_user')->toString(),
+            'provider' => $request->string('provider')->toString(),
         ];
     }
 
@@ -78,9 +80,25 @@ class LeaderboardService
         return UserService::searchUser($listedUsers);
     }
 
-    private function buildLeaderboardQuery(?int $skillId, ?string $direction, ?string $language)
+    private function buildLeaderboardQuery(?int $skillId, ?string $direction, ?string $language, ?string $provider)
     {
-        $query = User::query()->select('users.*');
+        $query = User::query()->select('users.*')->with('providers');
+
+        $provider = $provider ? strtolower(trim($provider)) : null;
+        $allowedProviders = ['github', 'gitlab', 'bitbucket'];
+
+        if ($provider && in_array($provider, $allowedProviders, true)) {
+            $query->where(function ($q) use ($provider) {
+                $q->whereHas('providers', function ($providerQuery) use ($provider) {
+                    $providerQuery->where('provider', $provider);
+                })
+                ->orWhere(function ($legacy) use ($provider) {
+                    $legacy->where('oauth_provider', $provider)
+                        ->whereDoesntHave('providers');
+                });
+            });
+        }
+
         if ($skillId) {
             $query
                 ->join('user_skills', 'user_skills.user_id', '=', 'users.id')
@@ -109,7 +127,20 @@ class LeaderboardService
                 $user->setAttribute('skill_xp', 0);
             }
 
-            return $user;
+            return [
+                'id' => $user->id,
+                'nickname' => $user->nickname,
+                'avatar' => $user->avatar,
+                'name' => $user->name,
+                'xp' => $user->xp,
+                'skill_xp' => $user->getAttribute('skill_xp') ?? 0,
+                'level' => $user->level ?? 1,
+                'rank' => $user->getAttribute('rank'),
+                'providers' => $user->providers->map(fn($p) => [
+                    'provider' => $p->provider,
+                    'provider_username' => $p->provider_username,
+                ])->toArray(),
+            ];
         });
     }
 

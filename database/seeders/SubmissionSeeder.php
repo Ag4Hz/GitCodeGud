@@ -27,14 +27,27 @@ class SubmissionSeeder extends Seeder
             $submissionCount = rand(1, 3);
             $selectedUserIds = $userIds->random(min($submissionCount, $userIds->count()));
 
-            return $selectedUserIds->map(fn($userId) => [
-                'bounty_id' => $bountyId,
-                'user_id' => $userId,
-                'pr_url' => fake()->url(),
-                'status' => fake()->randomElement(['pending', 'accepted', 'rejected']),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+            return $selectedUserIds->map(function ($userId) use ($bountyId) {
+                $provider = fake()->randomElement(['github', 'gitlab', 'bitbucket']);
+                $owner = fake()->userName();
+                $repo = fake()->word() . '-' . fake()->word();
+                $prNumber = fake()->numberBetween(1, 999);
+
+                $prUrl = match ($provider) {
+                    'github' => "https://github.com/{$owner}/{$repo}/pull/{$prNumber}",
+                    'gitlab' => "https://gitlab.com/{$owner}/{$repo}/-/merge_requests/{$prNumber}",
+                    'bitbucket' => "https://bitbucket.org/{$owner}/{$repo}/pull-requests/{$prNumber}",
+                };
+
+                return [
+                    'bounty_id' => $bountyId,
+                    'user_id' => $userId,
+                    'pr_url' => $prUrl,
+                    'status' => fake()->randomElement(['pending', 'accepted', 'rejected']),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            });
         })->toArray();
 
         Submission::insert($submissions);

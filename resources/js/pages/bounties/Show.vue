@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { useDateFormatter } from '@/composables/useDateFormatter';
 import { useInitials } from '@/composables/useInitials';
+import { useProviderUtils } from '@/composables/useProviderUtils';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem, type User } from '@/types';
 import { type Bounty } from '@/types/bounty';
@@ -38,6 +39,7 @@ interface SubmissionType {
 interface BountyWithDetails extends Bounty {
     issue: {
         url: string;
+        provider: 'github' | 'gitlab' | 'bitbucket';
         description?: string;
         repo: {
             url: string;
@@ -92,6 +94,7 @@ const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
 
 const { formatDate } = useDateFormatter();
 const { getInitials } = useInitials();
+const { getProviderConfig, getProviderName, extractProviderFromUrl } = useProviderUtils();
 
 const getStatusColor = (status: string) => {
     switch (status) {
@@ -266,6 +269,48 @@ const shouldShowPagination = computed(() => {
                         <div class="flex items-start justify-between">
                             <div class="space-y-2">
                                 <div class="flex items-center gap-3">
+                                    <!-- GitHub Icon -->
+                                    <svg
+                                        v-if="bounty.issue?.provider === 'github'"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 24 24"
+                                        :class="getProviderConfig(bounty.issue?.provider).color"
+                                        class="h-6 w-6 flex-shrink-0"
+                                        fill="currentColor"
+                                    >
+                                        <path
+                                            d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
+                                        />
+                                    </svg>
+
+                                    <!-- GitLab Icon -->
+                                    <svg
+                                        v-else-if="bounty.issue?.provider === 'gitlab'"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 24 24"
+                                        :class="getProviderConfig(bounty.issue?.provider).color"
+                                        class="h-6 w-6 flex-shrink-0"
+                                        fill="currentColor"
+                                    >
+                                        <path
+                                            d="M2.39 9.73L12 22l9.61-12.27a.7.7 0 0 0-.25-.97L19.07 7 16.7 1.27a.7.7 0 0 0-1.32 0L12 7.33 8.62 1.27a.7.7 0 0 0-1.32 0L4.93 7 2.64 8.76a.7.7 0 0 0-.25.97Z"
+                                        />
+                                    </svg>
+
+                                    <!-- Bitbucket Icon -->
+                                    <svg
+                                        v-else-if="bounty.issue?.provider === 'bitbucket'"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 24 24"
+                                        :class="getProviderConfig(bounty.issue?.provider).color"
+                                        class="h-6 w-6 flex-shrink-0"
+                                        fill="currentColor"
+                                    >
+                                        <path
+                                            d="M2.4 3A1.3 1.3 0 0 0 1.1 4.5l2.7 15.9c.1.5.6.9 1.2.9h13a1.3 1.3 0 0 0 1.2-1.1l2.7-15.7A1.3 1.3 0 0 0 20.7 3H2.4zm9.6 12.3H9.3l-.9-6.6h7.2l-.9 6.6h-2.7z"
+                                        />
+                                    </svg>
+
                                     <h1 class="text-2xl font-bold">{{ bounty.title }}</h1>
                                     <Badge :class="getStatusColor(bounty.status)" class="text-sm">
                                         {{ getStatusDisplayText(bounty.status) }}
@@ -474,7 +519,7 @@ const shouldShowPagination = computed(() => {
                                                     <Target class="h-5 w-5 text-green-600 dark:text-green-400" />
                                                 </div>
                                                 <div class="min-w-0 flex-1">
-                                                    <h4 class="mb-1 text-lg font-semibold">GitHub Issue</h4>
+                                                    <h4 class="mb-1 text-lg font-semibold">{{ getProviderName(bounty.issue?.provider) }} Issue</h4>
                                                     <p class="text-sm text-muted-foreground">View the specific issue to resolve</p>
                                                 </div>
                                             </div>
@@ -487,7 +532,7 @@ const shouldShowPagination = computed(() => {
                                                 class="flex w-full items-center justify-center gap-2 rounded-lg bg-green-800 px-4 py-3 text-sm font-medium text-white transition-all duration-200 group-hover:scale-105 hover:bg-green-700"
                                             >
                                                 <ExternalLink class="h-4 w-4" />
-                                                View Issue
+                                                View Issue on {{ getProviderName(bounty.issue?.provider) }}
                                             </a>
                                             <div
                                                 v-else
@@ -629,6 +674,7 @@ const shouldShowPagination = computed(() => {
                                             </div>
 
                                             <div class="flex items-center gap-3">
+                                                <!-- Provider Badge -->
                                                 <a
                                                     v-if="submission.pr_url"
                                                     :href="submission.pr_url"
@@ -636,8 +682,15 @@ const shouldShowPagination = computed(() => {
                                                     class="flex items-center gap-1 text-sm text-purple-600 transition-colors hover:text-purple-800"
                                                 >
                                                     <ExternalLink class="h-3 w-3" />
-                                                    PR
+                                                    {{ extractProviderFromUrl(submission.pr_url) === 'gitlab' ? 'MR' : 'PR' }}
                                                 </a>
+                                                <Badge
+                                                    v-if="submission.pr_url"
+                                                    :class="getProviderConfig(extractProviderFromUrl(submission.pr_url)).badgeColor"
+                                                    class="text-xs"
+                                                >
+                                                    {{ getProviderName(extractProviderFromUrl(submission.pr_url)) }}
+                                                </Badge>
                                                 <Badge :class="getSubmissionStatusColor(submission.status)" class="text-xs">
                                                     <component :is="getSubmissionStatusIcon(submission.status)" class="mr-1 h-3 w-3" />
                                                     {{ submission.status.toUpperCase() }}

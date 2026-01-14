@@ -6,7 +6,7 @@ use App\Http\Controllers\FollowerController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\GitHubSkillController;
+use App\Http\Controllers\SkillController;
 use App\Http\Controllers\SubmissionController;
 use App\Http\Controllers\SubmissionStatusController;
 use App\Http\Controllers\ReviewController;
@@ -29,9 +29,16 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
-    Route::post('/profile/sync-github-skills', [GitHubSkillController::class, 'sync'])
+    Route::post('/profile/sync-github-skills', [SkillController::class, 'syncGitHub'])
         ->name('profile.sync-github-skills');
+
+    Route::post('/profile/sync-gitlab-skills', [SkillController::class, 'syncGitLab'])
+        ->name('profile.sync-gitlab-skills');
+
+//    Route::post('/profile/sync-bitbucket-skills', [SkillController::class, 'syncBitbucket'])
+//        ->name('profile.sync-bitbucket-skills');
 });
+
 
 Route::middleware('auth')->group(function () {
     Route::get('/bounties/{bounty}/submit', [SubmissionController::class, 'create'])->name('submissions.create');
@@ -53,6 +60,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('bounty.search-repositories');
 
     Route::get('/bounty/repositories/{owner}/{repo}/issues', [BountyController::class, 'getRepositoryIssues'])
+        ->where('repo', '.*')
         ->name('bounty.repository-issues');
 });
 
@@ -78,5 +86,5 @@ Route::get('/api/xp-settings/last-update', function () {
     return response()->json(['updated_at' => $latest]);
 });
 
-require __DIR__.'/settings.php';
-require __DIR__.'/auth.php';
+require __DIR__ . '/settings.php';
+require __DIR__ . '/auth.php';

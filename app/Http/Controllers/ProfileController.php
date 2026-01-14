@@ -6,7 +6,7 @@ use App\Helpers\XPHelper;
 use App\Http\Resources\BountyResource;
 use App\Models\Bounty;
 use App\Models\User;
-use App\Services\GitHubSkillSyncService;
+use App\Services\SkillSyncService;
 use App\Services\FollowStatsService;
 
 use App\Services\ReviewService;
@@ -19,10 +19,10 @@ use App\Services\UserBountyService;
 class ProfileController extends Controller
 {
     public function __construct(
-        private UserBountyService $userBountyService,
-        protected GitHubSkillSyncService $gitHubSkillSync,
+        private UserBountyService  $userBountyService,
+        protected SkillSyncService $gitHubSkillSync,
         private FollowStatsService $followStatsService,
-        private ReviewService $reviewService,
+        private ReviewService      $reviewService,
     ) {}
 
     public function show(Request $request, ?User $user = null): Response
@@ -33,6 +33,19 @@ class ProfileController extends Controller
         $this->followStatsService->attachCounts($user);
         $canReview = $this->reviewService->canUserReview($user);
         $bounties = $this->userBountyService->getUserBountiesWithDeleted($user);
+
+        $connectedProviders = $user->providers()
+            ->pluck('provider')
+            ->unique()
+            ->values()
+            ->toArray();
+
+        // Fallback to legacy OAuth provider if no user_providers exist
+        if (empty($connectedProviders) && $user->oauth_provider) {
+            $connectedProviders = [$user->oauth_provider];
+        }
+
+        $repoCountsByProvider = $user->repos->countBy('provider')->toArray();
 
         return Inertia::render('Profile', [
             'user' => array_merge(
@@ -51,6 +64,8 @@ class ProfileController extends Controller
             'reviews'    => $this->reviewService->getUserReviews($user),
             'canReview'   => $canReview,
             'ratingAvg'   => $this->reviewService->getUserRatingStats($user)['average'],
+            'connectedProviders' => $connectedProviders,
+            'repoCountsByProvider' => $repoCountsByProvider,
 
         ]);
     }

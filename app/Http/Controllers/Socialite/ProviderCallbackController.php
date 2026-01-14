@@ -16,14 +16,20 @@ class ProviderCallbackController extends Controller
      */
     public function __invoke(Request $request, string $provider)
     {
+        // Check if user is already authenticated (linking additional account)
+        $isLinking = Auth::check();
+        $authenticatedUser = Auth::user();
+
         if ($request->has('error')) {
-            return redirect(route('login'))->withErrors([
+            $redirectRoute = $isLinking ? route('accounts.edit') : route('login');
+            return redirect($redirectRoute)->withErrors([
                 'provider' => "Authorization failed: " . $request->get('error_description', $request->get('error'))
             ]);
         }
 
         if (!$request->has('code')) {
-            return redirect(route('login'))->withErrors([
+            $redirectRoute = $isLinking ? route('accounts.edit') : route('login');
+            return redirect($redirectRoute)->withErrors([
                 'provider' => "No authorization code received from {$provider}. Please try again."
             ]);
         }
@@ -34,6 +40,41 @@ class ProviderCallbackController extends Controller
             ->where('provider_id', (string)$providerUser->getId())
             ->first();
 
+        if ($isLinking) {
+            // User is authenticated and linking an additional account
+            if ($userProvider && $userProvider->user_id !== $authenticatedUser->id) {
+                return redirect(route('accounts.edit'))->withErrors([
+                    'provider' => "This {$provider} account is already linked to another user."
+                ]);
+            }
+
+            if (!$userProvider) {
+                UserProvider::create([
+                    'user_id' => $authenticatedUser->id,
+                    'provider' => $provider,
+                    'provider_id' => (string)$providerUser->getId(),
+                    'provider_username' => $this->getNickname($providerUser, $provider),
+                    'provider_email' => $providerUser->getEmail(),
+                    'nickname' => $this->getNickname($providerUser, $provider),
+                    'avatar' => $providerUser->getAvatar(),
+                    'token' => $providerUser->token,
+                    'refresh_token' => $providerUser->refreshToken ?? null,
+                ]);
+            } else {
+                $userProvider->update([
+                    'provider_username' => $this->getNickname($providerUser, $provider),
+                    'provider_email' => $providerUser->getEmail(),
+                    'nickname' => $this->getNickname($providerUser, $provider),
+                    'avatar' => $providerUser->getAvatar(),
+                    'token' => $providerUser->token,
+                    'refresh_token' => $providerUser->refreshToken ?? null,
+                ]);
+            }
+
+            return redirect(route('accounts.edit'))->with('success', ucfirst($provider) . ' account connected successfully!');
+        }
+
+        // User is not authenticated - this is a login/registration flow
         if (!$userProvider) {
             $user = User::firstOrCreate(
                 ['email' => $providerUser->getEmail()],
@@ -49,6 +90,8 @@ class ProviderCallbackController extends Controller
                 'provider_id' => (string)$providerUser->getId(),
                 'provider_username' => $this->getNickname($providerUser, $provider),
                 'provider_email' => $providerUser->getEmail(),
+                'nickname' => $this->getNickname($providerUser, $provider),
+                'avatar' => $providerUser->getAvatar(),
                 'token' => $providerUser->token,
                 'refresh_token' => $providerUser->refreshToken ?? null,
             ]);
@@ -68,6 +111,10 @@ class ProviderCallbackController extends Controller
             }
 
             $userProvider->update([
+                'provider_username' => $this->getNickname($providerUser, $provider),
+                'provider_email' => $providerUser->getEmail(),
+                'nickname' => $this->getNickname($providerUser, $provider),
+                'avatar' => $providerUser->getAvatar(),
                 'token' => $providerUser->token,
                 'refresh_token' => $providerUser->refreshToken ?? null,
             ]);

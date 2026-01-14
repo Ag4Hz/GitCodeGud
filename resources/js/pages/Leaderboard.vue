@@ -10,7 +10,23 @@ import { computed, ref, watch } from 'vue';
 
 type Dir = 'asc' | 'desc';
 
-type User = { id: number; nickname: string; avatar: string; name: string; xp: number; skill_xp: number; level: number; rank: number };
+type Provider = {
+    provider: string;
+    provider_username: string;
+};
+
+type User = {
+    id: number;
+    nickname: string;
+    avatar: string;
+    name: string;
+    xp: number;
+    skill_xp: number;
+    level: number;
+    rank: number;
+    providers?: Provider[];
+};
+
 type LeaderboardUsers = { data: User[]; links: any[]; total: number };
 type UsersSearchPayload = { data?: User[] };
 
@@ -19,7 +35,7 @@ type PageProps = {
     users?: UsersSearchPayload;
     leaderboardUsers: LeaderboardUsers;
     sort?: { dir?: Dir };
-    filters?: { language?: string };
+    filters?: { language?: string; provider?: string };
     availableLanguages?: string[];
     selected?: { dir?: Dir; skill_id?: number | null };
 };
@@ -28,17 +44,33 @@ const props = withDefaults(defineProps<PageProps>(), {
     userFilters: () => ({ search: '' }),
     users: () => ({ data: [] }),
     sort: () => ({ dir: 'desc' as Dir }),
-    filters: () => ({ language: '' }),
+    filters: () => ({ language: '', provider: '' }),
     availableLanguages: () => [],
 });
 
 const sortDir = ref<Dir>(props.sort.dir ?? 'desc');
 const localSelectedLanguage = ref<string>(props.filters.language ?? '');
+const localSelectedProvider = ref<string>(props.filters.provider ?? '');
+
+const providerOptions = ['GitHub', 'GitLab', 'Bitbucket'];
 
 watch(localSelectedLanguage, (val) => {
     router.reload({
         data: {
             language: val || undefined,
+            provider: localSelectedProvider.value || undefined,
+            dir: sortDir.value,
+            skill_id: props.selected?.skill_id ?? undefined,
+            page: 1,
+        },
+    });
+});
+
+watch(localSelectedProvider, (val) => {
+    router.reload({
+        data: {
+            provider: val || undefined,
+            language: localSelectedLanguage.value || undefined,
             dir: sortDir.value,
             skill_id: props.selected?.skill_id ?? undefined,
             page: 1,
@@ -52,6 +84,7 @@ const changeSort = (dir: Dir) => {
         data: {
             dir,
             language: localSelectedLanguage.value || undefined,
+            provider: localSelectedProvider.value || undefined,
             skill_id: props.selected?.skill_id ?? undefined,
             page: 1,
         },
@@ -80,9 +113,19 @@ const totalUsers = computed(() => props.leaderboardUsers.total ?? 0);
                 Welcome to the battleground where developers rise and legends are made.
             </p>
 
-            <div class="mb-6 flex items-center justify-between gap-4">
-                <div class="sm:w-48">
-                    <LanguageFilter v-model="localSelectedLanguage" :languages="availableLanguages" placeholder="All Languages" />
+            <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
+                <div class="flex flex-wrap items-center gap-3">
+                    <div class="sm:w-48">
+                        <LanguageFilter v-model="localSelectedLanguage" :languages="availableLanguages" placeholder="All Languages" />
+                    </div>
+
+                    <div class="sm:w-48">
+                        <LanguageFilter
+                            v-model="localSelectedProvider"
+                            :languages="providerOptions"
+                            placeholder="All Providers"
+                        />
+                    </div>
                 </div>
 
                 <div>

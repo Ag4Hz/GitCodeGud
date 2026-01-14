@@ -2,13 +2,15 @@
 
 namespace App\Services;
 
-use App\Models\User;
+use App\Models\UserProvider;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 
 class GitHubApiService implements GitProviderInterface
 {
+    private ?UserProvider $provider;
+    private ?string $token;
     private const BASE_URL = 'https://api.github.com';
     private const USER_AGENT = 'GitCodeGud-App';
     private const API_VERSION = 'application/vnd.github.v3+json';
@@ -16,14 +18,21 @@ class GitHubApiService implements GitProviderInterface
     private const GITHUB_ISSUE_PATTERN = '/^https:\/\/github\.com\/([^\/]+)\/([^\/]+)\/issues\/(\d+)(?:\/.*)?$/i';
     private const GITHUB_PR_PATTERN = '/^https:\/\/github\.com\/([^\/]+)\/([^\/]+)\/pull\/(\d+)(?:\/.*)?$/i';
 
-    public function __construct(
-        private User $user
-    ) {}
+    public function __construct(UserProvider $provider)
+    {
+        $this->provider = $provider;
+        $this->token = $provider->token;
+    }
+
+    public function getProviderKey(): string
+    {
+        return 'github';
+    }
 
     private function createClient(): PendingRequest
     {
         return Http::withHeaders([
-            'Authorization' => 'Bearer ' . $this->user->oauth_provider_token,
+            'Authorization' => 'token ' . $this->token,
             'Accept' => self::API_VERSION,
             'User-Agent' => self::USER_AGENT,
         ])->baseUrl(self::BASE_URL);
@@ -45,6 +54,7 @@ class GitHubApiService implements GitProviderInterface
         }
         return $response->json() ?? [];
     }
+
     private function handleSimpleResponse(Response $response): array
     {
         if ($response->failed()) {
@@ -52,6 +62,7 @@ class GitHubApiService implements GitProviderInterface
         }
         return $response->json() ?? [];
     }
+
     private static function parseGitHubUrlWithPattern(string $url, string $pattern, array $fieldMapping): ?array
     {
         $url = self::normalizeUrl($url);
@@ -67,7 +78,7 @@ class GitHubApiService implements GitProviderInterface
                     }
 
                     $result[$fieldName] = $fieldName === 'issue_number' || $fieldName === 'pr_number'
-                        ? (int) $value
+                        ? (int)$value
                         : $value;
                 }
             }
@@ -127,7 +138,7 @@ class GitHubApiService implements GitProviderInterface
 
     public function hasValidToken(): bool
     {
-        return !empty($this->user->oauth_provider_token);
+        return !empty($this->token);
     }
 
     public function getUserRepositories(array $params = []): array
@@ -151,6 +162,17 @@ class GitHubApiService implements GitProviderInterface
     {
         $response = $this->createClient()->get("/repos/{$repoFullName}");
         return $this->handleResponse($response, "Failed to fetch repository: {$repoFullName}");
+    }
+
+    public function canUserWriteToRepository(string $repoFullName): bool
+    {
+        try {
+            $repoData = $this->getRepository($repoFullName);
+            return isset($repoData['permissions']) &&
+                ($repoData['permissions']['admin'] || $repoData['permissions']['push']);
+        } catch (\Exception $e) {
+            return false;
+        }
     }
 
     public function isIssueOpen(string $repoFullName, int $issueNumber): bool
@@ -178,6 +200,7 @@ class GitHubApiService implements GitProviderInterface
         $repoFullName = $issueInfo['owner'] . '/' . $issueInfo['name'];
         return $this->getIssueComments($repoFullName, $issueInfo['issue_number']);
     }
+
     public static function isValidGitPullRequestUrl(string $url): bool
     {
         return self::parseGitPullRequestUrl($url) !== null;
@@ -196,6 +219,7 @@ class GitHubApiService implements GitProviderInterface
 
         return isset($data['state']) && $data['state'] === 'open';
     }
+
     public function getPullRequestComments(string $repoFullName, int $prNumber): array
     {
         $response = $this->createClient()->get("/repos/{$repoFullName}/pulls/{$prNumber}/comments");
