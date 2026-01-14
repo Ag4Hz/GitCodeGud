@@ -19,6 +19,7 @@ class Submission extends Model
         'user_id',
         'status',
         'pr_url',
+        'provider',
     ];
 
     protected function casts(): array

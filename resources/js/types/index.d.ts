@@ -32,7 +32,11 @@ export interface User {
     nickname: string;
     email: string;
     description?: string;
-    avatar?: string;
+    avatar?: {
+        url: string;
+        provider: string;
+        label: string;
+    };
     email_verified_at: string | null;
     created_at: string;
     updated_at: string;

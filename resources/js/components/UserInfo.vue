@@ -28,7 +28,7 @@ const props = withDefaults(defineProps<Props>(), {
 const { getInitials } = useInitials();
 const { getUserXP } = useXP();
 
-const showAvatar = computed(() => props.user.avatar && props.user.avatar !== '');
+const showAvatar = computed(() => props.user.avatar && props.user.avatar.url !== '');
 const userXPData = computed(() => getUserXP.value(props.user));
 
 const truncatedDescription = computed(() => {
@@ -56,7 +56,7 @@ const isDescriptionTruncated = computed(() => {
                 :class="{ 'cursor-pointer transition-opacity hover:opacity-80': clickable }"
             >
                 <Avatar class="h-8 w-8 overflow-hidden rounded-lg">
-                    <AvatarImage v-if="showAvatar" :src="user.avatar!" :alt="user.name" />
+                    <AvatarImage v-if="showAvatar" :src="user.avatar?.url!" :alt="user.name" />
                     <AvatarFallback class="rounded-lg bg-neutral-200 font-semibold text-black dark:bg-neutral-700 dark:text-white">
                         {{ getInitials(user.name) }}
                     </AvatarFallback>

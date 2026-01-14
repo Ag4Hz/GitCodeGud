@@ -24,7 +24,28 @@ class UpdateThresholdsRequest extends FormRequest
     {
         return [
             'thresholds' => 'required|array',
-            'thresholds.*' => 'required|integer|min:0'
+            'thresholds.*' => 'required|integer|min:1'
         ];
+    }
+
+    /**
+     * Configure the validator instance.
+     */
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            $thresholds = $this->input('thresholds', []);
+
+            // Check if thresholds are in increasing order
+            for ($i = 1; $i < count($thresholds); $i++) {
+                if ($thresholds[$i] <= $thresholds[$i - 1]) {
+                    $validator->errors()->add(
+                        'thresholds',
+                        'Level thresholds must be in strictly increasing order.'
+                    );
+                    break;
+                }
+            }
+        });
     }
 }

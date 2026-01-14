@@ -3,12 +3,14 @@
 namespace App\Http\Requests;
 
 use App\Models\Bounty;
+
 use App\Rules\GitPullRequestUrl;
 use App\Rules\PullRequestBelongsToRepository;
 use App\Rules\UniqueSubmissionForBounty;
 use App\Services\GitProviderFactory;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
+use App\Services\GitProviderFactory;
 
 class SubmissionStoreRequest extends FormRequest
 {
@@ -31,11 +33,32 @@ class SubmissionStoreRequest extends FormRequest
             'pr_url' => [
                 'required',
                 'url',
+
                 new GitPullRequestUrl(),
                 $bounty ? new PullRequestBelongsToRepository($bounty->issue->repo->url) : '',
             ],
         ];
     }
+
+    public function provider(): string
+    {
+        $url = $this->input('pr_url');
+
+        if (str_contains($url, 'github')) {
+            return 'github';
+        }
+
+        if (str_contains($url, 'gitlab')) {
+            return 'gitlab';
+        }
+
+        if (str_contains($url, 'bitbucket')) {
+            return 'bitbucket';
+        }
+
+        return 'unknown';
+    }
+
 
     public function messages(): array
     {
