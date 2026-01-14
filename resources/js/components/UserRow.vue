@@ -14,7 +14,11 @@ type Provider = {
 type User = {
     id: number;
     nickname?: string | null;
-    avatar?: string | null;
+    avatar?: {
+        url: string;
+        provider: string;
+        label: string;
+    } | null;
     name?: string | null;
     providers?: Provider[];
 };
@@ -61,7 +65,7 @@ const providers = computed(() => {
     >
         <div class="relative">
             <Avatar class="h-10 w-10 flex-shrink-0">
-                <AvatarImage :src="user.avatar || ''" :alt="user.nickname || user.name || 'avatar'" />
+                <AvatarImage :src="user.avatar?.url || ''" :alt="user.nickname || user.name || 'avatar'" />
                 <AvatarFallback class="bg-neutral-200 text-[15px] font-semibold text-neutral-800 dark:bg-neutral-700 dark:text-neutral-100">
                     {{ initials }}
                 </AvatarFallback>
