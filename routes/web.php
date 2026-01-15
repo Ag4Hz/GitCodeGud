@@ -15,7 +15,9 @@ use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 Route::get('/', [DashboardController::class, 'index'])->name('home');
-Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 Route::get('/leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard');
 
 Route::middleware('auth')->group(function () {
