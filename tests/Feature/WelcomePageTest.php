@@ -8,13 +8,13 @@ use App\Models\Bounty;
 use App\Models\Issue;
 use App\Models\Repo;
 use App\Models\User;
-use Illuminate\Foundation\Testing\DatabaseTruncation;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class WelcomePageTest extends TestCase
 {
-    use DatabaseTruncation;
+    use RefreshDatabase;
 
     public function test_welcome_page_shows_login_and_register_buttons()
     {
