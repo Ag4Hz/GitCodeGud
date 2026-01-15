@@ -7,6 +7,7 @@ use App\Models\Issue;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 
 class BountySearchService
 {
@@ -22,11 +23,14 @@ class BountySearchService
     {
         return $query->when($request->filled('search'), function ($q) use ($request) {
             $searchTerm = $request->get('search');
-            return $q->where(function ($query) use ($searchTerm) {
-                $query->where('title', 'ILIKE', "%{$searchTerm}%")
-                    ->orWhere('description', 'ILIKE', "%{$searchTerm}%")
-                    ->orWhereHas('issue.repo', function ($repo) use ($searchTerm) {
-                        $repo->where('git_id', 'ILIKE', "%{$searchTerm}%");
+
+            $operator = DB::connection()->getDriverName() === 'pgsql' ? 'ILIKE' : 'LIKE';
+
+            return $q->where(function ($query) use ($searchTerm, $operator) {
+                $query->where('title', $operator, "%{$searchTerm}%")
+                    ->orWhere('description', $operator, "%{$searchTerm}%")
+                    ->orWhereHas('issue.repo', function ($repo) use ($searchTerm, $operator) {
+                        $repo->where('git_id', $operator, "%{$searchTerm}%");
                     });
             });
         });

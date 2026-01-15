@@ -10,13 +10,13 @@ use App\Models\Bounty;
 use App\Models\Issue;
 use App\Models\Repo;
 use App\Models\Submission;
-use Illuminate\Foundation\Testing\DatabaseTruncation;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class DashboardTest extends TestCase
 {
-    use DatabaseTruncation;
+    use RefreshDatabase;
 
     protected User $user;
 
@@ -138,8 +138,6 @@ class DashboardTest extends TestCase
 
     public function test_filters_by_keyword_search_title_and_description()
     {
-        $this->withoutExceptionHandling();
-
         $creator = User::factory()->create();
         $repo = Repo::factory()->create(['user_id' => $creator->id]);
 
@@ -152,28 +150,20 @@ class DashboardTest extends TestCase
         $issue3 = Issue::factory()->create(['repo_id' => $repo->id]);
         Bounty::factory()->create(['issue_id' => $issue3->id, 'title' => 'Irrelevant Task', 'status' => 'open', 'languages' => ['PHP'], 'reward_xp' => 100]);
 
-        try {
-            $this->actingAs($this->user)
-                ->get('/dashboard?search=UniqueTitleSearch')
-                ->assertInertia(fn (Assert $page) => $page
-                    ->has('bounties.data', 1)
-                    ->where('bounties.data.0.title', 'UniqueTitleSearch')
-                    ->where('filters.search', 'UniqueTitleSearch')
-                );
+        $this->actingAs($this->user)
+            ->get('/dashboard?search=UniqueTitleSearch')
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('bounties.data', 1)
+                ->where('bounties.data.0.title', 'UniqueTitleSearch')
+                ->where('filters.search', 'UniqueTitleSearch')
+            );
 
-            $this->actingAs($this->user)
-                ->get('/dashboard?search=HiddenDescSearch')
-                ->assertInertia(fn (Assert $page) => $page
-                    ->has('bounties.data', 1)
-                    ->where('bounties.data.0.title', 'Other Task')
-                );
-
-        } catch (\Throwable $e) {
-            echo "Message: " . $e->getMessage() . "\n";
-            echo "File: " . $e->getFile() . ":" . $e->getLine() . "\n";
-
-            throw $e;
-        }
+        $this->actingAs($this->user)
+            ->get('/dashboard?search=HiddenDescSearch')
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('bounties.data', 1)
+                ->where('bounties.data.0.title', 'Other Task')
+            );
     }
 
     public function test_works_with_multiple_filters_together()
