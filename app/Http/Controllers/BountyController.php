@@ -9,12 +9,14 @@ use App\Models\Issue;
 use App\Models\Repo;
 use App\Services\BountySearchService;
 use App\Services\GitHubApiService;
+use App\Services\GitProviderFactory;
 use App\Services\GitRepoService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -182,25 +184,30 @@ class BountyController extends Controller
     private function getPaginatedComments(Bounty $bounty, Request $request): array
     {
         $user = $request->user();
-        if (!$user) return [];
-
-        $githubProvider = $user->providers()->where('provider', 'github')->first();
-        if (!$githubProvider) {
+        if (!$user || !$bounty->issue?->url) {
             return [];
         }
 
-        $githubApi = new GitHubApiService($githubProvider);
-        if (!$githubApi->hasValidToken() || !$bounty->issue?->url) {
+        $provider = $bounty->issue->provider ?? 'github';
+
+        $userProvider = $user->providers()->where('provider', $provider)->first();
+        if (!$userProvider || !$userProvider->token) {
             return [];
         }
 
-        $allComments = $githubApi->getIssueCommentsByUrl($bounty->issue->url);
-        if (empty($allComments)) return [];
+        $apiService = GitProviderFactory::getProvider($provider, $userProvider);
+
+        $allComments = $apiService->getIssueCommentsByUrl($bounty->issue->url);
+        if (empty($allComments)) {
+            return [];
+        }
+
+        $normalizedComments = $this->normalizeComments($allComments, $provider);
 
         $perPage = $request->get('per_page', 10);
         $currentPage = $request->get('page', 1);
 
-        $comments = collect($allComments);
+        $comments = collect($normalizedComments);
 
         $paginatedComments = new \Illuminate\Pagination\LengthAwarePaginator(
             $comments->forPage($currentPage, $perPage),
@@ -214,6 +221,60 @@ class BountyController extends Controller
         );
 
         return $paginatedComments->withQueryString()->toArray();
+    }
+
+    private function normalizeComments(array $comments, string $provider): array
+    {
+        return array_map(function ($comment) use ($provider) {
+            switch ($provider) {
+                case 'gitlab':
+                    $body = $comment['body'] ?? '';
+                    $body = preg_replace('/<code[^>]*>(.*?)<\/code>/is', '`$1`', $body);
+                    $body = preg_replace('/<p[^>]*>/i', '', $body);
+                    $body = str_replace('</p>', "\n\n", $body);
+                    $body = preg_replace('/<br\s*\/?>/i', "\n", $body);
+                    $body = strip_tags($body);
+
+                    $body = html_entity_decode($body, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                    $body = preg_replace('/\n{3,}/', "\n\n", $body);
+                    $body = trim($body);
+
+                    return [
+                        'id' => $comment['id'] ?? null,
+                        'body' => $body,
+                        'created_at' => $comment['created_at'] ?? null,
+                        'updated_at' => $comment['updated_at'] ?? null,
+                        'html_url' => $comment['web_url'] ?? '#',
+                        'user' => [
+                            'login' => $comment['author']['username'] ?? 'Unknown',
+                            'avatar_url' => $comment['author']['avatar_url'] ?? '',
+                        ],
+                        'reactions' => [
+                            'total_count' => 0,
+                        ],
+                    ];
+
+                case 'bitbucket':
+                    return [
+                        'id' => $comment['id'] ?? null,
+                        'body' => $comment['content']['raw'] ?? ($comment['content']['markup'] ?? ''),
+                        'created_at' => $comment['created_on'] ?? null,
+                        'updated_at' => $comment['updated_on'] ?? null,
+                        'html_url' => $comment['links']['html']['href'] ?? '#',
+                        'user' => [
+                            'login' => $comment['user']['nickname'] ?? ($comment['user']['display_name'] ?? 'Unknown'),
+                            'avatar_url' => $comment['user']['links']['avatar']['href'] ?? '',
+                        ],
+                        'reactions' => [
+                            'total_count' => 0,
+                        ],
+                    ];
+
+                case 'github':
+                default:
+                    return $comment;
+            }
+        }, $comments);
     }
 
     public function edit(Bounty $bounty): Response
@@ -320,8 +381,7 @@ class BountyController extends Controller
         });
 
         if (!empty($providerFilter) && $providerFilter !== 'all') {
-            $allRepositories = array_filter($allRepositories, fn($repo) =>
-                ($repo['provider'] ?? 'github') === $providerFilter
+            $allRepositories = array_filter($allRepositories, fn($repo) => ($repo['provider'] ?? 'github') === $providerFilter
             );
         }
 

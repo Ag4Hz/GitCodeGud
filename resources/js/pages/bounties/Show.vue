@@ -96,6 +96,12 @@ const { formatDate } = useDateFormatter();
 const { getInitials } = useInitials();
 const { getProviderConfig, getProviderName, extractProviderFromUrl } = useProviderUtils();
 
+const getAvatarUrl = (avatar: string | { url: string; provider: string; label: string } | undefined): string => {
+    if (!avatar) return '';
+    if (typeof avatar === 'string') return avatar;
+    return avatar.url || '';
+};
+
 const getStatusColor = (status: string) => {
     switch (status) {
         case 'open':
@@ -163,18 +169,18 @@ const submissionStatusText = computed(() => {
     }
 });
 
-const isValidGitHubUrl = (url: string | undefined): boolean => {
+const isValidGitUrl = (url: string | undefined): boolean => {
     if (!url) return false;
     try {
         const parsedUrl = new URL(url);
-        return parsedUrl.hostname === 'github.com';
+        return ['github.com', 'gitlab.com', 'bitbucket.org'].includes(parsedUrl.hostname);
     } catch {
         return false;
     }
 };
 
 const getRepositoryName = (repoUrl: string | undefined): string => {
-    if (!repoUrl || !isValidGitHubUrl(repoUrl)) return 'Repository';
+    if (!repoUrl || !isValidGitUrl(repoUrl)) return 'Repository';
 
     try {
         const url = new URL(repoUrl);
@@ -195,7 +201,7 @@ const ownerInfo = computed(() => {
             id: user.id,
             name: user.name,
             nickname: user.nickname,
-            avatar: user.avatar || `https://github.com/${user.nickname}.png`,
+            avatar: getAvatarUrl(user.avatar) || `https://github.com/${user.nickname}.png`,
         };
     }
 
@@ -409,9 +415,9 @@ const shouldShowPagination = computed(() => {
                                             class="flex items-center gap-1 text-sm text-purple-600 transition-colors hover:text-purple-800"
                                         >
                                             <ExternalLink class="h-3 w-3" />
-                                            View Pull Request
+                                            View {{ extractProviderFromUrl(userSubmission.pr_url) === 'gitlab' ? 'Merge Request' : 'Pull Request' }}
                                         </a>
-                                        <span class="text-sm text-muted-foreground"> • Submitted {{ formatDate(userSubmission.created_at) }} </span>
+                                        <span class="text-sm text-muted-foreground"> â€¢ Submitted {{ formatDate(userSubmission.created_at) }} </span>
                                     </div>
                                 </div>
                             </div>
@@ -489,7 +495,7 @@ const shouldShowPagination = computed(() => {
                                             </div>
 
                                             <a
-                                                v-if="isValidGitHubUrl(bounty.issue?.repo?.url || '')"
+                                                v-if="isValidGitUrl(bounty.issue?.repo?.url || '')"
                                                 :href="bounty.issue?.repo?.url || '#'"
                                                 target="_blank"
                                                 rel="noopener noreferrer"
@@ -525,7 +531,7 @@ const shouldShowPagination = computed(() => {
                                             </div>
 
                                             <a
-                                                v-if="isValidGitHubUrl(bounty.issue?.url || '')"
+                                                v-if="isValidGitUrl(bounty.issue?.url || '')"
                                                 :href="bounty.issue?.url || '#'"
                                                 target="_blank"
                                                 rel="noopener noreferrer"
@@ -661,7 +667,7 @@ const shouldShowPagination = computed(() => {
                                         <div class="flex items-center justify-between">
                                             <div class="flex items-center gap-3">
                                                 <Avatar class="h-8 w-8">
-                                                    <AvatarImage :src="submission.user.avatar || ''" :alt="submission.user.name" />
+                                                    <AvatarImage :src="getAvatarUrl(submission.user.avatar) || ''" :alt="submission.user.name" />
                                                     <AvatarFallback>
                                                         {{ getInitials(submission.user.name || submission.user.nickname || '') }}
                                                     </AvatarFallback>
@@ -713,11 +719,11 @@ const shouldShowPagination = computed(() => {
                             </div>
                         </div>
 
-                        <!-- GitHub Comments Section -->
+                        <!-- Comments Section -->
                         <div>
                             <h3 class="mb-4 flex items-center gap-2 text-lg font-semibold">
                                 <MessageSquare class="h-5 w-5" />
-                                GitHub Comments
+                                {{ getProviderName(bounty.issue?.provider) }} Comments
                                 <span v-if="comments?.total && comments.total > 0" class="text-sm text-muted-foreground">
                                     ({{ comments.total }})
                                 </span>
@@ -736,16 +742,16 @@ const shouldShowPagination = computed(() => {
                                 <Card class="w-full rounded-xl border border-gray-200 bg-white/40 p-4 dark:border-white/10 dark:bg-white/5">
                                     <CardContent class="p-6">
                                         <MessageSquare class="mx-auto mb-3 h-12 w-12 text-muted-foreground" />
-                                        <p class="text-muted-foreground">No comments yet on this GitHub issue.</p>
+                                        <p class="text-muted-foreground">No comments yet on this {{ getProviderName(bounty.issue?.provider) }} issue.</p>
                                         <a
-                                            v-if="isValidGitHubUrl(bounty.issue?.url || '')"
+                                            v-if="isValidGitUrl(bounty.issue?.url || '')"
                                             :href="bounty.issue?.url || '#'"
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             class="mt-2 inline-flex items-center gap-1 text-sm text-purple-600 hover:underline"
                                         >
                                             <ExternalLink class="h-3 w-3" />
-                                            Add a comment on GitHub
+                                            Add a comment on {{ getProviderName(bounty.issue?.provider) }}
                                         </a>
                                     </CardContent>
                                 </Card>
@@ -773,7 +779,7 @@ const shouldShowPagination = computed(() => {
                                                 <!-- Comment Header -->
                                                 <div class="mb-2 flex items-center gap-2">
                                                     <span class="text-sm font-semibold">{{ comment.user?.login || 'Unknown User' }}</span>
-                                                    <Badge variant="outline" class="text-xs"> GitHub User </Badge>
+                                                    <Badge variant="outline" class="text-xs"> {{ getProviderName(bounty.issue?.provider) }} User </Badge>
                                                     <span class="text-xs text-muted-foreground">
                                                         {{ formatDate(comment.created_at) }}
                                                     </span>
@@ -784,7 +790,7 @@ const shouldShowPagination = computed(() => {
                                                         class="ml-auto flex items-center gap-1 text-xs text-purple-600 hover:underline"
                                                     >
                                                         <ExternalLink class="h-3 w-3" />
-                                                        View on GitHub
+                                                        View on {{ getProviderName(bounty.issue?.provider) }}
                                                     </a>
                                                 </div>
 

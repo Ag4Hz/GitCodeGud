@@ -18,6 +18,7 @@ class BountyDisplayTest extends TestCase
 
         Bounty::factory()->create([
             'title' => 'Test Bounty',
+            'status' => 'open',
         ]);
 
         $this->actingAs($user)
@@ -25,8 +26,10 @@ class BountyDisplayTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->has('bounties')
-                ->where('bounties', fn ($bounties) => collect(data_get($bounties, 'data', $bounties))
-                    ->contains(fn ($item) => data_get($item, 'title') === 'Test Bounty')
+                ->has('bounties.data')
+                ->has('bounties.data.0', fn (Assert $bounty) => $bounty
+                    ->where('title', 'Test Bounty')
+                    ->etc()
                 )
             );
     }
@@ -38,14 +41,18 @@ class BountyDisplayTest extends TestCase
         $bounty = Bounty::factory()->create([
             'title' => 'Test Bounty',
             'description' => 'Test Description',
+            'status' => 'open',
         ]);
 
         $this->actingAs($user)
             ->get(route('bounties.show', $bounty))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                ->where('bounty.title', 'Test Bounty')
-                ->where('bounty.description', 'Test Description')
+                ->has('bounty', fn (Assert $bounty) => $bounty
+                    ->where('title', 'Test Bounty')
+                    ->where('description', 'Test Description')
+                    ->etc()
+                )
             );
     }
 

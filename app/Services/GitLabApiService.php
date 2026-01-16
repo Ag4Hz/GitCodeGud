@@ -229,7 +229,11 @@ class GitLabApiService implements GitProviderInterface
     {
         $encodedPath = self::encodeProjectPath($repoFullName);
         $response = $this->createClient()->get("/projects/{$encodedPath}/issues/{$issueNumber}/notes");
-        return $this->handleSimpleResponse($response);
+        $notes = $this->handleSimpleResponse($response);
+
+        return array_values(array_filter($notes, function ($note) {
+            return empty($note['system']);
+        }));
     }
 
     public function getIssueCommentsByUrl(string $issueUrl): array
@@ -263,6 +267,10 @@ class GitLabApiService implements GitProviderInterface
     {
         $encodedPath = self::encodeProjectPath($repoFullName);
         $response = $this->createClient()->get("/projects/{$encodedPath}/merge_requests/{$prNumber}/notes");
-        return $this->handleSimpleResponse($response);
+        $notes = $this->handleSimpleResponse($response);
+
+        return array_values(array_filter($notes, function ($note) {
+            return empty($note['system']);
+        }));
     }
 }
