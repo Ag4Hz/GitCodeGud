@@ -25,8 +25,9 @@ class BountyDisplayTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->has('bounties')
-                ->where('bounties', fn ($bounties) => collect(data_get($bounties, 'data', $bounties))
-                    ->contains(fn ($item) => data_get($item, 'title') === 'Test Bounty')
+                ->has('bounties.data')
+                ->has('bounties.data.0', fn (Assert $bounty) => $bounty
+                    ->where('title', 'Test Bounty')
                 )
             );
     }
