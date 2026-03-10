@@ -64,5 +64,5 @@ Route::middleware('auth')->group(function () {
 });
 
 
-Route::get('/auth/{provider}/redirect', ProviderRedirectController::class)->where('provider', 'github|gitlab|bitbucket')->name('oauth.redirect');
-Route::get('/auth/{provider}/callback', ProviderCallbackController::class)->where('provider', 'github|gitlab|bitbucket')->name('oauth.callback');
+Route::get('/auth/{provider}/redirect', ProviderRedirectController::class)->where('provider', 'github|gitlab|bitbucket|jira')->name('oauth.redirect');
+Route::get('/auth/{provider}/callback', ProviderCallbackController::class)->where('provider', 'github|gitlab|bitbucket|jira')->name('oauth.callback');

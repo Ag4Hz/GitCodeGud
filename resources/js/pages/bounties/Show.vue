@@ -169,6 +169,21 @@ const submissionStatusText = computed(() => {
     }
 });
 
+const isValidIssueUrl = (url: string | undefined): boolean => {
+    if (!url) return false;
+    try {
+        const parsedUrl = new URL(url);
+        const hostname = parsedUrl.hostname;
+        return (
+            ['github.com', 'gitlab.com', 'bitbucket.org'].includes(hostname) ||
+            hostname === 'atlassian.net' ||
+            hostname.endsWith('.atlassian.net')
+        );
+    } catch {
+        return false;
+    }
+};
+
 const isValidGitUrl = (url: string | undefined): boolean => {
     if (!url) return false;
     try {
@@ -177,6 +192,11 @@ const isValidGitUrl = (url: string | undefined): boolean => {
     } catch {
         return false;
     }
+};
+
+const getIssueLinkLabel = (provider: string | undefined): string => {
+    if (provider === 'bitbucket') return 'Jira';
+    return getProviderName(provider);
 };
 
 const getRepositoryName = (repoUrl: string | undefined): string => {
@@ -417,7 +437,7 @@ const shouldShowPagination = computed(() => {
                                             <ExternalLink class="h-3 w-3" />
                                             View {{ extractProviderFromUrl(userSubmission.pr_url) === 'gitlab' ? 'Merge Request' : 'Pull Request' }}
                                         </a>
-                                        <span class="text-sm text-muted-foreground"> â€¢ Submitted {{ formatDate(userSubmission.created_at) }} </span>
+                                        <span class="text-sm text-muted-foreground"> • Submitted {{ formatDate(userSubmission.created_at) }} </span>
                                     </div>
                                 </div>
                             </div>
@@ -525,20 +545,20 @@ const shouldShowPagination = computed(() => {
                                                     <Target class="h-5 w-5 text-green-600 dark:text-green-400" />
                                                 </div>
                                                 <div class="min-w-0 flex-1">
-                                                    <h4 class="mb-1 text-lg font-semibold">{{ getProviderName(bounty.issue?.provider) }} Issue</h4>
+                                                    <h4 class="mb-1 text-lg font-semibold">{{ getIssueLinkLabel(bounty.issue?.provider) }} Issue</h4>
                                                     <p class="text-sm text-muted-foreground">View the specific issue to resolve</p>
                                                 </div>
                                             </div>
 
                                             <a
-                                                v-if="isValidGitUrl(bounty.issue?.url || '')"
+                                                v-if="isValidIssueUrl(bounty.issue?.url || '')"
                                                 :href="bounty.issue?.url || '#'"
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 class="flex w-full items-center justify-center gap-2 rounded-lg bg-green-800 px-4 py-3 text-sm font-medium text-white transition-all duration-200 group-hover:scale-105 hover:bg-green-700"
                                             >
                                                 <ExternalLink class="h-4 w-4" />
-                                                View Issue on {{ getProviderName(bounty.issue?.provider) }}
+                                                View Issue on {{ getIssueLinkLabel(bounty.issue?.provider) }}
                                             </a>
                                             <div
                                                 v-else
@@ -723,7 +743,7 @@ const shouldShowPagination = computed(() => {
                         <div>
                             <h3 class="mb-4 flex items-center gap-2 text-lg font-semibold">
                                 <MessageSquare class="h-5 w-5" />
-                                {{ getProviderName(bounty.issue?.provider) }} Comments
+                                {{ getIssueLinkLabel(bounty.issue?.provider) }} Comments
                                 <span v-if="comments?.total && comments.total > 0" class="text-sm text-muted-foreground">
                                     ({{ comments.total }})
                                 </span>
@@ -742,16 +762,16 @@ const shouldShowPagination = computed(() => {
                                 <Card class="w-full rounded-xl border border-gray-200 bg-white/40 p-4 dark:border-white/10 dark:bg-white/5">
                                     <CardContent class="p-6">
                                         <MessageSquare class="mx-auto mb-3 h-12 w-12 text-muted-foreground" />
-                                        <p class="text-muted-foreground">No comments yet on this {{ getProviderName(bounty.issue?.provider) }} issue.</p>
+                                        <p class="text-muted-foreground">No comments yet on this {{ getIssueLinkLabel(bounty.issue?.provider) }} issue.</p>
                                         <a
-                                            v-if="isValidGitUrl(bounty.issue?.url || '')"
+                                            v-if="isValidIssueUrl(bounty.issue?.url || '')"
                                             :href="bounty.issue?.url || '#'"
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             class="mt-2 inline-flex items-center gap-1 text-sm text-purple-600 hover:underline"
                                         >
                                             <ExternalLink class="h-3 w-3" />
-                                            Add a comment on {{ getProviderName(bounty.issue?.provider) }}
+                                            Add a comment on {{ getIssueLinkLabel(bounty.issue?.provider) }}
                                         </a>
                                     </CardContent>
                                 </Card>
@@ -779,7 +799,7 @@ const shouldShowPagination = computed(() => {
                                                 <!-- Comment Header -->
                                                 <div class="mb-2 flex items-center gap-2">
                                                     <span class="text-sm font-semibold">{{ comment.user?.login || 'Unknown User' }}</span>
-                                                    <Badge variant="outline" class="text-xs"> {{ getProviderName(bounty.issue?.provider) }} User </Badge>
+                                                    <Badge variant="outline" class="text-xs"> {{ getIssueLinkLabel(bounty.issue?.provider) }} User </Badge>
                                                     <span class="text-xs text-muted-foreground">
                                                         {{ formatDate(comment.created_at) }}
                                                     </span>
@@ -790,7 +810,7 @@ const shouldShowPagination = computed(() => {
                                                         class="ml-auto flex items-center gap-1 text-xs text-purple-600 hover:underline"
                                                     >
                                                         <ExternalLink class="h-3 w-3" />
-                                                        View on {{ getProviderName(bounty.issue?.provider) }}
+                                                        View on {{ getIssueLinkLabel(bounty.issue?.provider) }}
                                                     </a>
                                                 </div>
 
