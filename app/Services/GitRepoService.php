@@ -26,7 +26,7 @@ class GitRepoService
             $service = $this->createServiceForProvider($userProvider);
             if ($service && $service->hasValidToken()) {
                 $this->providers[$userProvider->provider] = [
-                    'service' => $service,
+                    'service'  => $service,
                     'provider' => $userProvider,
                 ];
             }
@@ -36,9 +36,10 @@ class GitRepoService
     private function createServiceForProvider(UserProvider $userProvider): ?GitProviderInterface
     {
         return match ($userProvider->provider) {
-            'github' => new GitHubApiService($userProvider),
-            'gitlab' => new GitLabApiService($userProvider),
-            default => null,
+            'github'    => new GitHubApiService($userProvider),
+            'gitlab'    => new GitLabApiService($userProvider),
+            'bitbucket' => new BitbucketApiService($userProvider),
+            default     => null,
         };
     }
 
@@ -69,7 +70,7 @@ class GitRepoService
             }
         }
 
-        usort($allRepositories, fn ($a, $b) =>
+        usort($allRepositories, fn($a, $b) =>
             ($b['updated_at'] ?? '') <=> ($a['updated_at'] ?? '')
         );
 
@@ -86,10 +87,10 @@ class GitRepoService
             $issues = $this->providers[$provider]['service']->getRepositoryIssues($repoFullName, $params);
             return $this->normalizeIssues($issues, $provider);
         } catch (Exception $e) {
-            Log::warning("Failed to fetch issues from {$provider}: " . $e->getMessage());
             return [];
         }
     }
+
     public function getRepositoryLanguages(string $provider, string $repoFullName): array
     {
         if (!$this->hasProvider($provider)) {
@@ -140,6 +141,9 @@ class GitRepoService
         if (GitLabApiService::isValidGitUrl($url) || GitLabApiService::isValidGitIssueUrl($url)) {
             return 'gitlab';
         }
+        if (BitbucketApiService::isValidGitUrl($url)) {
+            return 'bitbucket';
+        }
         return null;
     }
 
@@ -151,9 +155,10 @@ class GitRepoService
         }
 
         $result = match ($provider) {
-            'github' => GitHubApiService::parseGitUrl($url),
-            'gitlab' => GitLabApiService::parseGitUrl($url),
-            default => null,
+            'github'    => GitHubApiService::parseGitUrl($url),
+            'gitlab'    => GitLabApiService::parseGitUrl($url),
+            'bitbucket' => BitbucketApiService::parseGitUrl($url),
+            default     => null,
         };
 
         if ($result) {
@@ -171,9 +176,10 @@ class GitRepoService
         }
 
         $result = match ($provider) {
-            'github' => GitHubApiService::parseGitIssueUrl($url),
-            'gitlab' => GitLabApiService::parseGitIssueUrl($url),
-            default => null,
+            'github'    => GitHubApiService::parseGitIssueUrl($url),
+            'gitlab'    => GitLabApiService::parseGitIssueUrl($url),
+            'bitbucket' => BitbucketApiService::parseGitIssueUrl($url),
+            default     => null,
         };
 
         if ($result) {
@@ -188,66 +194,78 @@ class GitRepoService
         return array_map(function ($repo) use ($provider) {
             return match ($provider) {
                 'github' => [
-                    'id' => $repo['id'],
-                    'name' => $repo['name'],
-                    'full_name' => $repo['full_name'],
-                    'description' => $repo['description'] ?? '',
-                    'url' => $repo['html_url'],
-                    'language' => $repo['language'] ?? 'Unknown',
-                    'updated_at' => $repo['updated_at'],
+                    'id'               => $repo['id'],
+                    'name'             => $repo['name'],
+                    'full_name'        => $repo['full_name'],
+                    'description'      => $repo['description'] ?? '',
+                    'url'              => $repo['html_url'],
+                    'language'         => $repo['language'] ?? 'Unknown',
+                    'updated_at'       => $repo['updated_at'],
                     'open_issues_count' => $repo['open_issues_count'] ?? 0,
-                    'provider' => 'github',
+                    'provider'         => 'github',
                 ],
                 'gitlab' => [
-                    'id' => $repo['id'],
-                    'name' => $repo['name'] ?? $repo['path'],
-                    'full_name' => $repo['path_with_namespace'],
-                    'description' => $repo['description'] ?? '',
-                    'url' => $repo['web_url'],
-                    'language' => $repo['language'] ?? 'Unknown',
-                    'updated_at' => $repo['last_activity_at'] ?? $repo['updated_at'] ?? null,
+                    'id'               => $repo['id'],
+                    'name'             => $repo['name'] ?? $repo['path'],
+                    'full_name'        => $repo['path_with_namespace'],
+                    'description'      => $repo['description'] ?? '',
+                    'url'              => $repo['web_url'],
+                    'language'         => $repo['language'] ?? 'Unknown',
+                    'updated_at'       => $repo['last_activity_at'] ?? $repo['updated_at'] ?? null,
                     'open_issues_count' => $repo['open_issues_count'] ?? 0,
-                    'provider' => 'gitlab',
+                    'provider'         => 'gitlab',
+                ],
+                'bitbucket' => [
+                    'id'               => $repo['uuid'] ?? $repo['full_name'],
+                    'name'             => $repo['slug'] ?? $repo['name'] ?? '',
+                    'full_name'        => $repo['full_name'],
+                    'description'      => $repo['description'] ?? '',
+                    'url'              => $repo['links']['html']['href'] ?? "https://bitbucket.org/{$repo['full_name']}",
+                    'language'         => ucfirst(strtolower($repo['language'] ?? '')) ?: 'Unknown',
+                    'updated_at'       => $repo['updated_on'] ?? null,
+                    'open_issues_count' => 0,
+                    'provider'         => 'bitbucket',
                 ],
                 default => $repo,
             };
         }, $repos);
     }
+
     private function normalizeIssues(array $issues, string $provider): array
     {
         return array_map(function ($issue) use ($provider) {
             return match ($provider) {
                 'github' => [
-                    'id' => $issue['id'],
-                    'number' => $issue['number'],
-                    'title' => $issue['title'],
-                    'body' => $issue['body'] ?? '',
-                    'url' => $issue['html_url'],
-                    'state' => $issue['state'],
+                    'id'         => $issue['id'],
+                    'number'     => $issue['number'],
+                    'title'      => $issue['title'],
+                    'body'       => $issue['body'] ?? '',
+                    'url'        => $issue['html_url'],
+                    'state'      => $issue['state'],
                     'created_at' => $issue['created_at'],
                     'updated_at' => $issue['updated_at'],
-                    'user' => [
-                        'login' => $issue['user']['login'],
+                    'user'       => [
+                        'login'      => $issue['user']['login'],
                         'avatar_url' => $issue['user']['avatar_url'],
                     ],
-                    'labels' => array_map(fn($l) => ['name' => $l['name'], 'color' => $l['color']], $issue['labels'] ?? []),
+                    'labels'   => array_map(fn($l) => ['name' => $l['name'], 'color' => $l['color']], $issue['labels'] ?? []),
                     'comments' => $issue['comments'] ?? 0,
                     'provider' => 'github',
                 ],
                 'gitlab' => [
-                    'id' => $issue['id'],
-                    'number' => $issue['iid'],
-                    'title' => $issue['title'],
-                    'body' => $issue['description'] ?? '',
-                    'url' => $issue['web_url'],
-                    'state' => $issue['state'] === 'opened' ? 'open' : $issue['state'],
+                    'id'         => $issue['id'],
+                    'number'     => $issue['iid'],
+                    'title'      => $issue['title'],
+                    'body'       => $issue['description'] ?? '',
+                    'url'        => $issue['web_url'],
+                    'state'      => $issue['state'] === 'opened' ? 'open' : $issue['state'],
                     'created_at' => $issue['created_at'],
                     'updated_at' => $issue['updated_at'],
-                    'user' => [
-                        'login' => $issue['author']['username'] ?? 'unknown',
+                    'user'       => [
+                        'login'      => $issue['author']['username'] ?? 'unknown',
                         'avatar_url' => $issue['author']['avatar_url'] ?? '',
                     ],
-                    'labels' => array_map(fn($l) => ['name' => $l, 'color' => '6c757d'], $issue['labels'] ?? []),
+                    'labels'   => array_map(fn($l) => ['name' => $l, 'color' => '6c757d'], $issue['labels'] ?? []),
                     'comments' => $issue['user_notes_count'] ?? 0,
                     'provider' => 'gitlab',
                 ],

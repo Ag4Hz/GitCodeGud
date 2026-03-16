@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Http;
 class BitbucketApiService implements GitProviderInterface
 {
     private UserProvider $provider;
+    private array $repoCache = [];
 
     private const BASE_URL = 'https://api.bitbucket.org/2.0';
     private const USER_AGENT = 'GitCodeGud-App';
@@ -17,7 +18,8 @@ class BitbucketApiService implements GitProviderInterface
     private const BITBUCKET_ISSUE_PATTERN = '/^https:\/\/bitbucket\.org\/([^\/]+)\/([^\/]+)\/issues\/(\d+)(?:\/.*)?$/i';
     private const BITBUCKET_PR_PATTERN = '/^https:\/\/bitbucket\.org\/([^\/]+)\/([^\/]+)\/pull-requests\/(\d+)(?:\/.*)?$/i';
 
-    public function __construct(UserProvider $provider) {
+    public function __construct(UserProvider $provider)
+    {
         $this->provider = $provider;
     }
 
@@ -30,9 +32,55 @@ class BitbucketApiService implements GitProviderInterface
     {
         return Http::withHeaders([
             'Authorization' => 'Bearer ' . $this->provider->token,
-            'Accept' => 'application/json',
-            'User-Agent' => self::USER_AGENT,
+            'Accept'        => 'application/json',
+            'User-Agent'    => self::USER_AGENT,
         ])->baseUrl(self::BASE_URL);
+    }
+
+    private function refreshToken(): bool
+    {
+        if (empty($this->provider->refresh_token)) {
+            return false;
+        }
+
+        $clientId     = config('services.bitbucket.client_id');
+        $clientSecret = config('services.bitbucket.client_secret');
+
+        if (!$clientId || !$clientSecret) {
+            return false;
+        }
+
+        $response = Http::asForm()->post('https://bitbucket.org/site/oauth2/access_token', [
+            'grant_type'    => 'refresh_token',
+            'refresh_token' => $this->provider->refresh_token,
+            'client_id'     => $clientId,
+            'client_secret' => $clientSecret,
+        ]);
+
+        if ($response->failed()) {
+            return false;
+        }
+
+        $data = $response->json();
+        if (empty($data['access_token'])) {
+            return false;
+        }
+
+        $this->provider->update([
+            'token'         => $data['access_token'],
+            'refresh_token' => $data['refresh_token'] ?? $this->provider->refresh_token,
+        ]);
+
+        return true;
+    }
+
+    private function getWithRefresh(string $url, array $params = []): Response
+    {
+        $response = $this->createClient()->get($url, $params);
+        if ($response->status() === 401 && $this->refreshToken()) {
+            $response = $this->createClient()->get($url, $params);
+        }
+        return $response;
     }
 
     private static function normalizeUrl(string $url): string
@@ -69,23 +117,19 @@ class BitbucketApiService implements GitProviderInterface
             foreach ($fieldMapping as $index => $fieldName) {
                 if (isset($matches[$index])) {
                     $value = trim($matches[$index]);
-
                     if ($fieldName === 'name' && str_ends_with($value, '.git')) {
                         $value = substr($value, 0, -4);
                     }
-
                     $result[$fieldName] = ($fieldName === 'issue_number' || $fieldName === 'pr_number')
                         ? (int) $value
                         : $value;
                 }
             }
-
             if (isset($result['owner']) && isset($result['name'])) {
-                $fullName = $result['owner'] . '/' . $result['name'];
-                $result['full_name'] = $fullName;
+                $fullName                 = $result['owner'] . '/' . $result['name'];
+                $result['full_name']      = $fullName;
                 $result['repo_full_name'] = $fullName;
             }
-
             return $result;
         }
 
@@ -94,20 +138,17 @@ class BitbucketApiService implements GitProviderInterface
 
     public static function parseGitUrl(string $url): ?array
     {
-        $fieldMapping = [1 => 'owner', 2 => 'name'];
-        return self::parseUrlWithPattern($url, self::BITBUCKET_REPO_PATTERN, $fieldMapping);
+        return self::parseUrlWithPattern($url, self::BITBUCKET_REPO_PATTERN, [1 => 'owner', 2 => 'name']);
     }
 
     public static function parseGitIssueUrl(string $url): ?array
     {
-        $fieldMapping = [1 => 'owner', 2 => 'name', 3 => 'issue_number'];
-        return self::parseUrlWithPattern($url, self::BITBUCKET_ISSUE_PATTERN, $fieldMapping);
+        return self::parseUrlWithPattern($url, self::BITBUCKET_ISSUE_PATTERN, [1 => 'owner', 2 => 'name', 3 => 'issue_number']);
     }
 
     public static function parseGitPullRequestUrl(string $url): ?array
     {
-        $fieldMapping = [1 => 'owner', 2 => 'name', 3 => 'pr_number'];
-        return self::parseUrlWithPattern($url, self::BITBUCKET_PR_PATTERN, $fieldMapping);
+        return self::parseUrlWithPattern($url, self::BITBUCKET_PR_PATTERN, [1 => 'owner', 2 => 'name', 3 => 'pr_number']);
     }
 
     public static function isValidGitUrl(string $url): bool
@@ -133,69 +174,76 @@ class BitbucketApiService implements GitProviderInterface
     public function getUserRepositories(array $params = []): array
     {
         $defaultParams = [
-            'role' => 'owner',
-            'sort' => '-updated_on',
-            'pagelen' => 100
+            'role'    => 'member',
+            'sort'    => '-updated_on',
+            'pagelen' => 100,
         ];
-        $response = $this->createClient()->get('/repositories/' . $this->provider->provider_id, array_merge($defaultParams, $params));
-        $data = $this->handleResponse($response, 'Failed to fetch Bitbucket repositories');
 
-        return $data['values'] ?? [];
+        $response = $this->getWithRefresh('/repositories', array_merge($defaultParams, $params));
+        $data     = $this->handleSimpleResponse($response);
+        $repos    = $data['values'] ?? [];
+
+        foreach ($repos as $repo) {
+            $ws   = $repo['workspace']['slug'] ?? $repo['owner']['nickname'] ?? null;
+            $slug = $repo['slug'] ?? null;
+            if ($ws && $slug) {
+                $this->repoCache["{$ws}/{$slug}"] = $repo;
+            }
+        }
+
+        return $repos;
     }
 
     public function getRepositoryLanguages(string $repoFullName): array
     {
-        // Bitbucket doesn't have a direct languages endpoint
-        // Return empty array or implement custom logic
-        return [];
+        $repo     = $this->repoCache[$repoFullName] ?? $this->getRepository($repoFullName);
+        $language = $repo['language'] ?? null;
+
+        if (empty($language)) {
+            return [];
+        }
+
+        return [ucfirst(strtolower($language)) => 1000];
     }
 
     public function getRepository(string $repoFullName): array
     {
-        $response = $this->createClient()->get("/repositories/{$repoFullName}");
-        return $this->handleResponse($response, "Failed to fetch repository: {$repoFullName}");
+        if (!isset($this->repoCache[$repoFullName])) {
+            $response                       = $this->createClient()->get("/repositories/{$repoFullName}");
+            $this->repoCache[$repoFullName] = $this->handleResponse($response, "Failed to fetch repository: {$repoFullName}");
+        }
+        return $this->repoCache[$repoFullName];
     }
 
     public function getRepositoryIssues(string $repoFullName, array $params = []): array
     {
-        $defaultParams = [
-            'state' => 'new',
-            'pagelen' => 50,
-            'sort' => '-updated_on'
-        ];
-
-        $response = $this->createClient()->get("/repositories/{$repoFullName}/issues", array_merge($defaultParams, $params));
-        $data = $this->handleSimpleResponse($response);
-
+        $defaultParams = ['state' => 'new', 'pagelen' => 50, 'sort' => '-updated_on'];
+        $response      = $this->createClient()->get("/repositories/{$repoFullName}/issues", array_merge($defaultParams, $params));
+        $data          = $this->handleSimpleResponse($response);
         return $data['values'] ?? [];
     }
 
     public function isIssueOpen(string $repoFullName, int $issueNumber): bool
     {
         $response = $this->createClient()->get("/repositories/{$repoFullName}/issues/{$issueNumber}");
-        $data = $this->handleSimpleResponse($response);
-
+        $data     = $this->handleSimpleResponse($response);
         return isset($data['state']) && in_array($data['state'], ['new', 'open']);
     }
 
     public function getIssueComments(string $repoFullName, int $issueNumber): array
     {
         $response = $this->createClient()->get("/repositories/{$repoFullName}/issues/{$issueNumber}/comments");
-        $data = $this->handleSimpleResponse($response);
-
+        $data     = $this->handleSimpleResponse($response);
         return $data['values'] ?? [];
     }
 
     public function getIssueCommentsByUrl(string $issueUrl): array
     {
         $issueInfo = self::parseGitIssueUrl($issueUrl);
-
         if (!$issueInfo) {
             return [];
         }
-
-        $repoFullName = $issueInfo['owner'] . '/' . $issueInfo['name'];
-        return $this->getIssueComments($repoFullName, $issueInfo['issue_number']);
+        return $this->getIssueComments($issueInfo['owner'] . '/' . $issueInfo['name'], $issueInfo['issue_number']);
     }
 
     public function getPullRequest(string $repoFullName, int $prNumber): array
@@ -207,31 +255,24 @@ class BitbucketApiService implements GitProviderInterface
     public function isPullRequestOpen(string $repoFullName, int $prNumber): bool
     {
         $response = $this->createClient()->get("/repositories/{$repoFullName}/pullrequests/{$prNumber}");
-        $data = $this->handleSimpleResponse($response);
-
+        $data     = $this->handleSimpleResponse($response);
         return isset($data['state']) && $data['state'] === 'OPEN';
     }
 
     public function getPullRequestComments(string $repoFullName, int $prNumber): array
     {
         $response = $this->createClient()->get("/repositories/{$repoFullName}/pullrequests/{$prNumber}/comments");
-        $data = $this->handleSimpleResponse($response);
-
+        $data     = $this->handleSimpleResponse($response);
         return $data['values'] ?? [];
     }
 
     public function canUserWriteToRepository(string $repoFullName): bool
     {
-        try {
-            if (!$this->hasValidToken()) {
-                return false;
-            }
-
-            $repo = $this->getRepository($repoFullName);
-            return !empty($repo);
-        } catch (\Throwable $e) {
+        if (!$this->hasValidToken()) {
             return false;
         }
-    }
 
+        $repo = $this->getRepository($repoFullName);
+        return !empty($repo);
+    }
 }
