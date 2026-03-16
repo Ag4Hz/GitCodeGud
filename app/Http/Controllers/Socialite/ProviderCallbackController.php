@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\UserProvider;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 use Laravel\Socialite\Facades\Socialite;
 
 class ProviderCallbackController extends Controller
@@ -17,8 +18,14 @@ class ProviderCallbackController extends Controller
     public function __invoke(Request $request, string $provider)
     {
         // Check if user is already authenticated (linking additional account)
-        $isLinking = Auth::check();
+        $isLinking         = Auth::check();
         $authenticatedUser = Auth::user();
+
+        if ($provider === 'jira' && !$isLinking) {
+            return redirect(route('login'))->withErrors([
+                'provider' => 'Please log in first, then connect your Jira account from Account Settings.',
+            ]);
+        }
 
         if ($request->has('error')) {
             $redirectRoute = $isLinking ? route('accounts.edit') : route('login');
@@ -34,10 +41,18 @@ class ProviderCallbackController extends Controller
             ]);
         }
 
-        $providerUser = Socialite::driver($provider)->user();
+        $providerUser = Socialite::driver($provider === 'jira' ? 'atlassian' : $provider)->user();
+
+        $providerId = (string) $providerUser->getId();
+        if ($provider === 'jira') {
+            $cloudId = $this->resolveJiraCloudId($providerUser->token);
+            if ($cloudId) {
+                $providerId = $cloudId;
+            }
+        }
 
         $userProvider = UserProvider::where('provider', $provider)
-            ->where('provider_id', (string)$providerUser->getId())
+            ->where('provider_id', $providerId)
             ->first();
 
         if ($isLinking) {
@@ -50,50 +65,50 @@ class ProviderCallbackController extends Controller
 
             if (!$userProvider) {
                 UserProvider::create([
-                    'user_id' => $authenticatedUser->id,
-                    'provider' => $provider,
-                    'provider_id' => (string)$providerUser->getId(),
+                    'user_id'           => $authenticatedUser->id,
+                    'provider'          => $provider,
+                    'provider_id'       => $providerId,
                     'provider_username' => $this->getNickname($providerUser, $provider),
-                    'provider_email' => $providerUser->getEmail(),
-                    'nickname' => $this->getNickname($providerUser, $provider),
-                    'avatar' => $providerUser->getAvatar(),
-                    'token' => $providerUser->token,
-                    'refresh_token' => $providerUser->refreshToken ?? null,
+                    'provider_email'    => $providerUser->getEmail(),
+                    'nickname'          => $this->getNickname($providerUser, $provider),
+                    'avatar'            => $providerUser->getAvatar(),
+                    'token'             => $providerUser->token,
+                    'refresh_token'     => $providerUser->refreshToken ?? null,
                 ]);
             } else {
                 $userProvider->update([
                     'provider_username' => $this->getNickname($providerUser, $provider),
-                    'provider_email' => $providerUser->getEmail(),
-                    'nickname' => $this->getNickname($providerUser, $provider),
-                    'avatar' => $providerUser->getAvatar(),
-                    'token' => $providerUser->token,
-                    'refresh_token' => $providerUser->refreshToken ?? null,
+                    'provider_email'    => $providerUser->getEmail(),
+                    'nickname'          => $this->getNickname($providerUser, $provider),
+                    'avatar'            => $providerUser->getAvatar(),
+                    'token'             => $providerUser->token,
+                    'refresh_token'     => $providerUser->refreshToken ?? null,
                 ]);
             }
 
-            return redirect(route('accounts.edit'))->with('success', ucfirst($provider) . ' account connected successfully!');
+            return redirect(route('accounts.edit'))
+                ->with('success', ucfirst($provider) . ' account connected successfully!');
         }
 
-        // User is not authenticated - this is a login/registration flow
         if (!$userProvider) {
             $user = User::firstOrCreate(
                 ['email' => $providerUser->getEmail()],
                 [
-                    'name' => $providerUser->getName(),
+                    'name'     => $providerUser->getName(),
                     'nickname' => $this->getNickname($providerUser, $provider),
                 ]
             );
 
             UserProvider::create([
-                'user_id' => $user->id,
-                'provider' => $provider,
-                'provider_id' => (string)$providerUser->getId(),
+                'user_id'           => $user->id,
+                'provider'          => $provider,
+                'provider_id'       => $providerId,
                 'provider_username' => $this->getNickname($providerUser, $provider),
-                'provider_email' => $providerUser->getEmail(),
-                'nickname' => $this->getNickname($providerUser, $provider),
-                'avatar' => $providerUser->getAvatar(),
-                'token' => $providerUser->token,
-                'refresh_token' => $providerUser->refreshToken ?? null,
+                'provider_email'    => $providerUser->getEmail(),
+                'nickname'          => $this->getNickname($providerUser, $provider),
+                'avatar'            => $providerUser->getAvatar(),
+                'token'             => $providerUser->token,
+                'refresh_token'     => $providerUser->refreshToken ?? null,
             ]);
         } else {
             $user = $userProvider->user;
@@ -102,35 +117,53 @@ class ProviderCallbackController extends Controller
                 $user = User::firstOrCreate(
                     ['email' => $providerUser->getEmail()],
                     [
-                        'name' => $providerUser->getName(),
+                        'name'     => $providerUser->getName(),
                         'nickname' => $this->getNickname($providerUser, $provider),
                     ]
                 );
-
                 $userProvider->update(['user_id' => $user->id]);
             }
 
             $userProvider->update([
                 'provider_username' => $this->getNickname($providerUser, $provider),
-                'provider_email' => $providerUser->getEmail(),
-                'nickname' => $this->getNickname($providerUser, $provider),
-                'avatar' => $providerUser->getAvatar(),
-                'token' => $providerUser->token,
-                'refresh_token' => $providerUser->refreshToken ?? null,
+                'provider_email'    => $providerUser->getEmail(),
+                'nickname'          => $this->getNickname($providerUser, $provider),
+                'avatar'            => $providerUser->getAvatar(),
+                'token'             => $providerUser->token,
+                'refresh_token'     => $providerUser->refreshToken ?? null,
             ]);
         }
 
         Auth::login($user);
-
         return redirect('/dashboard');
+    }
+
+    private function resolveJiraCloudId(string $token): ?string
+    {
+        $response = Http::withToken($token)
+            ->acceptJson()
+            ->get('https://api.atlassian.com/oauth/token/accessible-resources');
+
+        if ($response->failed()) {
+            return null;
+        }
+
+        $sites = $response->json();
+        if (empty($sites) || !is_array($sites)) {
+            return null;
+        }
+
+        return $sites[0]['id'] ?? null;
     }
 
     private function getNickname($providerUser, string $provider): string
     {
-        if (in_array($provider, ['gitlab', 'bitbucket']) && method_exists($providerUser, 'getNickname')) {
-            return $providerUser->getNickname();
+        if (in_array($provider, ['gitlab', 'bitbucket', 'jira']) && method_exists($providerUser, 'getNickname')) {
+            $nick = $providerUser->getNickname();
+            if ($nick) {
+                return $nick;
+            }
         }
-
-        return $providerUser->getNickname() ?? $providerUser->getName();
+        return $providerUser->getName() ?? $providerUser->getEmail() ?? 'Unknown';
     }
 }
