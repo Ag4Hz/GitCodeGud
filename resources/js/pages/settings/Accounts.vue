@@ -38,18 +38,28 @@ const providers = [
         name: 'GitHub',
         logo: '/assets/images/github.svg',
         connectUrl: '/auth/github/redirect',
+        description: 'Connect to use GitHub repositories and issues.',
     },
     {
         id: 'gitlab',
         name: 'GitLab',
         logo: '/assets/images/gitlab.svg',
         connectUrl: '/auth/gitlab/redirect',
+        description: 'Connect to use GitLab repositories and issues.',
     },
     {
         id: 'bitbucket',
         name: 'Bitbucket',
         logo: '/assets/images/bitbucket.svg',
         connectUrl: '/auth/bitbucket/redirect',
+        description: 'Connect to use Bitbucket repositories.',
+    },
+    {
+        id: 'jira',
+        name: 'Jira',
+        logo: '/assets/images/jira.svg',
+        connectUrl: '/auth/jira/redirect',
+        description: 'Required to create bounties on Bitbucket repositories (Jira is used for issue tracking).',
     },
 ];
 
@@ -113,7 +123,11 @@ watch(
 
 <template>
     <div class="space-y-6">
-        <Card v-for="provider in providers" :key="provider.id" class="border-gray-200 bg-white/40 dark:border-white/10 dark:bg-white/5">
+        <Card
+            v-for="provider in providers"
+            :key="provider.id"
+            class="border-gray-200 bg-white/40 dark:border-white/10 dark:bg-white/5"
+        >
             <CardHeader>
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
@@ -122,7 +136,9 @@ watch(
                         </div>
                         <div>
                             <CardTitle>{{ provider.name }}</CardTitle>
-                            <CardDescription v-if="!isConnected(provider.id)"> Connect your {{ provider.name }} account </CardDescription>
+                            <CardDescription v-if="!isConnected(provider.id)">
+                                {{ provider.description }}
+                            </CardDescription>
                         </div>
                     </div>
                 </div>
@@ -133,34 +149,47 @@ watch(
                     <div class="flex items-center gap-3">
                         <Avatar>
                             <AvatarImage :src="isConnected(provider.id)!.avatar || ''" />
-                            <AvatarFallback>{{ isConnected(provider.id)!.nickname?.[0]?.toUpperCase() || '?' }}</AvatarFallback>
+                            <AvatarFallback>
+                                {{ isConnected(provider.id)!.nickname?.[0]?.toUpperCase() || '?' }}
+                            </AvatarFallback>
                         </Avatar>
                         <span class="font-medium">{{ isConnected(provider.id)!.nickname || 'Unknown' }}</span>
                     </div>
 
-                    <Button variant="destructive" :disabled="!canDisconnect || disconnecting === provider.id" @click="handleDisconnect(provider.id)">
+                    <Button
+                        variant="destructive"
+                        :disabled="!canDisconnect || disconnecting === provider.id"
+                        @click="handleDisconnect(provider.id)"
+                    >
                         {{ disconnecting === provider.id ? 'Disconnecting...' : 'Disconnect' }}
                     </Button>
                 </div>
 
-                <Button v-else variant="default" @click="handleConnect(provider.connectUrl)"> Connect {{ provider.name }} </Button>
+                <Button v-else variant="default" @click="handleConnect(provider.connectUrl)">
+                    Connect {{ provider.name }}
+                </Button>
             </CardContent>
         </Card>
 
         <!-- Confirmation Dialog -->
         <Dialog v-model:open="openDialog">
-            <DialogContent class="fixed top-36 left-1/2 max-w-md -translate-x-1/2 rounded-xl bg-red-400/40 p-2 backdrop-blur dark:bg-red-900/40">
+            <DialogContent
+                class="fixed top-36 left-1/2 max-w-md -translate-x-1/2 rounded-xl bg-red-400/40 p-2 backdrop-blur dark:bg-red-900/40"
+            >
                 <DialogHeader>
-                    <DialogTitle class="text-black dark:text-white">Disconnect {{ providerToDisconnect?.name }} Account?</DialogTitle>
+                    <DialogTitle class="text-black dark:text-white">
+                        Disconnect {{ providerToDisconnect?.name }} Account?
+                    </DialogTitle>
                 </DialogHeader>
                 <DialogDescription>
                     <p class="text-sm text-muted-foreground">
-                        Are you sure you want to disconnect your {{ providerToDisconnect?.name }} account? You can reconnect it anytime.
+                        Are you sure you want to disconnect your {{ providerToDisconnect?.name }} account? You can
+                        reconnect it anytime.
                     </p>
                 </DialogDescription>
                 <DialogFooter class="flex justify-end gap-2">
-                    <Button variant="secondary" @click="openDialog = false"> Cancel </Button>
-                    <Button variant="destructive" @click="confirmDisconnect" :disabled="disconnecting !== null">
+                    <Button variant="secondary" @click="openDialog = false">Cancel</Button>
+                    <Button variant="destructive" :disabled="disconnecting !== null" @click="confirmDisconnect">
                         {{ disconnecting ? 'Disconnecting...' : 'Disconnect' }}
                     </Button>
                 </DialogFooter>

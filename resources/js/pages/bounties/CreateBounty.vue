@@ -83,6 +83,7 @@ const bountyForm = useForm({
     reward_xp: 50,
     repository_full_name: '',
     issue_number: '',
+    jira_issue_url: '',
     provider: 'github',
 });
 
@@ -148,6 +149,8 @@ const updateBountyForm = (field: string, value: any) => {
         bountyForm.repository_full_name = value;
     } else if (field === 'issue_number') {
         bountyForm.issue_number = value;
+    } else if (field === 'jira_issue_url') {
+        bountyForm.jira_issue_url = value;
     } else if (field === 'title') {
         bountyForm.title = value;
     } else if (field === 'description') {
