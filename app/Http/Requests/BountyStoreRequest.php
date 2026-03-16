@@ -8,8 +8,10 @@ use App\Rules\GitHubIssueUrl;
 use App\Rules\GitHubRepositoryUrl;
 use App\Rules\IssueBelongsToRepository;
 use App\Rules\UniqueIssueForBounty;
+use App\Rules\ValidJiraIssueUrl;
 use App\Services\GitHubApiService;
 use App\Services\GitRepoService;
+use App\Services\JiraApiService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
@@ -40,6 +42,8 @@ class BountyStoreRequest extends FormRequest
 
     public function rules(): array
     {
+        $provider = $this->input('provider', 'github');
+
         $rules = [
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:2000'],
@@ -62,9 +66,18 @@ class BountyStoreRequest extends FormRequest
             ];
         }
 
-        if ($this->filled('repository_full_name') && $this->filled('issue_number')) {
+        if ($this->filled('repository_full_name')) {
             $rules['repository_full_name'] = ['required', 'string'];
-            $rules['issue_number'] = ['required', 'integer', 'min:1'];
+
+            if ($provider === 'bitbucket') {
+                $rules['jira_issue_url'] = [
+                    'required',
+                    'url',
+                    new ValidJiraIssueUrl(),
+                ];
+            } else {
+                $rules['issue_number'] = ['required', 'integer', 'min:1'];
+            }
         }
 
         return $rules;
@@ -73,14 +86,20 @@ class BountyStoreRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator) {
+            $provider = $this->input('provider', 'github');
+
             // Handle URL-based validation
             if ($this->filled('issue_url')) {
                 $this->validateIssueStatus($validator);
             }
 
             // Handle form-based validation
-            if ($this->filled('repository_full_name') && $this->filled('issue_number')) {
-                $this->validateSelectedRepositoryAndIssue($validator);
+            if ($this->filled('repository_full_name')) {
+                if ($provider === 'bitbucket' && $this->filled('jira_issue_url')) {
+                    $this->validateJiraIssue($validator);
+                } elseif ($provider !== 'bitbucket' && $this->filled('issue_number')) {
+                    $this->validateSelectedRepositoryAndIssue($validator);
+                }
             }
         });
     }
@@ -119,6 +138,46 @@ class BountyStoreRequest extends FormRequest
         }
     }
 
+    private function validateJiraIssue(Validator $validator): void
+    {
+        $jiraIssueUrl = $this->input('jira_issue_url');
+        $user = $this->user();
+
+        if (!$user || !$jiraIssueUrl) {
+            return;
+        }
+
+        $jiraProvider = $user->providers()->where('provider', 'jira')->first();
+        if (!$jiraProvider || !$jiraProvider->token) {
+            $validator->errors()->add('jira_issue_url', 'A linked Jira account is required to validate Jira issues. Please connect your Jira account in Account Settings.');
+            return;
+        }
+
+        $issueInfo = JiraApiService::parseIssueUrl($jiraIssueUrl);
+        if (!$issueInfo) {
+            return;
+        }
+
+        $existingIssue = Issue::where('url', $jiraIssueUrl)->first();
+        if ($existingIssue) {
+            $existingBounty = Bounty::withTrashed()->where('issue_id', $existingIssue->id)->first();
+            if ($existingBounty) {
+                $message = $existingBounty->trashed()
+                    ? 'An archived bounty already exists for this Jira issue. Please restore the existing bounty instead of creating a new one.'
+                    : 'A bounty already exists for this Jira issue. Each issue can only have one bounty.';
+                $validator->errors()->add('jira_issue_url', $message);
+                return;
+            }
+        }
+
+        $jiraApi = JiraApiService::fromProvider($jiraProvider);
+        $isOpen = $jiraApi->isIssueOpen($issueInfo['workspace'], $issueInfo['issue_key']);
+
+        if (!$isOpen) {
+            $validator->errors()->add('jira_issue_url', 'Only open Jira issues can be used for bounties.');
+        }
+    }
+
     private function validateSelectedRepositoryAndIssue(Validator $validator): void
     {
         $repositoryFullName = $this->input('repository_full_name');
@@ -132,7 +191,6 @@ class BountyStoreRequest extends FormRequest
 
         $issueUrl = match ($provider) {
             'gitlab' => "https://gitlab.com/{$repositoryFullName}/-/issues/{$issueNumber}",
-            'bitbucket' => "https://bitbucket.org/{$repositoryFullName}/issues/{$issueNumber}",
             default => "https://github.com/{$repositoryFullName}/issues/{$issueNumber}",
         };
 
@@ -167,29 +225,29 @@ class BountyStoreRequest extends FormRequest
     public function getValidatedDataForStore(): array
     {
         $validated = $this->validated();
+        $provider = $this->input('provider', 'github');
 
-        if (isset($validated['repository_full_name']) && isset($validated['issue_number'])) {
-            $provider = $this->input('provider', 'github');
+        if (isset($validated['repository_full_name'])) {
             $repoFullName = $validated['repository_full_name'];
-            $issueNumber = $validated['issue_number'];
 
-            switch ($provider) {
-                case 'gitlab':
-                    $validated['repo_url'] = "https://gitlab.com/{$repoFullName}";
-                    $validated['issue_url'] = "https://gitlab.com/{$repoFullName}/-/issues/{$issueNumber}";
-                    break;
-                case 'bitbucket':
-                    $validated['repo_url'] = "https://bitbucket.org/{$repoFullName}";
-                    $validated['issue_url'] = "https://bitbucket.org/{$repoFullName}/issues/{$issueNumber}";
-                    break;
-                case 'github':
-                default:
-                    $validated['repo_url'] = "https://github.com/{$repoFullName}";
-                    $validated['issue_url'] = "https://github.com/{$repoFullName}/issues/{$issueNumber}";
-                    break;
+            if ($provider === 'bitbucket') {
+                $validated['repo_url'] = "https://bitbucket.org/{$repoFullName}";
+                $validated['issue_url'] = $validated['jira_issue_url'];
+                unset($validated['jira_issue_url']);
+            } else {
+                $issueNumber = $validated['issue_number'];
+                $validated['repo_url'] = match ($provider) {
+                    'gitlab' => "https://gitlab.com/{$repoFullName}",
+                    default  => "https://github.com/{$repoFullName}",
+                };
+                $validated['issue_url'] = match ($provider) {
+                    'gitlab' => "https://gitlab.com/{$repoFullName}/-/issues/{$issueNumber}",
+                    default  => "https://github.com/{$repoFullName}/issues/{$issueNumber}",
+                };
+                unset($validated['issue_number']);
             }
 
-            unset($validated['repository_full_name'], $validated['issue_number']);
+            unset($validated['repository_full_name']);
         }
 
         return $validated;

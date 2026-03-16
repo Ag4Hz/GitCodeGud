@@ -8,15 +8,13 @@ use App\Models\Bounty;
 use App\Models\Issue;
 use App\Models\Repo;
 use App\Services\BountySearchService;
-use App\Services\GitHubApiService;
 use App\Services\GitProviderFactory;
 use App\Services\GitRepoService;
+use App\Services\JiraApiService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -26,9 +24,7 @@ class BountyController extends Controller
 
     public function __construct(
         private BountySearchService $bountySearchService
-    )
-    {
-    }
+    ) {}
 
     public function index(Request $request)
     {
@@ -56,7 +52,7 @@ class BountyController extends Controller
         $issues = [];
         $selectedRepo = $request->input('selected_repository', '');
         $selectedProvider = $request->input('selected_provider', 'github');
-        if ($selectedRepo) {
+        if ($selectedRepo && $selectedProvider !== 'bitbucket') {
             $issues = $this->getIssueData($request, $selectedRepo, $selectedProvider)['issues'];
         }
 
@@ -64,16 +60,21 @@ class BountyController extends Controller
         if ($request->user()) {
             $repoService = new GitRepoService($request->user());
             $connectedProviders = $repoService->getConnectedProviders();
+
+            $hasJira = $request->user()->providers()->where('provider', 'jira')->exists();
+            if ($hasJira && !in_array('jira', $connectedProviders)) {
+                $connectedProviders[] = 'jira';
+            }
         }
 
         return Inertia::render('bounties/CreateBounty', [
-            'bounties' => $userBounties,
-            'repositories' => $repositories,
-            'repositoryQuery' => $repositoryQuery,
-            'providerFilter' => $providerFilter,
-            'issues' => $issues,
+            'bounties'           => $userBounties,
+            'repositories'       => $repositories,
+            'repositoryQuery'    => $repositoryQuery,
+            'providerFilter'     => $providerFilter,
+            'issues'             => $issues,
             'selectedRepository' => $selectedRepo,
-            'selectedProvider' => $selectedProvider,
+            'selectedProvider'   => $selectedProvider,
             'connectedProviders' => $connectedProviders,
         ]);
     }
@@ -91,39 +92,46 @@ class BountyController extends Controller
 
         if (!$repo) {
             $repo = Repo::create([
-                'git_id' => $repoInfo['full_name'],
-                'url' => $validated['repo_url'],
-                'user_id' => $request->user()->id,
+                'git_id'   => $repoInfo['full_name'],
+                'url'      => $validated['repo_url'],
+                'user_id'  => $request->user()->id,
                 'provider' => $provider,
             ]);
         }
 
-        preg_match('/\/-\/issues\/(\d+)|\/issues\/(\d+)/', $validated['issue_url'], $matches);
-        $issueNumber = $matches[1] ?: ($matches[2] ?? null);
+        if ($provider === 'bitbucket') {
+            $jiraParsed  = JiraApiService::parseIssueUrl($validated['issue_url']);
+            $issueNumber = $jiraParsed['issue_key'] ?? null; // e.g. "PROJ-123"
+            $issueProvider = 'jira';
+        } else {
+            preg_match('/\/-\/issues\/(\d+)|\/issues\/(\d+)/', $validated['issue_url'], $matches);
+            $issueNumber   = $matches[1] ?: ($matches[2] ?? null);
+            $issueProvider = $provider;
+        }
 
         $issue = Issue::firstOrCreate(
             [
-                'url' => $validated['issue_url'],
+                'url'     => $validated['issue_url'],
                 'repo_id' => $repo->id,
-                'git_id' => $issueNumber,
-                'provider' => $provider,
             ],
             [
+                'git_id'      => $issueNumber,
+                'provider'    => $issueProvider,
                 'description' => $validated['description'] ?? '',
             ]
         );
 
-        $user = $request->user();
+        $user        = $request->user();
         $repoService = new GitRepoService($user);
         $repoLanguages = $repoService->getRepositoryLanguages($provider, $repoInfo['full_name']);
 
         $bounty = Bounty::create([
-            'issue_id' => $issue->id,
-            'title' => $validated['title'],
+            'issue_id'    => $issue->id,
+            'title'       => $validated['title'],
             'description' => $validated['description'] ?? '',
-            'reward_xp' => $validated['reward_xp'],
-            'languages' => collect($repoLanguages)->sortDesc()->keys()->toArray(),
-            'status' => 'open',
+            'reward_xp'   => $validated['reward_xp'],
+            'languages'   => collect($repoLanguages)->sortDesc()->keys()->toArray(),
+            'status'      => 'open',
         ]);
 
         return redirect()
@@ -141,7 +149,7 @@ class BountyController extends Controller
         }
 
         return Inertia::render('bounties/Submissions', [
-            'bounty' => $bounty->load(['issue.repo']),
+            'bounty'      => $bounty->load(['issue.repo']),
             'submissions' => $bounty->submissions()->with(['user'])->latest()->paginate(10),
         ]);
     }
@@ -150,9 +158,9 @@ class BountyController extends Controller
     {
         $this->trackBountyView($request, $bounty);
 
-        $user = $request->user();
+        $user          = $request->user();
         $userSubmission = null;
-        $canUserSubmit = false;
+        $canUserSubmit  = false;
 
         if ($user) {
             $userSubmission = $bounty->submissions()
@@ -164,11 +172,11 @@ class BountyController extends Controller
         }
 
         return Inertia::render('bounties/Show', [
-            'bounty' => $bounty->load(['issue.repo', 'submissions.user'])->loadCount('submissions'),
+            'bounty'          => $bounty->load(['issue.repo', 'submissions.user'])->loadCount('submissions'),
             'popularityScore' => ($bounty->views ?? 0) + ($bounty->submissions_count ?? 0),
-            'comments' => Inertia::merge(fn() => $this->getPaginatedComments($bounty, $request)),
-            'canUserSubmit' => $canUserSubmit,
-            'userSubmission' => $userSubmission,
+            'comments'        => Inertia::merge(fn() => $this->getPaginatedComments($bounty, $request)),
+            'canUserSubmit'   => $canUserSubmit,
+            'userSubmission'  => $userSubmission,
         ]);
     }
 
@@ -188,36 +196,38 @@ class BountyController extends Controller
             return [];
         }
 
-        $provider = $bounty->issue->provider ?? 'github';
+        $issueProvider = $bounty->issue->provider ?? 'github';
 
-        $userProvider = $user->providers()->where('provider', $provider)->first();
+        if ($issueProvider === 'jira') {
+            return [];
+        }
+
+        $repoProvider = $bounty->issue->repo->provider ?? $issueProvider;
+
+        $userProvider = $user->providers()->where('provider', $repoProvider)->first();
         if (!$userProvider || !$userProvider->token) {
             return [];
         }
 
-        $apiService = GitProviderFactory::getProvider($provider, $userProvider);
+        $apiService = GitProviderFactory::getProvider($repoProvider, $userProvider);
 
         $allComments = $apiService->getIssueCommentsByUrl($bounty->issue->url);
         if (empty($allComments)) {
             return [];
         }
 
-        $normalizedComments = $this->normalizeComments($allComments, $provider);
+        $normalizedComments = $this->normalizeComments($allComments, $repoProvider);
 
-        $perPage = $request->get('per_page', 10);
+        $perPage     = $request->get('per_page', 10);
         $currentPage = $request->get('page', 1);
-
-        $comments = collect($normalizedComments);
+        $comments    = collect($normalizedComments);
 
         $paginatedComments = new \Illuminate\Pagination\LengthAwarePaginator(
             $comments->forPage($currentPage, $perPage),
             $comments->count(),
             $perPage,
             $currentPage,
-            [
-                'path' => $request->url(),
-                'pageName' => 'page',
-            ]
+            ['path' => $request->url(), 'pageName' => 'page']
         );
 
         return $paginatedComments->withQueryString()->toArray();
@@ -234,40 +244,35 @@ class BountyController extends Controller
                     $body = str_replace('</p>', "\n\n", $body);
                     $body = preg_replace('/<br\s*\/?>/i', "\n", $body);
                     $body = strip_tags($body);
-
                     $body = html_entity_decode($body, ENT_QUOTES | ENT_HTML5, 'UTF-8');
                     $body = preg_replace('/\n{3,}/', "\n\n", $body);
                     $body = trim($body);
 
                     return [
-                        'id' => $comment['id'] ?? null,
-                        'body' => $body,
+                        'id'         => $comment['id'] ?? null,
+                        'body'       => $body,
                         'created_at' => $comment['created_at'] ?? null,
                         'updated_at' => $comment['updated_at'] ?? null,
-                        'html_url' => $comment['web_url'] ?? '#',
-                        'user' => [
-                            'login' => $comment['author']['username'] ?? 'Unknown',
+                        'html_url'   => $comment['web_url'] ?? '#',
+                        'user'       => [
+                            'login'      => $comment['author']['username'] ?? 'Unknown',
                             'avatar_url' => $comment['author']['avatar_url'] ?? '',
                         ],
-                        'reactions' => [
-                            'total_count' => 0,
-                        ],
+                        'reactions'  => ['total_count' => 0],
                     ];
 
                 case 'bitbucket':
                     return [
-                        'id' => $comment['id'] ?? null,
-                        'body' => $comment['content']['raw'] ?? ($comment['content']['markup'] ?? ''),
+                        'id'         => $comment['id'] ?? null,
+                        'body'       => $comment['content']['raw'] ?? ($comment['content']['markup'] ?? ''),
                         'created_at' => $comment['created_on'] ?? null,
                         'updated_at' => $comment['updated_on'] ?? null,
-                        'html_url' => $comment['links']['html']['href'] ?? '#',
-                        'user' => [
-                            'login' => $comment['user']['nickname'] ?? ($comment['user']['display_name'] ?? 'Unknown'),
+                        'html_url'   => $comment['links']['html']['href'] ?? '#',
+                        'user'       => [
+                            'login'      => $comment['user']['nickname'] ?? ($comment['user']['display_name'] ?? 'Unknown'),
                             'avatar_url' => $comment['user']['links']['avatar']['href'] ?? '',
                         ],
-                        'reactions' => [
-                            'total_count' => 0,
-                        ],
+                        'reactions'  => ['total_count' => 0],
                     ];
 
                 case 'github':
@@ -292,9 +297,9 @@ class BountyController extends Controller
         $validated = $request->validated();
 
         $bounty->update([
-            'title' => $validated['title'],
+            'title'       => $validated['title'],
             'description' => $validated['description'],
-            'reward_xp' => $validated['reward_xp'],
+            'reward_xp'   => $validated['reward_xp'],
         ]);
 
         return redirect()
@@ -306,7 +311,6 @@ class BountyController extends Controller
     {
         $bounty = Bounty::findOrFail($id);
         $this->authorize('delete', $bounty);
-
         $bounty->delete();
 
         return redirect()
@@ -318,7 +322,6 @@ class BountyController extends Controller
     {
         $bounty = Bounty::withTrashed()->findOrFail($id);
         $this->authorize('restore', $bounty);
-
         $bounty->restore();
 
         return redirect()
@@ -330,8 +333,8 @@ class BountyController extends Controller
     {
         return redirect()->route('bounties.create', [
             'repository_search' => $request->input('query', ''),
-            'provider_filter' => $request->input('provider_filter', ''),
-            'page' => $request->input('page', 1)
+            'provider_filter'   => $request->input('provider_filter', ''),
+            'page'              => $request->input('page', 1),
         ]);
     }
 
@@ -339,34 +342,34 @@ class BountyController extends Controller
     {
         return redirect()->route('bounties.create', [
             'selected_repository' => $owner . '/' . $repo,
-            'selected_provider' => $request->input('provider', 'github'),
-            'issue_page' => $request->input('page', 1)
+            'selected_provider'   => $request->input('provider', 'github'),
+            'issue_page'          => $request->input('page', 1),
         ]);
     }
 
     private function getRepositoryData(Request $request): array
     {
-        $user = $request->user();
-        $query = $request->input('repository_search', '');
+        $user         = $request->user();
+        $query        = $request->input('repository_search', '');
         $providerFilter = $request->input('provider_filter', '');
-        $page = $request->input('page', 1);
-        $perPage = 30;
+        $page         = $request->input('page', 1);
 
         $emptyResponse = [
             'repositories' => [],
-            'query' => $query,
+            'query'        => $query,
             'providerFilter' => $providerFilter,
-            'total' => 0,
-            'page' => $page,
-            'hasMore' => false,
+            'total'        => 0,
+            'page'         => $page,
+            'hasMore'      => false,
         ];
 
         if (!$user) {
             return $emptyResponse;
         }
 
-        $repoService = new GitRepoService($user);
+        $repoService       = new GitRepoService($user);
         $connectedProviders = $repoService->getConnectedProviders();
+
 
         if (empty($connectedProviders)) {
             return $emptyResponse;
@@ -374,48 +377,51 @@ class BountyController extends Controller
 
         $cacheKey = "user_repos_{$user->id}_" . md5(implode('_', $connectedProviders));
 
+        Cache::forget($cacheKey);
+
         $allRepositories = Cache::remember($cacheKey, 3600, function () use ($repoService) {
-            return $repoService->getAllUserRepositories([
-                'per_page' => 100,
-            ]);
+            $repos = $repoService->getAllUserRepositories(['per_page' => 100]);
+            return $repos;
         });
 
         if (!empty($providerFilter) && $providerFilter !== 'all') {
-            $allRepositories = array_filter($allRepositories, fn($repo) => ($repo['provider'] ?? 'github') === $providerFilter
+            $allRepositories = array_filter(
+                $allRepositories,
+                fn($repo) => ($repo['provider'] ?? 'github') === $providerFilter
             );
         }
 
         if (!empty($query)) {
             $allRepositories = array_filter($allRepositories, function ($repo) use ($query) {
-                return stripos($repo['name'], $query) !== false ||
-                    stripos($repo['full_name'], $query) !== false ||
-                    (isset($repo['description']) && stripos($repo['description'], $query) !== false);
+                return stripos($repo['name'], $query) !== false
+                    || stripos($repo['full_name'], $query) !== false
+                    || (isset($repo['description']) && stripos($repo['description'], $query) !== false);
             });
         }
 
         return [
             'repositories' => array_values($allRepositories),
-            'query' => $query,
+            'query'        => $query,
             'providerFilter' => $providerFilter,
-            'total' => count($allRepositories),
-            'page' => 1,
-            'hasMore' => false,
+            'total'        => count($allRepositories),
+            'page'         => 1,
+            'hasMore'      => false,
         ];
     }
 
     private function getIssueData(Request $request, string $repoFullName, string $provider = 'github'): array
     {
-        $user = $request->user();
-        $page = $request->input('issue_page', 1);
+        $user    = $request->user();
+        $page    = $request->input('issue_page', 1);
         $perPage = 10;
 
         $emptyResponse = [
-            'issues' => [],
+            'issues'     => [],
             'repository' => $repoFullName,
-            'provider' => $provider,
-            'total' => 0,
-            'page' => $page,
-            'hasMore' => false,
+            'provider'   => $provider,
+            'total'      => 0,
+            'page'       => $page,
+            'hasMore'    => false,
         ];
 
         if (!$user) {
@@ -428,26 +434,24 @@ class BountyController extends Controller
         }
 
         $allIssues = $repoService->getRepositoryIssues($provider, $repoFullName, [
-            'state' => 'open',
+            'state'    => 'open',
             'per_page' => $perPage,
-            'page' => $page,
+            'page'     => $page,
         ]);
 
         if ($provider === 'github') {
-            $allIssues = array_filter($allIssues, function ($issue) {
-                return !isset($issue['pull_request']);
-            });
+            $allIssues = array_filter($allIssues, fn($issue) => !isset($issue['pull_request']));
         }
 
         $issues = array_values($allIssues);
 
         return [
-            'issues' => $issues,
+            'issues'     => $issues,
             'repository' => $repoFullName,
-            'provider' => $provider,
-            'total' => count($issues),
-            'page' => $page,
-            'hasMore' => count($issues) >= $perPage,
+            'provider'   => $provider,
+            'total'      => count($issues),
+            'page'       => $page,
+            'hasMore'    => count($issues) >= $perPage,
         ];
     }
 }
