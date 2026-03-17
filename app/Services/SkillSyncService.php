@@ -6,7 +6,6 @@ use App\Helpers\XPHelper;
 use App\Models\User;
 use App\Models\Skill;
 use App\Models\SkillUser;
-use App\Models\UserProvider;
 use App\Models\UserProviderSkill;
 use Illuminate\Support\Facades\DB;
 
@@ -35,31 +34,32 @@ class SkillSyncService
 
     private function getLanguageStatsFromRepos(GitProviderInterface $api, array $repositories): array
     {
-        return collect($repositories)
+        $languageStats = [];
+
+        collect($repositories)
             ->reject(fn($repo) => ($repo['fork'] ?? false) || ($repo['archived'] ?? false))
-            ->map(function ($repo) use ($api) {
+            ->take(30)
+            ->each(function ($repo) use ($api, &$languageStats) {
                 $fullName = $repo['full_name']
                     ?? $repo['path_with_namespace']
                     ?? $repo['repo_full_name']
                     ?? null;
 
                 if (!$fullName) {
-                    return [
-                        'repo'      => null,
-                        'languages' => [],
-                    ];
+                    return;
                 }
 
-                return [
-                    'repo'      => $fullName,
-                    'languages' => $api->getRepositoryLanguages($fullName),
-                ];
-            })
-            ->reject(fn($repoData) => empty($repoData['languages']))
-            ->flatMap(fn($repoData) => $repoData['languages'])
-            ->groupBy(fn($bytes, $language) => $language)
-            ->map(fn($bytesCollection) => $bytesCollection->sum())
-            ->toArray();
+                $languages = $api->getRepositoryLanguages($fullName);
+
+                foreach ($languages as $language => $bytes) {
+                    if (!is_string($language)) {
+                        continue;
+                    }
+                    $languageStats[$language] = ($languageStats[$language] ?? 0) + $bytes;
+                }
+            });
+
+        return $languageStats;
     }
 
     private function updateUserSkills(User $user, array $languageStats, string $providerKey): void
@@ -94,7 +94,7 @@ class SkillSyncService
                 UserProviderSkill::updateOrCreate(
                     [
                         'user_provider_id' => $userProvider->id,
-                        'skill_id' => $skill->id,
+                        'skill_id'         => $skill->id,
                     ],
                     [
                         'xp' => $initialXp,
@@ -114,11 +114,11 @@ class SkillSyncService
 
                 SkillUser::updateOrCreate(
                     [
-                        'user_id' => $user->id,
+                        'user_id'  => $user->id,
                         'skill_id' => (int) $row->skill_id,
                     ],
                     [
-                        'xp' => $totalXp,
+                        'xp'    => $totalXp,
                         'level' => XPHelper::calculateLevel($totalXp),
                     ]
                 );

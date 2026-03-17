@@ -7,10 +7,10 @@ use Illuminate\Support\Facades\Http;
 class JiraApiService
 {
     private const JIRA_CLOUD_PATTERN = '/^https:\/\/([a-zA-Z0-9\-]+)\.atlassian\.net\/browse\/([A-Z][A-Z0-9_]+-\d+)$/i';
+
     public function __construct(
         private string $cloudId,
         private string $token,
-        private string $email,
     ) {}
 
     public static function parseIssueUrl(string $url): ?array
@@ -26,6 +26,7 @@ class JiraApiService
                 'issue_key' => strtoupper($matches[2]),
             ];
         }
+
         return null;
     }
 
@@ -76,7 +77,16 @@ class JiraApiService
         return true;
     }
 
-    public function getIssue(string $workspace, string $issueKey): array
+    private function doGetIssue(string $issueKey): \Illuminate\Http\Client\Response
+    {
+        return Http::withToken($this->token)
+            ->acceptJson()
+            ->get("https://api.atlassian.com/ex/jira/{$this->cloudId}/rest/api/3/issue/{$issueKey}", [
+                'fields' => 'summary,status,assignee',
+            ]);
+    }
+
+    public function getIssue(string $issueKey): array
     {
         $response = $this->doGetIssue($issueKey);
 
@@ -87,22 +97,39 @@ class JiraApiService
         if ($response->failed()) {
             return [];
         }
+
         return $response->json() ?? [];
     }
 
-    private function doGetIssue(string $issueKey): \Illuminate\Http\Client\Response
+    private function resolveCloudId(string $workspace): ?string
     {
-        return Http::withToken($this->token)
+        $response = Http::withToken($this->token)
             ->acceptJson()
-            ->get("https://api.atlassian.com/ex/jira/{$this->cloudId}/rest/api/3/issue/{$issueKey}", [
-                'fields' => 'summary,status,assignee',
-            ]);
+            ->get('https://api.atlassian.com/oauth/token/accessible-resources');
+
+        if ($response->failed()) {
+            return null;
+        }
+
+        foreach ($response->json() as $site) {
+            if (str_contains($site['url'] ?? '', $workspace)) {
+                return $site['id'];
+            }
+        }
+
+        return null;
     }
 
+    // Jira status category  (To Do)(In Progress)
     public function isIssueOpen(string $workspace, string $issueKey): bool
     {
-        $issue = $this->getIssue($workspace, $issueKey);
+        $cloudId = $this->resolveCloudId($workspace);
 
+        if ($cloudId) {
+            $this->cloudId = $cloudId;
+        }
+
+        $issue          = $this->getIssue($issueKey);
         $statusCategory = $issue['fields']['status']['statusCategory']['key'] ?? null;
 
         return in_array($statusCategory, ['new', 'indeterminate'], true);
@@ -113,7 +140,6 @@ class JiraApiService
         return new self(
             cloudId: $provider->provider_id,
             token:   $provider->token,
-            email:   $provider->provider_email,
         );
     }
 }

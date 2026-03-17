@@ -37,52 +37,6 @@ class BitbucketApiService implements GitProviderInterface
         ])->baseUrl(self::BASE_URL);
     }
 
-    private function refreshToken(): bool
-    {
-        if (empty($this->provider->refresh_token)) {
-            return false;
-        }
-
-        $clientId     = config('services.bitbucket.client_id');
-        $clientSecret = config('services.bitbucket.client_secret');
-
-        if (!$clientId || !$clientSecret) {
-            return false;
-        }
-
-        $response = Http::asForm()->post('https://bitbucket.org/site/oauth2/access_token', [
-            'grant_type'    => 'refresh_token',
-            'refresh_token' => $this->provider->refresh_token,
-            'client_id'     => $clientId,
-            'client_secret' => $clientSecret,
-        ]);
-
-        if ($response->failed()) {
-            return false;
-        }
-
-        $data = $response->json();
-        if (empty($data['access_token'])) {
-            return false;
-        }
-
-        $this->provider->update([
-            'token'         => $data['access_token'],
-            'refresh_token' => $data['refresh_token'] ?? $this->provider->refresh_token,
-        ]);
-
-        return true;
-    }
-
-    private function getWithRefresh(string $url, array $params = []): Response
-    {
-        $response = $this->createClient()->get($url, $params);
-        if ($response->status() === 401 && $this->refreshToken()) {
-            $response = $this->createClient()->get($url, $params);
-        }
-        return $response;
-    }
-
     private static function normalizeUrl(string $url): string
     {
         $url = trim($url);
@@ -179,7 +133,7 @@ class BitbucketApiService implements GitProviderInterface
             'pagelen' => 100,
         ];
 
-        $response = $this->getWithRefresh('/repositories', array_merge($defaultParams, $params));
+        $response = $this->createClient()->get('/repositories', array_merge($defaultParams, $params));
         $data     = $this->handleSimpleResponse($response);
         $repos    = $data['values'] ?? [];
 
@@ -196,14 +150,53 @@ class BitbucketApiService implements GitProviderInterface
 
     public function getRepositoryLanguages(string $repoFullName): array
     {
-        $repo     = $this->repoCache[$repoFullName] ?? $this->getRepository($repoFullName);
-        $language = $repo['language'] ?? null;
+        return $this->detectLanguagesFromFileTree($repoFullName);
+    }
 
-        if (empty($language)) {
-            return [];
+    private function detectLanguagesFromFileTree(string $repoFullName): array
+    {
+        $extensionMap = config('linguist.extensions', []);
+        $filenameMap  = config('linguist.filenames', []);
+        $counts       = [];
+        $maxPages     = 3;
+        $page         = 0;
+        $nextUrl      = "/repositories/{$repoFullName}/src";
+        $params       = ['recursive' => 'true', 'pagelen' => 100];
+
+        while ($nextUrl && $page < $maxPages) {
+            $response = $page === 0
+                ? $this->createClient()->get($nextUrl, $params)
+                : $this->createClient()->get($nextUrl);
+
+            $data  = $this->handleSimpleResponse($response);
+            $files = $data['values'] ?? [];
+
+            foreach ($files as $file) {
+                if (($file['type'] ?? '') !== 'commit_file') {
+                    continue;
+                }
+
+                $path     = $file['path'] ?? '';
+                $basename = strtolower(basename($path));
+                $ext      = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+
+                $language = $filenameMap[$basename] ?? null;
+
+                if (!$language && $ext) {
+                    $language = $extensionMap[$ext] ?? null;
+                }
+
+                if ($language) {
+                    $size              = $file['size'] ?? 1000;
+                    $counts[$language] = ($counts[$language] ?? 0) + $size;
+                }
+            }
+
+            $nextUrl = $data['next'] ?? null;
+            $page++;
         }
 
-        return [ucfirst(strtolower($language)) => 1000];
+        return $counts;
     }
 
     public function getRepository(string $repoFullName): array
@@ -271,7 +264,6 @@ class BitbucketApiService implements GitProviderInterface
         if (!$this->hasValidToken()) {
             return false;
         }
-
         $repo = $this->getRepository($repoFullName);
         return !empty($repo);
     }

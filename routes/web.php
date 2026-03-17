@@ -37,8 +37,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/profile/sync-gitlab-skills', [SkillController::class, 'syncGitLab'])
         ->name('profile.sync-gitlab-skills');
 
-//    Route::post('/profile/sync-bitbucket-skills', [SkillController::class, 'syncBitbucket'])
-//        ->name('profile.sync-bitbucket-skills');
+    Route::post('/profile/sync-bitbucket-skills', [SkillController::class, 'syncBitbucket'])
+        ->name('profile.sync-bitbucket-skills');
 });
 
 

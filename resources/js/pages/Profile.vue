@@ -136,10 +136,10 @@ const providerIcons = {
         name: 'GitLab',
         svg: `<svg fill="currentColor" viewBox="0 0 24 24"><path d="M23.955 13.587l-1.342-4.135-2.664-8.189a.455.455 0 0 0-.867 0L16.418 9.45H7.582L4.919 1.263a.455.455 0 0 0-.867 0L1.388 9.452.045 13.587a.924.924 0 0 0 .331 1.023L12 23.054l11.624-8.443a.92.92 0 0 0 .331-1.024"></path></svg>`,
     },
-    // bitbucket: {
-    //     name: 'Bitbucket',
-    //     svg: `<svg fill="currentColor" viewBox="0 0 24 24"><path d="M.778 1.211a.768.768 0 0 0-.768.892l3.263 19.811c.084.5.515.868 1.022.873H19.95a.772.772 0 0 0 .77-.646l3.27-20.03a.768.768 0 0 0-.768-.891zM14.52 15.528H9.522L8.17 8.464h7.561z"></path></svg>`,
-    // },
+     bitbucket: {
+         name: 'Bitbucket',
+         svg: `<svg fill="currentColor" viewBox="0 0 24 24"><path d="M.778 1.211a.768.768 0 0 0-.768.892l3.263 19.811c.084.5.515.868 1.022.873H19.95a.772.772 0 0 0 .77-.646l3.27-20.03a.768.768 0 0 0-.768-.891zM14.52 15.528H9.522L8.17 8.464h7.561z"></path></svg>`,
+     },
 };
 
 const providerDisplay = computed(() => {
@@ -156,7 +156,7 @@ const providerDisplay = computed(() => {
 const providerRoutes: Record<string, string> = {
     github: '/profile/sync-github-skills',
     gitlab: '/profile/sync-gitlab-skills',
-    // bitbucket: '/profile/sync-bitbucket-skills',
+    bitbucket: '/profile/sync-bitbucket-skills',
 };
 
 const syncProviderSkills = (provider: 'github' | 'gitlab' | 'bitbucket') => {
