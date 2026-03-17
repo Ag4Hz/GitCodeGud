@@ -49,8 +49,12 @@ class BountySearchService
         return $query->when($request->filled('provider'), function ($q) use ($request) {
             $provider = $request->get('provider');
 
-            return $q->whereHas('issue', function ($issueQuery) use ($provider) {
-                $issueQuery->where('provider', $provider);
+            $providers = $provider === 'bitbucket'
+                ? ['bitbucket', 'jira']
+                : [$provider];
+
+            return $q->whereHas('issue', function ($issueQuery) use ($providers) {
+                $issueQuery->whereIn('provider', $providers);
             });
         });
     }

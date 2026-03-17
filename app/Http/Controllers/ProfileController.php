@@ -30,11 +30,14 @@ class ProfileController extends Controller
         if (!$user) {
             $user = $request->user();
         }
+
+        $user->load('skills', 'providers');
+
         $this->followStatsService->attachCounts($user);
         $canReview = $this->reviewService->canUserReview($user);
-        $bounties = $this->userBountyService->getUserBountiesWithDeleted($user);
+        $bounties  = $this->userBountyService->getUserBountiesWithDeleted($user);
 
-        $connectedProviders = $user->providers()
+        $connectedProviders = $user->providers
             ->pluck('provider')
             ->unique()
             ->values()
@@ -45,7 +48,16 @@ class ProfileController extends Controller
             $connectedProviders = [$user->oauth_provider];
         }
 
-        $repoCountsByProvider = $user->repos->countBy('provider')->toArray();
+        $repoCountsByProvider = Bounty::withTrashed()
+            ->whereHas('issue.repo', fn($q) => $q->where('user_id', $user->id))
+            ->with('issue.repo')
+            ->get()
+            ->groupBy(function ($bounty) {
+                $provider = $bounty->issue?->repo?->provider ?? 'unknown';
+                return $provider === 'jira' ? 'bitbucket' : $provider;
+            })
+            ->map(fn($group) => $group->count())
+            ->toArray();
 
         return Inertia::render('Profile', [
             'user' => array_merge(
@@ -55,16 +67,16 @@ class ProfileController extends Controller
                     'followings_count' => $user->followings_count,
                 ]
             ),
-            'profileUserId' => $user->id,
-            'followers'  => $this->followStatsService->getFollowers($user),
-            'followings' => $this->followStatsService->getFollowings($user),
-            'bounties' => BountyResource::collection($bounties),
-            'isFollowing' => auth()->check()? auth()->user()->isFollowing($user): false,
-            'isOwner' => $request->user() && $request->user()->id === $user->id,
-            'reviews'    => $this->reviewService->getUserReviews($user),
-            'canReview'   => $canReview,
-            'ratingAvg'   => $this->reviewService->getUserRatingStats($user)['average'],
-            'connectedProviders' => $connectedProviders,
+            'profileUserId'        => $user->id,
+            'followers'            => $this->followStatsService->getFollowers($user),
+            'followings'           => $this->followStatsService->getFollowings($user),
+            'bounties'             => BountyResource::collection($bounties),
+            'isFollowing'          => auth()->check() ? auth()->user()->isFollowing($user) : false,
+            'isOwner'              => $request->user() && $request->user()->id === $user->id,
+            'reviews'              => $this->reviewService->getUserReviews($user),
+            'canReview'            => $canReview,
+            'ratingAvg'            => $this->reviewService->getUserRatingStats($user)['average'],
+            'connectedProviders'   => $connectedProviders,
             'repoCountsByProvider' => $repoCountsByProvider,
 
         ]);

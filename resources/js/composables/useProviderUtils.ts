@@ -32,6 +32,7 @@ export function useProviderUtils() {
                     badgeColor: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
                     bgColor: 'bg-orange-50 dark:bg-orange-900/20',
                 };
+            case 'jira':
             case 'bitbucket':
                 return {
                     name: 'Bitbucket',
@@ -86,6 +87,7 @@ export function useProviderUtils() {
         if (hostname.includes('github.com')) return 'github';
         if (hostname.includes('gitlab.com')) return 'gitlab';
         if (hostname.includes('bitbucket.org')) return 'bitbucket';
+        if (hostname.includes('atlassian.net')) return 'bitbucket';
 
         return 'github';
     };

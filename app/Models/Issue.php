@@ -37,12 +37,10 @@ class Issue extends Model
     private static function normalizeProviderName(string $provider): string
     {
         return match (strtolower($provider)) {
-            'github' => 'GitHub',
-            'gitlab' => 'GitLab',
-            'bitbucket' => 'Bitbucket',
-            'gitea' => 'Gitea',
-            'sourcehut', 'srht' => 'SourceHut',
-            default => ucfirst($provider),
+            'github'            => 'GitHub',
+            'gitlab'            => 'GitLab',
+            'bitbucket', 'jira' => 'Bitbucket',
+            default             => ucfirst($provider),
         };
     }
 
@@ -55,11 +53,13 @@ class Issue extends Model
             ->groupBy('provider')
             ->orderBy('provider')
             ->get()
-            ->map(fn ($row) => [
-                'name' => self::normalizeProviderName($row->provider),
-                'value' => $row->provider,
-                'count' => $row->total,
+            ->groupBy(fn($row) => strtolower($row->provider) === 'jira' ? 'bitbucket' : $row->provider)
+            ->map(fn($group, $provider) => [
+                'name'  => self::normalizeProviderName($provider),
+                'value' => $provider,
+                'count' => $group->sum('total'),
             ])
+            ->values()
             ->toArray();
     }
 
