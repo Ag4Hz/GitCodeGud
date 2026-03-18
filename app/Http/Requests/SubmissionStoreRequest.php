@@ -78,8 +78,9 @@ class SubmissionStoreRequest extends FormRequest
 
     private function validatePullRequestAccess(Validator $validator): void
     {
-        $prUrl = $this->input('pr_url');
-        $user = $this->user();
+        $prUrl  = $this->input('pr_url');
+        $user   = $this->user();
+        $bounty = Bounty::with('issue.repo.user.providers')->find($this->input('bounty_id'));
 
         if (!$user || !$prUrl) {
             return;
@@ -96,14 +97,20 @@ class SubmissionStoreRequest extends FormRequest
         }
 
         $userProvider = $user->providers()->where('provider', $providerKey)->first();
+
+        if (!$userProvider || !$userProvider->token) {
+            $userProvider = $bounty?->issue?->repo?->user?->providers
+                ->where('provider', $providerKey)
+                ->first();
+        }
+
         if (!$userProvider || !$userProvider->token) {
             return;
         }
 
         try {
             $providerService = GitProviderFactory::getProvider($providerKey, $userProvider);
-
-            $prData = $providerService->getPullRequest($prInfo['repo_full_name'], $prInfo['pr_number']);
+            $prData          = $providerService->getPullRequest($prInfo['repo_full_name'], $prInfo['pr_number']);
 
             if (empty($prData)) {
                 $validator->errors()->add('pr_url', 'Could not access the Pull Request/Merge Request. Please ensure it exists and you have access to it.');
