@@ -199,7 +199,37 @@ class BountyController extends Controller
         $issueProvider = $bounty->issue->provider ?? 'github';
 
         if ($issueProvider === 'jira') {
-            return [];
+            $jiraProvider = $user->providers()->where('provider', 'jira')->first();
+            if (!$jiraProvider || !$jiraProvider->token) {
+                $jiraProvider = $bounty->issue->repo->user?->providers()
+                    ->where('provider', 'jira')
+                    ->first();
+            }
+            if (!$jiraProvider || !$jiraProvider->token) {
+                return [];
+            }
+
+            $jiraApi     = JiraApiService::fromProvider($jiraProvider);
+            $allComments = $jiraApi->getIssueCommentsByUrl($bounty->issue->url);
+            if (empty($allComments)) {
+                return [];
+            }
+
+            $normalizedComments = $this->normalizeComments($allComments, 'jira');
+
+            $perPage     = $request->get('per_page', 10);
+            $currentPage = $request->get('page', 1);
+            $comments    = collect($normalizedComments);
+
+            $paginatedComments = new \Illuminate\Pagination\LengthAwarePaginator(
+                $comments->forPage($currentPage, $perPage),
+                $comments->count(),
+                $perPage,
+                $currentPage,
+                ['path' => $request->url(), 'pageName' => 'page']
+            );
+
+            return $paginatedComments->withQueryString()->toArray();
         }
 
         $repoProvider = $bounty->issue->repo->provider ?? $issueProvider;
@@ -257,6 +287,32 @@ class BountyController extends Controller
                         'user'       => [
                             'login'      => $comment['author']['username'] ?? 'Unknown',
                             'avatar_url' => $comment['author']['avatar_url'] ?? '',
+                        ],
+                        'reactions'  => ['total_count' => 0],
+                    ];
+
+                case 'jira':
+                    $body = '';
+                    $content = $comment['body']['content'] ?? [];
+                    foreach ($content as $block) {
+                        foreach ($block['content'] ?? [] as $inline) {
+                            if (($inline['type'] ?? '') === 'text') {
+                                $body .= $inline['text'] ?? '';
+                            }
+                        }
+                        $body .= "\n";
+                    }
+                    $body = trim($body);
+
+                    return [
+                        'id'         => $comment['id'] ?? null,
+                        'body'       => $body,
+                        'created_at' => $comment['created'] ?? null,
+                        'updated_at' => $comment['updated'] ?? null,
+                        'html_url'   => '#',
+                        'user'       => [
+                            'login'      => $comment['author']['displayName'] ?? 'Unknown',
+                            'avatar_url' => $comment['author']['avatarUrls']['48x48'] ?? '',
                         ],
                         'reactions'  => ['total_count' => 0],
                     ];
@@ -370,18 +426,14 @@ class BountyController extends Controller
         $repoService       = new GitRepoService($user);
         $connectedProviders = $repoService->getConnectedProviders();
 
-
         if (empty($connectedProviders)) {
             return $emptyResponse;
         }
 
         $cacheKey = "user_repos_{$user->id}_" . md5(implode('_', $connectedProviders));
 
-        Cache::forget($cacheKey);
-
         $allRepositories = Cache::remember($cacheKey, 3600, function () use ($repoService) {
-            $repos = $repoService->getAllUserRepositories(['per_page' => 100]);
-            return $repos;
+            return $repoService->getAllUserRepositories(['per_page' => 100]);
         });
 
         if (!empty($providerFilter) && $providerFilter !== 'all') {

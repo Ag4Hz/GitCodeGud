@@ -30,6 +30,37 @@ class JiraApiService
         return null;
     }
 
+    public function getIssueComments(string $issueKey): array
+    {
+        $response = Http::withToken($this->token)
+            ->acceptJson()
+            ->get("https://api.atlassian.com/ex/jira/{$this->cloudId}/rest/api/3/issue/{$issueKey}/comment", [
+                'maxResults' => 100,
+                'orderBy'    => 'created',
+            ]);
+
+        if ($response->failed()) {
+            return [];
+        }
+
+        return $response->json()['comments'] ?? [];
+    }
+
+    public function getIssueCommentsByUrl(string $issueUrl): array
+    {
+        $issueInfo = self::parseIssueUrl($issueUrl);
+        if (!$issueInfo) {
+            return [];
+        }
+
+        $cloudId = $this->resolveCloudId($issueInfo['workspace']);
+        if ($cloudId) {
+            $this->cloudId = $cloudId;
+        }
+
+        return $this->getIssueComments($issueInfo['issue_key']);
+    }
+
     public static function isValidIssueUrl(string $url): bool
     {
         return self::parseIssueUrl($url) !== null;
