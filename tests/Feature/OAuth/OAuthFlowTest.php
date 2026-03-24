@@ -56,7 +56,7 @@ describe('OAuth redirect', function () {
     });
 
     it('user can login with Bitbucket (redirect endpoint returns redirect)', function () {
-        socialiteDriverMockForRedirect('bitbucket', ['account', 'repository']);
+        socialiteDriverMockForRedirect('bitbucket', ['account', 'repository', 'pullrequest']);
 
         $this->get(route('oauth.redirect', ['provider' => 'bitbucket'], absolute: false))
             ->assertRedirect('https://example.com/oauth/bitbucket');
