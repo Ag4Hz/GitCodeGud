@@ -3,6 +3,7 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\BountyController;
 use App\Http\Controllers\FollowerController;
+use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\DashboardController;
@@ -64,6 +65,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/bounty/repositories/{owner}/{repo}/issues', [BountyController::class, 'getRepositoryIssues'])
         ->where('repo', '.*')
         ->name('bounty.repository-issues');
+
+    Route::post('/organizations', [OrganizationController::class, 'store'])->name('organizations.store');
+    Route::get('/organizations/{organization}', [OrganizationController::class, 'show'])->name('organizations.show');
+    Route::patch('/organizations/{organization}', [OrganizationController::class, 'update'])->name('organizations.update');
+    Route::delete('/organizations/{organization}', [OrganizationController::class, 'destroy'])->name('organizations.destroy');
+    Route::get('/organizations/{organization}/members', [OrganizationController::class, 'members'])->name('organizations.members');
 });
 
 Route::middleware(['auth', 'verified', 'admin'])->group(function () {
