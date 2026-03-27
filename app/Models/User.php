@@ -142,6 +142,18 @@ class User extends Authenticatable
             ->withTimestamps();
     }
 
+    //Users - Organizations
+    public function organizations(): BelongsToMany
+    {
+        return $this->belongsToMany(Organization::class, 'organization_user')
+            ->withTimestamps();
+    }
+
+    public function ownedOrganizations(): HasMany
+    {
+        return $this->hasMany(Organization::class, 'owner_id');
+    }
+
     public function followings(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'followers', 'user_id', 'followed_id')
