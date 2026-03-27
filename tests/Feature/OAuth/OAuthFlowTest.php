@@ -42,7 +42,7 @@ function socialiteDriverMockForCallback(string $provider, FakeSocialiteUser $pro
 
 describe('OAuth redirect', function () {
     it('user can login with GitHub (redirect endpoint returns redirect)', function () {
-        socialiteDriverMockForRedirect('github', ['read:user', 'user:email']);
+        socialiteDriverMockForRedirect('github', ['read:user', 'user:email', 'repo']);
 
         $this->get(route('oauth.redirect', ['provider' => 'github'], absolute: false))
             ->assertRedirect('https://example.com/oauth/github');

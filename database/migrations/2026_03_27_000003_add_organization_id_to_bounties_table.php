@@ -20,8 +20,10 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('bounties', function (Blueprint $table) {
-            $table->dropForeignIdFor(\App\Models\Organization::class);
-            $table->dropColumn('organization_id');
+            if (Schema::hasColumn('bounties', 'organization_id')) {
+                $table->dropForeignIdFor(\App\Models\Organization::class);
+                $table->dropColumn('organization_id');
+            }
         });
     }
 };
