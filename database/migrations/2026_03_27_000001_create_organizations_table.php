@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('organizations',function (Blueprint $table){
+        Schema::create('organizations', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('slug')->unique();
@@ -16,14 +16,18 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('organization_user',function (Blueprint $table){
+        Schema::create('organization_user', function (Blueprint $table) {
             $table->id();
             $table->foreignId('organization_id')->constrained('organizations')->onDelete('cascade');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->enum('role', ['owner', 'member'])->default('member');
+            $table->timestamp('joined_at')->nullable();
             $table->timestamps();
-            $table->unique(['organization_id','user_id']);
+
+            $table->unique(['organization_id', 'user_id']);
         });
     }
+
     public function down(): void
     {
         Schema::dropIfExists('organization_user');
