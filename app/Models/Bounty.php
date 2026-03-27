@@ -17,6 +17,7 @@ class Bounty extends Model
 
     protected $fillable = [
         'issue_id',
+        'organization_id',
         'status',
         'title',
         'description',
@@ -33,6 +34,7 @@ class Bounty extends Model
             'status' => 'string',
             'languages' => 'array',
             'deleted_at' => 'datetime',
+            'organization_id' => 'integer'
         ];
     }
 
@@ -75,5 +77,22 @@ class Bounty extends Model
     public function scopeRecent($query, int $days = 7)
     {
         return $query->where('created_at', '>=', now()->subDays($days));
+    }
+    public function organization(): BelongsTo
+    {
+        return $this->belongsTo(Organization::class);
+    }
+
+    public function scopeVisibleTo(Builder $query, ?User $user): Builder
+    {
+        return $query->where(function (Builder $q) use ($user) {
+            $q->whereNull('organization_id');
+
+            if ($user !== null) {
+                $q->orWhereHas('organization.members', function (Builder $inner) use ($user) {
+                    $inner->where('users.id', $user->id);
+                });
+            }
+        });
     }
 }
