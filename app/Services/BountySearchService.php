@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Bounty;
 use App\Models\Issue;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -11,11 +12,12 @@ use Illuminate\Support\Facades\DB;
 
 class BountySearchService
 {
-    public function buildBountyQuery(): Builder
+    public function buildBountyQuery(?User $user = null): Builder
     {
         return Bounty::with(['issue.repo'])
             ->active()
             ->where('status', 'open')
+            ->visibleTo($user)
             ->latest();
     }
 
@@ -61,30 +63,23 @@ class BountySearchService
 
     public function getPaginatedBounties(Builder $query, int $perPage = 12): LengthAwarePaginator
     {
-        $paginated = $query->paginate($perPage)->withQueryString();
-
-        // Add provider to each bounty's issue
-        $paginated->getCollection()->transform(function ($bounty) {
-            return $bounty;
-        });
-
-        return $paginated;
+        return $query->paginate($perPage)->withQueryString();
     }
-
 
     public function getBountyData(Request $request, int $perPage = 12): array
     {
-        $query = $this->buildBountyQuery();
+        $user  = $request->user();
+        $query = $this->buildBountyQuery($user);
         $query = $this->applySearchFilter($query, $request);
         $query = $this->applyLanguageFilter($query, $request);
         $query = $this->applyProviderFilter($query, $request);
 
         return [
-            'bounties' => $this->getPaginatedBounties($query, $perPage),
+            'bounties'           => $this->getPaginatedBounties($query, $perPage),
             'availableLanguages' => Bounty::getAvailableLanguages(),
             'availableProviders' => Issue::getAvailableProviders(),
-            'filters' => [
-                'search' => $request->get('search', ''),
+            'filters'            => [
+                'search'   => $request->get('search', ''),
                 'language' => $request->get('language', ''),
                 'provider' => $request->get('provider', ''),
             ],

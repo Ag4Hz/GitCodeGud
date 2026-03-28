@@ -13,11 +13,20 @@ class BountyPolicy
         return true;
     }
 
-    public function view(User $user, Bounty $bounty): bool
+    public function view(?User $user, Bounty $bounty): bool
     {
         if ($bounty->trashed()) {
-            return $this->isOwner($user, $bounty);
+            return $user && $this->isOwner($user, $bounty);
         }
+
+        if ($bounty->organization_id !== null) {
+            if (!$user) {
+                return false;
+            }
+            return $bounty->organization->members()->whereKey($user->id)->exists()
+                || $bounty->organization->owner_id === $user->id;
+        }
+
         return true;
     }
 
