@@ -156,6 +156,7 @@ class BountyController extends Controller
 
     public function show(Request $request, Bounty $bounty): Response
     {
+        $this->authorize('view', $bounty);
         $this->trackBountyView($request, $bounty);
 
         $user          = $request->user();
