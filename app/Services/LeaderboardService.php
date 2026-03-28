@@ -11,39 +11,40 @@ use Illuminate\Database\Query\Builder;
 class LeaderboardService
 {
     public bool $languageWithoutSkill = false;
-    public function getLeaderboardPageData(Request $request): array
+
+    public function getLeaderboardPageData(Request $request, ?int $organizationId = null): array
     {
         $filters = $this->extractFilters($request);
         $sortDirection = $this->extractSortDirection($request);
         $skillId = $this->resolveSkillId($filters['language']);
-        $leaderboardUsers = $this->getLeaderboard($sortDirection, $skillId, $filters['language'], $filters['provider']);
+        $leaderboardUsers = $this->getLeaderboard($sortDirection, $skillId, $filters['language'], $filters['provider'], $organizationId);
 
         $bountyData = $this->getBountyData($request);
         $userData = $this->getUserSearchData($filters['user_search']);
 
         return [
-            'leaderboardUsers' => $leaderboardUsers,
+            'leaderboardUsers'   => $leaderboardUsers,
             'availableLanguages' => $bountyData['availableLanguages'] ?? [],
-            'filters' => [
+            'filters'            => [
                 'language' => $filters['language'],
-                'search' => $filters['search'],
+                'search'   => $filters['search'],
                 'provider' => $filters['provider'],
             ],
-            'sort' => ['dir' => $sortDirection],
+            'sort'     => ['dir' => $sortDirection],
             'selected' => [
-                'dir' => $sortDirection,
+                'dir'      => $sortDirection,
                 'skill_id' => $skillId,
             ],
             'userFilters' => ['search' => $filters['user_search']],
-            'users' => $userData['users'] ?? ['data' => []],
+            'users'       => $userData['users'] ?? ['data' => []],
         ];
     }
 
-    public function getLeaderboard(string $direction = 'desc', ?int $skillId = null, ?string $language = null, ?string $provider = null): LengthAwarePaginator
+    public function getLeaderboard(string $direction = 'desc', ?int $skillId = null, ?string $language = null, ?string $provider = null, ?int $organizationId = null): LengthAwarePaginator
     {
         $direction = $this->validateDirection($direction);
 
-        $query = $this->buildLeaderboardQuery($skillId, $direction, $language, $provider);
+        $query = $this->buildLeaderboardQuery($skillId, $direction, $language, $provider, $organizationId);
 
         $paginator = $query
             ->paginate(10)
@@ -55,10 +56,10 @@ class LeaderboardService
     private function extractFilters(Request $request): array
     {
         return [
-            'language' => $request->string('language')->toString(),
-            'search' => $request->string('search')->toString(),
+            'language'    => $request->string('language')->toString(),
+            'search'      => $request->string('search')->toString(),
             'user_search' => $request->string('search_user')->toString(),
-            'provider' => $request->string('provider')->toString(),
+            'provider'    => $request->string('provider')->toString(),
         ];
     }
 
@@ -73,14 +74,13 @@ class LeaderboardService
         return $bountySearchService->getBountyData($request);
     }
 
-
     private function getUserSearchData(string $searchTerm): array
     {
         $listedUsers = UserService::listUser($searchTerm);
         return UserService::searchUser($listedUsers);
     }
 
-    private function buildLeaderboardQuery(?int $skillId, ?string $direction, ?string $language, ?string $provider)
+    private function buildLeaderboardQuery(?int $skillId, ?string $direction, ?string $language, ?string $provider, ?int $organizationId = null)
     {
         $query = User::query()->select('users.*')->with('providers');
 
@@ -92,10 +92,18 @@ class LeaderboardService
                 $q->whereHas('providers', function ($providerQuery) use ($provider) {
                     $providerQuery->where('provider', $provider);
                 })
-                ->orWhere(function ($legacy) use ($provider) {
-                    $legacy->where('oauth_provider', $provider)
-                        ->whereDoesntHave('providers');
-                });
+                    ->orWhere(function ($legacy) use ($provider) {
+                        $legacy->where('oauth_provider', $provider)
+                            ->whereDoesntHave('providers');
+                    });
+            });
+        }
+
+        if ($organizationId !== null) {
+            $query->whereExists(function (\Illuminate\Database\Query\Builder $q) use ($organizationId) {
+                $q->from('organization_user')
+                    ->whereColumn('organization_user.user_id', 'users.id')
+                    ->where('organization_user.organization_id', $organizationId);
             });
         }
 
@@ -103,7 +111,7 @@ class LeaderboardService
             $query
                 ->join('user_skills', 'user_skills.user_id', '=', 'users.id')
                 ->where('user_skills.skill_id', $skillId)
-                ->when($language && !$skillId, function (Builder $query){
+                ->when($language && !$skillId, function (Builder $query) {
                     $query->whereNotNull('user_skills.xp');
                 })
                 ->addSelect('user_skills.xp as skill_xp')
@@ -111,6 +119,7 @@ class LeaderboardService
         } else {
             $query->orderBy('users.xp', $direction);
         }
+
         $query->orderBy('users.id');
 
         return $query;
@@ -128,16 +137,16 @@ class LeaderboardService
             }
 
             return [
-                'id' => $user->id,
+                'id'       => $user->id,
                 'nickname' => $user->nickname,
-                'avatar' => $user->avatar,
-                'name' => $user->name,
-                'xp' => $user->xp,
+                'avatar'   => $user->avatar,
+                'name'     => $user->name,
+                'xp'       => $user->xp,
                 'skill_xp' => $user->getAttribute('skill_xp') ?? 0,
-                'level' => $user->level ?? 1,
-                'rank' => $user->getAttribute('rank'),
+                'level'    => $user->level ?? 1,
+                'rank'     => $user->getAttribute('rank'),
                 'providers' => $user->providers->map(fn($p) => [
-                    'provider' => $p->provider,
+                    'provider'          => $p->provider,
                     'provider_username' => $p->provider_username,
                 ])->toArray(),
             ];
@@ -155,6 +164,7 @@ class LeaderboardService
             ->where('skill_name', $language)
             ->value('id');
     }
+
     private function validateDirection(string $direction): string
     {
         return strtolower($direction) === 'asc' ? 'asc' : 'desc';
