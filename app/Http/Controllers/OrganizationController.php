@@ -7,9 +7,11 @@ use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\Request;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class OrganizationController extends Controller
 {
+    use AuthorizesRequests;
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
@@ -31,8 +33,12 @@ class OrganizationController extends Controller
     public function show(Request $request, Organization $organization): Response
     {
         $this->authorize('view', $organization);
-        return Inertia::render("Organization/Show", [
+        $members = $organization->members()
+            ->withPivot('role', 'joined_at')
+            ->get();
+        return Inertia::render('Organizations/Show', [
             'organization' => $organization->load('owner'),
+            'members'      => $members,
         ]);
     }
 
