@@ -5,6 +5,7 @@ use App\Http\Controllers\BountyController;
 use App\Http\Controllers\FollowerController;
 use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\OrganizationInviteController;
+use App\Http\Controllers\OrganizationLeaderboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\DashboardController;
@@ -76,6 +77,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/organizations/{organization}/invite', [OrganizationInviteController::class, 'store'])->name('organizations.invite.store');
     Route::get('/organizations/{organization}/invite/accept', [OrganizationInviteController::class, 'accept'])->name('organizations.invite.accept');
     Route::get('/organizations/{organization}/invite/decline', [OrganizationInviteController::class, 'decline'])->name('organizations.invite.decline');
+    Route::get('/organizations/{organization}/leaderboard', [OrganizationLeaderboardController::class, 'index'])->name('organizations.leaderboard');
 });
 
 Route::middleware(['auth', 'verified', 'admin'])->group(function () {
