@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\BountyController;
 use App\Http\Controllers\FollowerController;
 use App\Http\Controllers\OrganizationController;
+use App\Http\Controllers\OrganizationInviteController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\DashboardController;
@@ -71,6 +72,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/organizations/{organization}', [OrganizationController::class, 'update'])->name('organizations.update');
     Route::delete('/organizations/{organization}', [OrganizationController::class, 'destroy'])->name('organizations.destroy');
     Route::get('/organizations/{organization}/members', [OrganizationController::class, 'members'])->name('organizations.members');
+
+    Route::post('/organizations/{organization}/invite', [OrganizationInviteController::class, 'store'])->name('organizations.invite.store');
+    Route::get('/organizations/{organization}/invite/accept', [OrganizationInviteController::class, 'accept'])->name('organizations.invite.accept');
+    Route::get('/organizations/{organization}/invite/decline', [OrganizationInviteController::class, 'decline'])->name('organizations.invite.decline');
 });
 
 Route::middleware(['auth', 'verified', 'admin'])->group(function () {
