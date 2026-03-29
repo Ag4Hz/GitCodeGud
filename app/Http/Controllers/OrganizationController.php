@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\Mail;
 use App\Models\Organization;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -12,6 +14,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 class OrganizationController extends Controller
 {
     use AuthorizesRequests;
+
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
@@ -38,7 +41,7 @@ class OrganizationController extends Controller
             ->get();
         return Inertia::render('Organizations/Show', [
             'organization' => $organization->load('owner'),
-            'members'      => $members,
+            'members' => $members,
         ]);
     }
 
@@ -71,5 +74,19 @@ class OrganizationController extends Controller
             'organization' => $organization,
             'members' => $members,
         ]);
+    }
+
+    public function removeMember(Organization $organization, User $user): RedirectResponse
+    {
+        $this->authorize('update', $organization);
+        if ($organization->owner_id === $user->id) {
+            return back()->withErrors(['member' => 'Cannot remove the owner.']);
+        }
+        $organization->members()->detach($user->id);
+        Mail::raw(
+            "You have been removed from the organization \"{$organization->name}\" on GitCodeGud.",
+            fn($msg) => $msg->to($user->email)->subject("Removed from {$organization->name}")
+        );
+        return back()->with('success', 'Member removed.');
     }
 }
