@@ -37,7 +37,7 @@ const getAvatarUrl = (avatar: OrgMember['avatar']): string => {
 };
 
 const removeMember = (memberId: number) => {
-    router.delete(route('Organizations.members.remove', { organization: props.organizationId, user: memberId }), {
+    router.delete(route('organizations.members.remove', { organization: props.organizationId, user: memberId }), {
         preserveScroll: true,
     });
 };
@@ -55,10 +55,10 @@ const removeMember = (memberId: number) => {
                     <AvatarImage :src="getAvatarUrl(member.avatar)" :alt="member.nickname" />
                     <AvatarFallback>{{ getInitials(member.name) }}</AvatarFallback>
                 </Avatar>
-                <div>
+                <a :href="`/users/${member.id}`" class="hover:underline">
                     <p class="text-sm font-medium">{{ member.nickname }}</p>
                     <p class="text-xs text-muted-foreground">{{ member.name }}</p>
-                </div>
+                </a>
             </div>
 
             <div class="flex items-center gap-2">

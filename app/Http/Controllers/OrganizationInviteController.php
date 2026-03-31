@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use App\Models\Organization;
 use App\Services\OrganizationService;
 use Illuminate\Http\RedirectResponse;
@@ -9,6 +10,7 @@ use Illuminate\Http\Request;
 
 class OrganizationInviteController extends Controller
 {
+    use AuthorizesRequests;
     public function __construct(private readonly OrganizationService $service) {}
 
     public function store(Request $request, Organization $organization): RedirectResponse

@@ -78,6 +78,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/organizations/{organization}/invite/accept', [OrganizationInviteController::class, 'accept'])->name('organizations.invite.accept');
     Route::get('/organizations/{organization}/invite/decline', [OrganizationInviteController::class, 'decline'])->name('organizations.invite.decline');
     Route::get('/organizations/{organization}/leaderboard', [OrganizationLeaderboardController::class, 'index'])->name('organizations.leaderboard');
+    Route::delete('/organizations/{organization}/members/{user}', [OrganizationController::class, 'removeMember'])->name('organizations.members.remove');
 });
 
 Route::middleware(['auth', 'verified', 'admin'])->group(function () {

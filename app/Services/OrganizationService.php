@@ -14,6 +14,25 @@ class OrganizationService
 {
     public function invite(Organization $organization, string $email): void
     {
+        $alreadyMember = $organization->members()
+            ->where('email', $email)
+            ->exists();
+        if ($alreadyMember) {
+            throw ValidationException::withMessages([
+                'email' => 'This user is already a member of the organization.',
+            ]);
+        }
+        $pendingInvite = OrganizationInvite::where('organization_id', $organization->id)
+            ->where('email', $email)
+            ->whereNull('accepted_at')
+            ->where('expires_at', '>', now())
+            ->exists();
+        if ($pendingInvite) {
+            throw ValidationException::withMessages([
+                'email' => 'An invitation has already been sent to this email.',
+            ]);
+        }
+
         $token = (string) Str::uuid();
 
         OrganizationInvite::create([
