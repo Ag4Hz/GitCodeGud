@@ -14,7 +14,7 @@ import { getInitials } from '@/composables/useInitials';
 import { useXP } from '@/composables/useXP';
 import type { BreadcrumbItem, NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
-import { LayoutGrid, LogIn, Menu, Plus, ShieldCheck, Trophy } from 'lucide-vue-next';
+import { Building2, LayoutGrid, LogIn, Menu, Plus, ShieldCheck, Trophy } from 'lucide-vue-next';
 import { computed } from 'vue';
 
 interface Props {
@@ -62,6 +62,12 @@ const mainNavItems = computed((): NavItem[] => {
             title: 'Create Bounty',
             href: '/bounties/create',
             icon: Plus,
+        });
+
+        items.push({
+            title: 'Organizations',
+            href: '/organizations',
+            icon: Building2,
         });
 
         if (auth.value.user.role === UserRole.ADMIN) {
@@ -146,7 +152,6 @@ const mainNavItems = computed((): NavItem[] => {
                         <Link :href="route('login')" class="flex items-center gap-2"> <LogIn class="size-4" /> Login </Link>
                     </Button>
 
-                    <!-- Register button for guests (styled through .btn-register in app.css) -->
                     <Button v-if="!isAuthenticated" variant="ghost" as-child>
                         <Link :href="route('register')" class="btn-register flex items-center gap-2"> Register </Link>
                     </Button>
@@ -169,7 +174,6 @@ const mainNavItems = computed((): NavItem[] => {
                                             </AvatarFallback>
                                         </Avatar>
 
-                                        <!-- XP Level Badge Overlay with Tooltip -->
                                         <Tooltip>
                                             <TooltipTrigger as-child>
                                                 <div class="absolute -right-1 -bottom-1 flex items-center justify-center">

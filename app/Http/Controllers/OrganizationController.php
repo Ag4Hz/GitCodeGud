@@ -89,4 +89,18 @@ class OrganizationController extends Controller
         );
         return back()->with('success', 'Member removed.');
     }
+
+    public function index(Request $request): Response
+    {
+        $user = $request->user();
+
+        $organizations = $user->organizations()
+            ->withPivot('role', 'joined_at')
+            ->withCount('members')
+            ->get();
+
+        return Inertia::render('Organizations/Index', [
+            'organizations' => $organizations,
+        ]);
+    }
 }

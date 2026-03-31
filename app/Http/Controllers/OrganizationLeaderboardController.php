@@ -7,9 +7,12 @@ use App\Services\LeaderboardService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+
 
 class OrganizationLeaderboardController extends Controller
 {
+    use AuthorizesRequests;
     public function __construct(
         private readonly LeaderboardService $leaderboardService
     ) {}

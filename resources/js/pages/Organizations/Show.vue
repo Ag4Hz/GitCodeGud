@@ -5,9 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem, type User } from '@/types';
 import { Head, usePage } from '@inertiajs/vue3';
-import { Building2, Mail, Users } from 'lucide-vue-next';
+import { Building2, Mail, Users, Trophy } from 'lucide-vue-next';
 import { computed } from 'vue';
-
+import { Link } from '@inertiajs/vue3';
 interface MemberPivot {
     role: 'owner' | 'member';
     joined_at: string;
@@ -60,8 +60,14 @@ const isOwner = computed(() => currentUser?.id === props.organization.owner_id);
                     </CardHeader>
                     <CardContent>
                         <div class="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Users class="h-4 w-4" />
-                            <span>{{ members.length }} {{ members.length === 1 ? 'member' : 'members' }}</span>
+                            <div class="flex items-center gap-2">
+                                <Users class="h-4 w-4" />
+                                <span>{{ members.length }} {{ members.length === 1 ? 'member' : 'members' }}</span>
+                            </div>
+                            <Link :href="`/organizations/${organization.id}/leaderboard`" class="flex items-center gap-1 text-sm text-green-400 hover:underline">
+                                <Trophy class="h-4 w-4" />
+                                Leaderboard
+                            </Link>
                         </div>
                     </CardContent>
                 </Card>
