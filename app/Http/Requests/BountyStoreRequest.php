@@ -13,6 +13,7 @@ use App\Services\GitHubApiService;
 use App\Services\GitRepoService;
 use App\Services\JiraApiService;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 class BountyStoreRequest extends FormRequest
@@ -48,6 +49,12 @@ class BountyStoreRequest extends FormRequest
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:2000'],
             'reward_xp' => ['required', 'integer', 'min:1', 'max:1000'],
+            'organization_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('organization_user', 'organization_id')
+                    ->where('user_id', $this->user()->id),
+            ],
         ];
 
         // Support both URL-based and form-based input methods

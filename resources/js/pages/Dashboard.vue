@@ -13,8 +13,8 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import type { AppPageProps, BreadcrumbItem } from '@/types';
 import { BountyStatus, ProviderOption, type Bounty, type BountyPagination } from '@/types/bounty';
 import { Head, router } from '@inertiajs/vue3';
-import { Calendar, DollarSign, Eye, Loader2, Search, Target } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
+import { Calendar, DollarSign, Eye, Loader2, Lock, Search, Target } from 'lucide-vue-next';
 
 type Provider = {
     provider: string;
@@ -383,6 +383,14 @@ const hasActiveBountyFilters = computed(() => {
                                                 class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
                                             >
                                                 {{ getStatusDisplayText(bounty.status) }}
+                                            </Badge>
+                                            <Badge
+                                                v-if="bounty.organization_id"
+                                                variant="secondary"
+                                                class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
+                                            >
+                                                <Lock class="h-3 w-3" />
+                                                Private
                                             </Badge>
                                         </div>
                                     </div>

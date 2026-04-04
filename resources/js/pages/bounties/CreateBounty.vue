@@ -12,6 +12,7 @@ import { type BountyPagination } from '@/types/bounty';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { AlertCircle, CheckCircle, Github, Plus, Search } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
+import OrganizationSelect from '@/components/OrganizationSelect.vue';
 
 interface Repository {
     id: number;
@@ -46,6 +47,11 @@ interface Issue {
     provider: 'github' | 'gitlab' | 'bitbucket';
 }
 
+interface Organization {
+    id: number;
+    name: string;
+}
+
 interface Props {
     bounties?: BountyPagination;
     repositories?: Repository[];
@@ -55,6 +61,7 @@ interface Props {
     selectedProvider?: string;
     connectedProviders?: string[];
     providerFilter?: string;
+    ownedOrganizations?: Organization[];
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -66,6 +73,7 @@ const props = withDefaults(defineProps<Props>(), {
     selectedProvider: 'github',
     connectedProviders: () => [],
     providerFilter: '',
+    ownedOrganizations: () => [],
 });
 
 const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
@@ -85,6 +93,7 @@ const bountyForm = useForm({
     issue_number: '',
     jira_issue_url: '',
     provider: 'github',
+    organization_id: null as number | null,
 });
 
 const showDuplicateBountyWarning = computed(() => {
@@ -316,8 +325,18 @@ watch(flashSuccess, (newValue) => {
                             <InputError :message="bountyForm.errors.reward_xp" />
                         </div>
 
-                        <!-- Form Actions -->
+                        <!-- Assign to Organization -->
+                        <div v-if="ownedOrganizations.length > 0" class="space-y-2">
+                            <Label>Assign to Organization</Label>
+                            <OrganizationSelect
+                                v-model="bountyForm.organization_id"
+                                :organizations="ownedOrganizations"
+                            />
+                            <p class="text-sm text-muted-foreground">Only members of the selected organization will see this bounty.</p>
+                            <InputError :message="bountyForm.errors.organization_id" />
+                        </div>
 
+                        <!-- Form Actions -->
                         <img
                             src="/assets/images/sitting-laptop.png"
                             alt="sitting bug"
