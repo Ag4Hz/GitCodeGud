@@ -27,17 +27,21 @@ type PageProps = AppPageProps<{
     bounties?: BountyPagination;
     availableLanguages?: string[];
     availableProviders?: ProviderOption[];
+    userOrganizations?: OrgOption[];
     filters?: {
         search?: string;
         bounty_search?: string;
         language?: string;
         provider?: string;
+        organization?: string;
     };
     userFilters?: { search?: string };
     users?: { data?: User[] };
     popularBounties?: PopularBounty[];
     trendingBounties?: PopularBounty[];
 }>;
+
+type OrgOption = { id: number; name: string };
 
 type PopularBounty = Bounty & {
     popularity_score?: number;
@@ -47,11 +51,12 @@ const props = withDefaults(defineProps<PageProps>(), {
     bounties: () => ({ data: [], total: 0, current_page: 1, last_page: 1 }),
     availableLanguages: () => [],
     availableProviders: () => [],
-    filters: () => ({ search: '', language: '', provider: '' }),
     userFilters: () => ({ search: '' }),
     users: () => ({ data: [] }),
     popularBounties: () => [],
     trendingBounties: () => [],
+    userOrganizations: () => [],
+    filters: () => ({ search: '', language: '', provider: '', organization: '' }),
 });
 
 const searchBountyQuery = computed(() => {
@@ -93,6 +98,14 @@ const debounce = <T extends (...args: any[]) => void>(func: T, wait: number): ((
     };
 };
 
+
+const localSelectedOrganization = ref(props.filters?.organization ?? '');
+
+const selectedOrganizationDisplay = computed(() => {
+    const org = (props.userOrganizations ?? []).find((o) => o.name === localSelectedOrganization.value);
+    return org ? org.name : localSelectedOrganization.value;
+});
+
 // Debounced search function to avoid too many requests
 const debouncedBountySearch = debounce(() => {
     const params = new URLSearchParams(window.location.search);
@@ -101,6 +114,7 @@ const debouncedBountySearch = debounce(() => {
     params.delete('language');
     params.delete('provider');
     params.delete('page');
+    params.delete('organization');
 
     if (localSearchQuery.value.trim()) {
         params.set('search', localSearchQuery.value.trim());
@@ -112,6 +126,10 @@ const debouncedBountySearch = debounce(() => {
 
     if (localSelectedProvider.value) {
         params.set('provider', localSelectedProvider.value);
+    }
+
+    if (localSelectedOrganization.value) {
+        params.set('organization', localSelectedOrganization.value);
     }
 
     const queryString = params.toString();
@@ -146,10 +164,13 @@ watch(localSelectedProvider, () => {
     debouncedBountySearch();
 });
 
+watch(localSelectedOrganization, () => { debouncedBountySearch(); });
+
 const clearBountyFilters = () => {
     localSearchQuery.value = '';
     localSelectedLanguage.value = '';
     localSelectedProvider.value = '';
+    localSelectedOrganization.value = '';
 
     router.visit(route('dashboard'), {
         preserveState: false,
@@ -216,8 +237,9 @@ const navigateToBountyPage = (page: number) => {
 };
 
 const hasActiveBountyFilters = computed(() => {
-    return localSearchQuery.value.trim() !== '' || localSelectedLanguage.value !== '' || localSelectedProvider.value != '';
+    return localSearchQuery.value.trim() !== '' || localSelectedLanguage.value !== '' || localSelectedProvider.value != '' || localSelectedOrganization.value !== '';
 });
+
 </script>
 
 <template>
@@ -289,6 +311,14 @@ const hasActiveBountyFilters = computed(() => {
                             <div class="sm:w-48">
                                 <ProviderFilter v-model="localSelectedProvider" :providers="availableProviders!" placeholder="All Providers" />
                             </div>
+                            <div v-if="userOrganizations && userOrganizations.length > 0" class="sm:w-48">
+                                <LanguageFilter
+                                    v-model="localSelectedOrganization"
+                                    :languages="(userOrganizations ?? []).map(o => o.name)"
+                                    placeholder="All Organizations"
+                                />
+                            </div>
+
                             <Button v-if="hasActiveBountyFilters" @click="clearBountyFilters" variant="button" size="default" class="rounded-xl">
                                 Clear Filters
                             </Button>
@@ -304,6 +334,9 @@ const hasActiveBountyFilters = computed(() => {
                             </Badge>
                             <Badge v-if="localSelectedProvider" variant="custom" class="flex items-center gap-1">
                                 Provider: {{ selectedProviderDisplay }}
+                            </Badge>
+                            <Badge v-if="localSelectedOrganization" variant="custom" class="flex items-center gap-1">
+                                Organization: {{ selectedOrganizationDisplay }}
                             </Badge>
                         </div>
                     </div>
