@@ -41,7 +41,14 @@ class ProviderCallbackController extends Controller
             ]);
         }
 
-        $providerUser = Socialite::driver($provider === 'jira' ? 'atlassian' : $provider)->user();
+        $driverName = $provider === 'jira' ? 'atlassian' : $provider;
+        $driver = Socialite::driver($driverName);
+
+        if (in_array($provider, ['gitlab', 'bitbucket'])) {
+            $driver = $driver->stateless();
+        }
+
+        $providerUser = $driver->user();
 
         $providerId = (string) $providerUser->getId();
         if ($provider === 'jira') {

@@ -18,18 +18,76 @@ class OrganizationController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'slug' => ['required', 'string', 'max:255', 'unique:organizations,slug'],
+            'name'           => ['required', 'string', 'max:255'],
+            'slug'           => ['required', 'string', 'max:255', 'unique:organizations,slug'],
+            'github_repo'    => ['nullable', 'string', 'max:255'],
+            'gitlab_repo'    => ['nullable', 'string', 'max:255'],
+            'bitbucket_repo' => ['nullable', 'string', 'max:255'],
         ]);
+
+        if (empty($validated['github_repo']) && empty($validated['gitlab_repo']) && empty($validated['bitbucket_repo'])) {
+            return back()->withErrors(['repo' => 'At least one repository must be provided (GitHub, GitLab, or Bitbucket).'])->withInput();
+        }
+
+        $user = $request->user();
+
+        if (!empty($validated['github_repo'])) {
+            if (Organization::where('github_repo', $validated['github_repo'])->exists()) {
+                return back()->withErrors(['github_repo' => 'An organization already exists for this GitHub repository.'])->withInput();
+            }
+            $githubProvider = $user->providers()->where('provider', 'github')->first();
+            if (!$githubProvider) {
+                return back()->withErrors(['github_repo' => 'You must connect your GitHub account first.'])->withInput();
+            }
+            $githubApi = new \App\Services\GitHubApiService($githubProvider);
+            try {
+                $githubApi->getRepository($validated['github_repo']);
+            } catch (\Exception $e) {
+                return back()->withErrors(['github_repo' => 'GitHub repository not found or not accessible.'])->withInput();
+            }
+        }
+
+        if (!empty($validated['gitlab_repo'])) {
+            if (Organization::where('gitlab_repo', $validated['gitlab_repo'])->exists()) {
+                return back()->withErrors(['gitlab_repo' => 'An organization already exists for this GitLab repository.'])->withInput();
+            }
+            $gitlabProvider = $user->providers()->where('provider', 'gitlab')->first();
+            if (!$gitlabProvider) {
+                return back()->withErrors(['gitlab_repo' => 'You must connect your GitLab account first.'])->withInput();
+            }
+            $gitlabApi = new \App\Services\GitLabApiService($gitlabProvider);
+            try {
+                $gitlabApi->getRepository($validated['gitlab_repo']);
+            } catch (\Exception $e) {
+                return back()->withErrors(['gitlab_repo' => 'GitLab repository not found or not accessible.'])->withInput();
+            }
+        }
+
+        if (!empty($validated['bitbucket_repo'])) {
+            if (Organization::where('bitbucket_repo', $validated['bitbucket_repo'])->exists()) {
+                return back()->withErrors(['bitbucket_repo' => 'An organization already exists for this Bitbucket repository.'])->withInput();
+            }
+            $bitbucketProvider = $user->providers()->where('provider', 'bitbucket')->first();
+            if (!$bitbucketProvider) {
+                return back()->withErrors(['bitbucket_repo' => 'You must connect your Bitbucket account first.'])->withInput();
+            }
+            $bitbucketApi = new \App\Services\BitbucketApiService($bitbucketProvider);
+            try {
+                $bitbucketApi->getRepository($validated['bitbucket_repo']);
+            } catch (\Exception $e) {
+                return back()->withErrors(['bitbucket_repo' => 'Bitbucket repository not found or not accessible.'])->withInput();
+            }
+        }
 
         $organization = Organization::create(array_merge($validated, [
-            'owner_id' => $request->user()->id,
+            'owner_id' => $user->id,
         ]));
 
-        $organization->members()->attach($request->user()->id, [
-            'role' => 'owner',
+        $organization->members()->attach($user->id, [
+            'role'      => 'owner',
             'joined_at' => now(),
         ]);
+
         return redirect()->route('organizations.show', $organization);
     }
 
@@ -41,16 +99,19 @@ class OrganizationController extends Controller
             ->get();
         return Inertia::render('Organizations/Show', [
             'organization' => $organization->load('owner'),
-            'members' => $members,
+            'members'      => $members,
         ]);
     }
 
     public function update(Request $request, Organization $organization): RedirectResponse
     {
-        $this->authorize('update', $organization);// owner/admin modosithat
+        $this->authorize('update', $organization);
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'slug' => ['required', 'string', 'max:255', 'unique:organizations,slug,' . $organization->id],
+            'name'           => ['required', 'string', 'max:255'],
+            'slug'           => ['required', 'string', 'max:255', 'unique:organizations,slug,' . $organization->id],
+            'github_repo'    => ['nullable', 'string', 'max:255'],
+            'gitlab_repo'    => ['nullable', 'string', 'max:255'],
+            'bitbucket_repo' => ['nullable', 'string', 'max:255'],
         ]);
         $organization->update($validated);
         return redirect()->route('organizations.show', $organization);
@@ -72,7 +133,7 @@ class OrganizationController extends Controller
             ->get();
         return Inertia::render('Organizations/Members', [
             'organization' => $organization,
-            'members' => $members,
+            'members'      => $members,
         ]);
     }
 

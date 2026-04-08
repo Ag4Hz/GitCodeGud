@@ -69,7 +69,7 @@ class BountyController extends Controller
 
         $ownedOrganizations = $request->user()
             ->organizations()
-            ->select('organizations.id', 'organizations.name')
+            ->select('organizations.id', 'organizations.name', 'organizations.github_repo', 'organizations.gitlab_repo', 'organizations.bitbucket_repo')
             ->get();
 
         return Inertia::render('bounties/CreateBounty', [
