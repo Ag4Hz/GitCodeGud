@@ -50,6 +50,9 @@ interface Issue {
 interface Organization {
     id: number;
     name: string;
+    github_repo?: string | null;
+    gitlab_repo?: string | null;
+    bitbucket_repo?: string | null;
 }
 
 interface Props {
@@ -331,6 +334,7 @@ watch(flashSuccess, (newValue) => {
                             <OrganizationSelect
                                 v-model="bountyForm.organization_id"
                                 :organizations="ownedOrganizations"
+                                :provider="bountyForm.provider"
                             />
                             <p class="text-sm text-muted-foreground">Only members of the selected organization will see this bounty.</p>
                             <InputError :message="bountyForm.errors.organization_id" />

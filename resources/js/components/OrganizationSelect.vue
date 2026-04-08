@@ -1,15 +1,19 @@
 <script setup lang="ts">
 import { Building2, Check, ChevronDown } from 'lucide-vue-next';
-import { onMounted, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 
 interface Organization {
     id: number;
     name: string;
+    github_repo?: string | null;
+    gitlab_repo?: string | null;
+    bitbucket_repo?: string | null;
 }
 
 interface Props {
     modelValue: number | null;
     organizations: Organization[];
+    provider?: string | null;
 }
 
 const props = defineProps<Props>();
@@ -17,6 +21,18 @@ const emit = defineEmits<{ 'update:modelValue': [value: number | null] }>();
 
 const isOpen = ref(false);
 const dropdownRef = ref<HTMLElement | null>(null);
+
+const filteredOrganizations = computed(() => {
+    if (!props.provider) return props.organizations;
+
+    const p = props.provider.toLowerCase();
+    return props.organizations.filter((org) => {
+        if (p === 'github') return !!org.github_repo;
+        if (p === 'gitlab') return !!org.gitlab_repo;
+        if (p === 'bitbucket') return !!org.bitbucket_repo;
+        return true;
+    });
+});
 
 const selectedOrg = () => props.organizations.find((o) => o.id === props.modelValue) ?? null;
 
@@ -36,7 +52,7 @@ onUnmounted(() => document.removeEventListener('mousedown', handleClickOutside))
 </script>
 
 <template>
-    <div ref="dropdownRef" class="relative">
+    <div ref="dropdownRef" class="relative z-50">
         <!-- Trigger -->
         <button
             type="button"
@@ -53,7 +69,7 @@ onUnmounted(() => document.removeEventListener('mousedown', handleClickOutside))
         <!-- Dropdown -->
         <div
             v-if="isOpen"
-            class="absolute z-50 mt-1 w-full rounded-2xl border border-gray-200 bg-white/90 text-sm font-medium shadow-sm backdrop-blur-xl backdrop-saturate-150 dark:border-white/10 dark:bg-gray-900/90"
+            class="absolute z-50 mt-1 w-full rounded-2xl border border-gray-200 bg-white/90 text-sm font-medium shadow-lg backdrop-blur-xl backdrop-saturate-150 dark:border-white/10 dark:bg-gray-900/90"
         >
             <!-- Public option -->
             <button
@@ -71,9 +87,9 @@ onUnmounted(() => document.removeEventListener('mousedown', handleClickOutside))
                 <Check v-if="modelValue === null" class="h-4 w-4 text-green-500" />
             </button>
 
-            <!-- Org options -->
+            <!-- Filtered org options -->
             <button
-                v-for="org in organizations"
+                v-for="org in filteredOrganizations"
                 :key="org.id"
                 type="button"
                 class="flex w-full items-center gap-3 px-4 py-3 text-left text-gray-900 last:rounded-b-2xl hover:bg-white/90 dark:text-gray-100 dark:hover:bg-white/10"
@@ -88,6 +104,14 @@ onUnmounted(() => document.removeEventListener('mousedown', handleClickOutside))
                 </div>
                 <Check v-if="modelValue === org.id" class="h-4 w-4 text-green-500" />
             </button>
+
+            <!-- No matching orgs message -->
+            <div
+                v-if="filteredOrganizations.length === 0"
+                class="rounded-b-2xl px-4 py-3 text-xs text-muted-foreground"
+            >
+                No organizations with a {{ provider }} repository. Only public bounties can be created.
+            </div>
         </div>
     </div>
 </template>

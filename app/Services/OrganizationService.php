@@ -6,6 +6,7 @@ use App\Mail\OrganizationInviteMail;
 use App\Models\Organization;
 use App\Models\OrganizationInvite;
 use App\Models\User;
+use App\Services\GitHubApiService;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -73,6 +74,48 @@ class OrganizationService
         ]);
 
         $invite->update(['accepted_at' => now()]);
+
+        $organization = $invite->organization;
+        if ($organization->github_repo) {
+            $owner = $organization->owner;
+            $githubProvider = $owner->providers()->where('provider', 'github')->first();
+
+            if ($githubProvider && $githubProvider->token) {
+                $githubApi = new GitHubApiService($githubProvider);
+                $userGithubProvider = $user->providers()->where('provider', 'github')->first();
+
+                if ($userGithubProvider && $userGithubProvider->provider_id) {
+                    $githubUsername = $githubApi->getUserById($userGithubProvider->provider_id);
+                    if ($githubUsername) {
+                        $githubApi->addCollaborator($organization->github_repo, $githubUsername);
+                    }
+                }
+            }
+        }
+
+        if ($organization->gitlab_repo) {
+            $owner = $organization->owner;
+            $gitlabProvider = $owner->providers()->where('provider', 'gitlab')->first();
+
+            if ($gitlabProvider && $gitlabProvider->token) {
+                $gitlabApi = new GitLabApiService($gitlabProvider);
+                $userGitlabProvider = $user->providers()->where('provider', 'gitlab')->first();
+
+                if ($userGitlabProvider && $userGitlabProvider->provider_id) {
+                    $gitlabApi->addMember($organization->gitlab_repo, $userGitlabProvider->provider_id);
+                }
+            }
+        }
+
+        if ($organization->bitbucket_repo) {
+            $owner = $organization->owner;
+            Mail::raw(
+                "A new member ({$user->name} - {$user->email}) has joined your organization \"{$organization->name}\" on GitCodeGud.\n\n" .
+                "Please manually grant them access to your Bitbucket repository: {$organization->bitbucket_repo}\n" .
+                "You can do this at: https://bitbucket.org/{$organization->bitbucket_repo}/admin/access",
+                fn($msg) => $msg->to($owner->email)->subject("Action required: Grant Bitbucket access to new member")
+            );
+        }
     }
 
     public function declineInvite(string $token): void
