@@ -273,4 +273,21 @@ class GitLabApiService implements GitProviderInterface
             return empty($note['system']);
         }));
     }
+    public function getUserById(string $userId): ?string
+    {
+        $response = $this->createClient()->get("/users/{$userId}");
+        $data = $this->handleSimpleResponse($response);
+        return $data['username'] ?? null;
+    }
+
+    public function addMember(string $repoFullName, string $userId, int $accessLevel = 30): bool
+    {
+        $encodedPath = self::encodeProjectPath($repoFullName);
+        $response = $this->createClient()->post("/projects/{$encodedPath}/members", [
+            'user_id'      => $userId,
+            'access_level' => $accessLevel,
+        ]);
+
+        return in_array($response->status(), [201, 409]);
+    }
 }

@@ -267,4 +267,22 @@ class BitbucketApiService implements GitProviderInterface
         $repo = $this->getRepository($repoFullName);
         return !empty($repo);
     }
+
+    public function addCollaborator(string $repoFullName, string $accountId, string $permission = 'read'): bool
+    {
+        [$workspace, $repoSlug] = explode('/', $repoFullName, 2);
+
+        $response = $this->createClient()->put(
+            "/repositories/{$workspace}/{$repoSlug}/permissions-config/users/{$accountId}",
+            ['permission' => $permission]
+        );
+
+        return in_array($response->status(), [200, 201]);
+    }
+
+    public function getUserByAccountId(string $accountId): ?array
+    {
+        $response = $this->createClient()->get("/users/{$accountId}");
+        return $this->handleSimpleResponse($response);
+    }
 }

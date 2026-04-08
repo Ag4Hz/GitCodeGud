@@ -225,4 +225,33 @@ class GitHubApiService implements GitProviderInterface
         $response = $this->createClient()->get("/repos/{$repoFullName}/pulls/{$prNumber}/comments");
         return $this->handleSimpleResponse($response);
     }
+    public function addCollaborator(string $repoFullName, string $username, string $permission = 'pull'): bool
+    {
+        $response = $this->createClient()->put("/repos/{$repoFullName}/collaborators/{$username}", [
+            'permission' => $permission,
+        ]);
+
+        return in_array($response->status(), [201, 204]);
+    }
+
+    public function getUsernameByEmail(string $email): ?string
+    {
+        $response = $this->createClient()->get('/search/users', [
+            'q' => "{$email} in:email",
+        ]);
+
+        $data = $this->handleSimpleResponse($response);
+
+        if (!empty($data['items'])) {
+            return $data['items'][0]['login'] ?? null;
+        }
+
+        return null;
+    }
+    public function getUserById(string $userId): ?string
+    {
+        $response = $this->createClient()->get("/user/{$userId}");
+        $data = $this->handleSimpleResponse($response);
+        return $data['login'] ?? null;
+    }
 }
