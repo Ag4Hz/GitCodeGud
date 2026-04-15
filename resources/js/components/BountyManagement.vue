@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { usePluralization } from '@/composables/usePluralization';
 import { BountyStatus, type Bounty, type BountyPagination } from '@/types/bounty';
 import { Link, router, useForm } from '@inertiajs/vue3';
-import { Archive, Calendar, CheckCircle, DollarSign, Edit2, ExternalLink, Eye, EyeOff, Loader2, RotateCcw, Save, Target, X } from 'lucide-vue-next';
+import { Archive, Calendar, CheckCircle, DollarSign, Edit2, ExternalLink, Eye, EyeOff, Loader2, LockOpen, RotateCcw, Save, Target, X } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 
 interface Props {
@@ -117,6 +117,18 @@ const editForm = useForm({
 
 const deleteForm = useForm({});
 const restoreForm = useForm({});
+const statusForm = useForm({ status: '' as BountyStatus });
+
+const toggleStatus = (bounty: Bounty) => {
+    const newStatus = bounty.status === BountyStatus.OPEN ? BountyStatus.CLOSED : BountyStatus.OPEN;
+    statusForm.status = newStatus;
+    statusForm.patch(route('bounties.status.update', bounty.id), {
+        preserveScroll: true,
+        onSuccess: () => {
+            router.reload({ only: ['bounties'] });
+        },
+    });
+};
 
 // Edit functionality
 const startEdit = (bounty: Bounty) => {
@@ -502,6 +514,16 @@ const restoreBounty = (bounty: Bounty) => {
                                     <Button @click="startEdit(bounty)" variant="button" size="sm" class="flex items-center gap-1">
                                         <Edit2 class="h-3 w-3" />
                                         Edit
+                                    </Button>
+                                    <Button
+                                        @click="toggleStatus(bounty)"
+                                        :disabled="statusForm.processing"
+                                        variant="outline"
+                                        size="sm"
+                                        class="flex items-center gap-1"
+                                    >
+                                        <component :is="bounty.status === 'open' ? EyeOff : LockOpen" class="h-3 w-3" />
+                                        {{ bounty.status === 'open' ? 'Close' : 'Reopen' }}
                                     </Button>
                                     <Button
                                         @click="softDeleteBounty(bounty)"

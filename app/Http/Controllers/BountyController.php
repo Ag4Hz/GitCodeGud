@@ -364,6 +364,7 @@ class BountyController extends Controller
             'title'       => $validated['title'],
             'description' => $validated['description'],
             'reward_xp'   => $validated['reward_xp'],
+            'status'      => $validated['status'] ?? $bounty->status,
         ]);
 
         return redirect()
@@ -391,6 +392,15 @@ class BountyController extends Controller
         return redirect()
             ->route('bounties.create')
             ->with('success', 'Bounty restored successfully!');
+    }
+
+    public function updateStatus(Request $request, Bounty $bounty): RedirectResponse
+    {
+        $this->authorize('update', $bounty);
+        $validated = $request->validate(['status' => ['required', 'in:open,closed']]);
+        $bounty->update(['status' => $validated['status']]);
+
+        return back()->with('success', 'Bounty status updated.');
     }
 
     public function searchRepositories(Request $request): RedirectResponse

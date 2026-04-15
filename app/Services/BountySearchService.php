@@ -16,7 +16,6 @@ class BountySearchService
     {
         return Bounty::with(['issue.repo'])
             ->active()
-            ->where('status', 'open')
             ->visibleTo($user)
             ->latest();
     }
