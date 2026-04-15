@@ -4,9 +4,9 @@ import OrganizationMemberList from '@/components/OrganizationMemberList.vue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem, type User } from '@/types';
-import { Head, Link, usePage } from '@inertiajs/vue3';
 import { Building2, Mail, Trophy, Users } from 'lucide-vue-next';
-import { computed } from 'vue';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { computed, onMounted, onUnmounted } from 'vue';
 
 interface MemberPivot {
     role: 'owner' | 'member';
@@ -43,6 +43,20 @@ const breadcrumbs = computed<BreadcrumbItem[]>(() => [
 ]);
 
 const isOwner = computed(() => currentUser?.id === props.organization.owner_id);
+
+let pollInterval: ReturnType<typeof setInterval> | null = null;
+
+onMounted(() => {
+    if (isOwner.value) {
+        pollInterval = setInterval(() => {
+            router.reload({ only: ['members'] });
+        }, 10000);
+    }
+});
+
+onUnmounted(() => {
+    if (pollInterval) clearInterval(pollInterval);
+});
 </script>
 
 <template>
