@@ -335,6 +335,7 @@ watch(flashSuccess, (newValue) => {
                                 v-model="bountyForm.organization_id"
                                 :organizations="ownedOrganizations"
                                 :provider="bountyForm.provider"
+                                :repository-full-name="bountyForm.repository_full_name || null"
                             />
                             <p class="text-sm text-muted-foreground">Only members of the selected organization will see this bounty.</p>
                             <InputError :message="bountyForm.errors.organization_id" />

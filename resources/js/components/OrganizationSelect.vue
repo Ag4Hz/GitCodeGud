@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Building2, Check, ChevronDown } from 'lucide-vue-next';
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 
 interface Organization {
     id: number;
@@ -14,6 +14,7 @@ interface Props {
     modelValue: number | null;
     organizations: Organization[];
     provider?: string | null;
+    repositoryFullName?: string | null;
 }
 
 const props = defineProps<Props>();
@@ -22,16 +23,31 @@ const emit = defineEmits<{ 'update:modelValue': [value: number | null] }>();
 const isOpen = ref(false);
 const dropdownRef = ref<HTMLElement | null>(null);
 
+const getOrgRepo = (org: Organization, provider: string): string | null => {
+    if (provider === 'github') return org.github_repo ?? null;
+    if (provider === 'gitlab') return org.gitlab_repo ?? null;
+    if (provider === 'bitbucket') return org.bitbucket_repo ?? null;
+    return null;
+};
+
 const filteredOrganizations = computed(() => {
     if (!props.provider) return props.organizations;
 
     const p = props.provider.toLowerCase();
+    const selectedRepo = props.repositoryFullName ?? null;
+
     return props.organizations.filter((org) => {
-        if (p === 'github') return !!org.github_repo;
-        if (p === 'gitlab') return !!org.gitlab_repo;
-        if (p === 'bitbucket') return !!org.bitbucket_repo;
+        const orgRepo = getOrgRepo(org, p);
+        if (!orgRepo) return false;
+        if (selectedRepo) return orgRepo === selectedRepo;
         return true;
     });
+});
+
+watch(filteredOrganizations, (newList) => {
+    if (props.modelValue !== null && !newList.find((o) => o.id === props.modelValue)) {
+        emit('update:modelValue', null);
+    }
 });
 
 const selectedOrg = () => props.organizations.find((o) => o.id === props.modelValue) ?? null;
@@ -110,7 +126,12 @@ onUnmounted(() => document.removeEventListener('mousedown', handleClickOutside))
                 v-if="filteredOrganizations.length === 0"
                 class="rounded-b-2xl px-4 py-3 text-xs text-muted-foreground"
             >
-                No organizations with a {{ provider }} repository. Only public bounties can be created.
+                <template v-if="repositoryFullName">
+                    No organizations linked to <span class="font-medium">{{ repositoryFullName }}</span>. Only public bounties can be created for this repository.
+                </template>
+                <template v-else>
+                    No organizations with a {{ provider }} repository. Only public bounties can be created.
+                </template>
             </div>
         </div>
     </div>
