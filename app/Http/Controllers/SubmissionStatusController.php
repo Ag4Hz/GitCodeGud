@@ -25,13 +25,25 @@ class SubmissionStatusController extends Controller
         ]);
 
         $oldStatus = $submission->status;
+        $alreadyAccepted = $submission->bounty->submissions()
+            ->where('status', 'accepted')
+            ->exists();
 
         $submission->update([
             'status' => $request->status
         ]);
 
         if ($request->status === 'accepted' && $oldStatus !== 'accepted') {
-            XPHelper::awardSubmissionXP($submission);
+            if ($alreadyAccepted) {
+                $owner = $submission->bounty->issue->repo->user;
+                if (!XPHelper::canAffordBounty($owner, $submission->bounty->reward_xp)) {
+                    $submission->update(['status' => $oldStatus]);
+                    return redirect()->back()->with('error', 'You do not have enough XP to accept another submission.');
+                }
+                XPHelper::deductBountyXP($owner, $submission->bounty->reward_xp);
+            }
+
+            //XPHelper::awardSubmissionXP($submission);
             return redirect()->back()->with('success', 'Submission accepted successfully! XP awarded to contributor.');
         }
 

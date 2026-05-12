@@ -114,6 +114,44 @@ class XPHelper
         });
     }
 
+    public static function canAffordBounty(User $user, int $xp): bool
+    {
+        $user->load('skills');
+        $totalXP = $user->skills->sum('pivot.xp');
+        return $totalXP >= $xp;
+    }
+
+    public static function deductBountyXP(User $user, int $xp): void
+    {
+        DB::transaction(function () use ($user, $xp) {
+            self::deductXPFromSkills($user, $xp);
+            self::updateUserTotalXP($user);
+        });
+    }
+
+    private static function deductXPFromSkills(User $user, int $totalXP): void
+    {
+        $user->load('skills');
+        $remaining = $totalXP;
+
+        foreach ($user->skills()->orderByPivot('xp', 'desc')->get() as $skill) {
+            if ($remaining <= 0) break;
+
+            $available = $skill->pivot->xp;
+            $deduct = min($available, $remaining);
+
+            $newXP = $available - $deduct;
+            SkillUser::where('user_id', $user->id)
+                ->where('skill_id', $skill->id)
+                ->update([
+                    'xp'    => $newXP,
+                    'level' => self::calculateLevel($newXP),
+                ]);
+
+            $remaining -= $deduct;
+        }
+    }
+
     private static function distributeXPToSkills(User $user, int $totalXP, array $languages): void
     {
         if (empty($languages)) {
@@ -142,7 +180,7 @@ class XPHelper
             ['xp' => 0, 'level' => 1]
         );
 
-        $newXP = $userSkill->xp + $xp;
+        $newXP = $userSkill->xp + (int) round($xp * $skill->multiplier);
         $userSkill->update([
             'xp' => $newXP,
             'level' => self::calculateLevel($newXP)
@@ -257,6 +295,13 @@ class XPHelper
     {
         return Cache::remember('level_thresholds_keyed', 3600, function () {
             return LevelThreshold::getThresholds();
+        });
+    }
+    public static function grantStarterXP(User $user): void
+    {
+        DB::transaction(function () use ($user) {
+            self::addXPToSkill($user, 'General', 200);
+            self::updateUserTotalXP($user);
         });
     }
 

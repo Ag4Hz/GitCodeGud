@@ -217,6 +217,11 @@ class BountyStoreRequest extends FormRequest
         }
 
         $jiraApi = JiraApiService::fromProvider($jiraProvider);
+
+        if (!$jiraApi->hasAccessToWorkspace($issueInfo['workspace'])) {
+            $validator->errors()->add('jira_issue_url', 'Your linked Jira account does not have access to this Jira instance.');
+            return;
+        }
         $isOpen = $jiraApi->isIssueOpen($issueInfo['workspace'], $issueInfo['issue_key']);
 
         if (!$isOpen) {

@@ -173,4 +173,8 @@ class JiraApiService
             token:   $provider->token,
         );
     }
+    public function hasAccessToWorkspace(string $workspace): bool
+    {
+        return $this->resolveCloudId($workspace) !== null;
+    }
 }

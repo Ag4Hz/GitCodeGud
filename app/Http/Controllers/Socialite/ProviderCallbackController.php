@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Socialite;
 
+use App\Helpers\XPHelper;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\UserProvider;
@@ -105,6 +106,10 @@ class ProviderCallbackController extends Controller
                     'nickname' => $this->getNickname($providerUser, $provider),
                 ]
             );
+            if ($user->wasRecentlyCreated) {
+                XPHelper::grantStarterXP($user);
+            }
+
 
             UserProvider::create([
                 'user_id'           => $user->id,
@@ -128,6 +133,9 @@ class ProviderCallbackController extends Controller
                         'nickname' => $this->getNickname($providerUser, $provider),
                     ]
                 );
+                if ($user->wasRecentlyCreated) {
+                    XPHelper::grantStarterXP($user);
+                }
                 $userProvider->update(['user_id' => $user->id]);
             }
 

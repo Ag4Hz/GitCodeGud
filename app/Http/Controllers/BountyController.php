@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\XPHelper;
 use App\Http\Requests\BountyStoreRequest;
 use App\Http\Requests\BountyUpdateRequest;
 use App\Models\Bounty;
@@ -127,7 +128,16 @@ class BountyController extends Controller
             ]
         );
 
-        $user        = $request->user();
+        $user = $request->user();
+
+        if (!XPHelper::canAffordBounty($user, $validated['reward_xp'])) {
+            return redirect()->back()
+                ->withErrors(['reward_xp' => 'Nincs elég XP-d ehhez a bountyhoz. Jelenlegi egyenleged: ' . $user->xp . ' XP.'])
+                ->withInput();
+        }
+
+        XPHelper::deductBountyXP($user, $validated['reward_xp']);
+
         $repoService = new GitRepoService($user);
         $repoLanguages = $repoService->getRepositoryLanguages($provider, $repoInfo['full_name']);
 
@@ -156,8 +166,9 @@ class BountyController extends Controller
         }
 
         return Inertia::render('bounties/Submissions', [
-            'bounty'      => $bounty->load(['issue.repo']),
-            'submissions' => $bounty->submissions()->with(['user'])->latest()->paginate(10),
+            'bounty'        => $bounty->load(['issue.repo']),
+            'submissions'   => $bounty->submissions()->with(['user'])->latest()->paginate(10),
+            'acceptedCount' => $bounty->submissions()->where('status', 'accepted')->count(),
         ]);
     }
 
@@ -200,6 +211,13 @@ class BountyController extends Controller
     private function getPaginatedComments(Bounty $bounty, Request $request): array
     {
         $user = $request->user();
+        \Log::info('getPaginatedComments', [
+            'user_id' => $user?->id,
+            'issue_url' => $bounty->issue?->url,
+            'issue_provider' => $bounty->issue?->provider,
+            'repo_provider' => $bounty->issue?->repo?->provider,
+            'user_providers' => $user?->providers()->pluck('provider')->toArray(),
+        ]);
         if (!$user || !$bounty->issue?->url) {
             return [];
         }
