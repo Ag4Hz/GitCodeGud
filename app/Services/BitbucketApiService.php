@@ -127,25 +127,36 @@ class BitbucketApiService implements GitProviderInterface
 
     public function getUserRepositories(array $params = []): array
     {
-        $defaultParams = [
-            'role'    => 'member',
-            'sort'    => '-updated_on',
-            'pagelen' => 100,
-        ];
+        $workspacesResponse = $this->createClient()->get('/user/workspaces');
+        $workspaces = $this->handleSimpleResponse($workspacesResponse);
+        $workspaceList = $workspaces['values'] ?? [];
 
-        $response = $this->createClient()->get('/repositories', array_merge($defaultParams, $params));
-        $data     = $this->handleSimpleResponse($response);
-        $repos    = $data['values'] ?? [];
+        $allRepos = [];
 
-        foreach ($repos as $repo) {
-            $ws   = $repo['workspace']['slug'] ?? $repo['owner']['nickname'] ?? null;
-            $slug = $repo['slug'] ?? null;
-            if ($ws && $slug) {
-                $this->repoCache["{$ws}/{$slug}"] = $repo;
+        foreach ($workspaceList as $workspaceData) {
+            $slug = $workspaceData['workspace']['slug'] ?? null;
+            if (!$slug) continue;
+
+            $defaultParams = [
+                'sort'    => '-updated_on',
+                'pagelen' => 100,
+            ];
+
+            $response = $this->createClient()->get("/repositories/{$slug}", array_merge($defaultParams, $params));
+            $data     = $this->handleSimpleResponse($response);
+            $repos    = $data['values'] ?? [];
+
+            foreach ($repos as $repo) {
+                $repoSlug = $repo['slug'] ?? null;
+                if ($slug && $repoSlug) {
+                    $this->repoCache["{$slug}/{$repoSlug}"] = $repo;
+                }
             }
+
+            $allRepos = array_merge($allRepos, $repos);
         }
 
-        return $repos;
+        return $allRepos;
     }
 
     public function getRepositoryLanguages(string $repoFullName): array

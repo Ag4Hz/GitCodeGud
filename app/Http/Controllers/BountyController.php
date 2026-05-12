@@ -211,13 +211,6 @@ class BountyController extends Controller
     private function getPaginatedComments(Bounty $bounty, Request $request): array
     {
         $user = $request->user();
-        \Log::info('getPaginatedComments', [
-            'user_id' => $user?->id,
-            'issue_url' => $bounty->issue?->url,
-            'issue_provider' => $bounty->issue?->provider,
-            'repo_provider' => $bounty->issue?->repo?->provider,
-            'user_providers' => $user?->providers()->pluck('provider')->toArray(),
-        ]);
         if (!$user || !$bounty->issue?->url) {
             return [];
         }
