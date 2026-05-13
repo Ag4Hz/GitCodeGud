@@ -15,6 +15,9 @@ class Organization extends Model
         'name',
         'slug',
         'owner_id',
+        'github_repo',
+        'gitlab_repo',
+        'bitbucket_repo',
     ];
 
     public function owner(): BelongsTo

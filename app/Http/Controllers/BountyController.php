@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\XPHelper;
 use App\Http\Requests\BountyStoreRequest;
 use App\Http\Requests\BountyUpdateRequest;
 use App\Models\Bounty;
@@ -67,15 +68,21 @@ class BountyController extends Controller
             }
         }
 
+        $ownedOrganizations = $request->user()
+            ->organizations()
+            ->select('organizations.id', 'organizations.name', 'organizations.github_repo', 'organizations.gitlab_repo', 'organizations.bitbucket_repo')
+            ->get();
+
         return Inertia::render('bounties/CreateBounty', [
-            'bounties'           => $userBounties,
-            'repositories'       => $repositories,
-            'repositoryQuery'    => $repositoryQuery,
-            'providerFilter'     => $providerFilter,
-            'issues'             => $issues,
-            'selectedRepository' => $selectedRepo,
-            'selectedProvider'   => $selectedProvider,
-            'connectedProviders' => $connectedProviders,
+            'bounties'            => $userBounties,
+            'repositories'        => $repositories,
+            'repositoryQuery'     => $repositoryQuery,
+            'providerFilter'      => $providerFilter,
+            'issues'              => $issues,
+            'selectedRepository'  => $selectedRepo,
+            'selectedProvider'    => $selectedProvider,
+            'connectedProviders'  => $connectedProviders,
+            'ownedOrganizations'  => $ownedOrganizations,
         ]);
     }
 
@@ -101,7 +108,7 @@ class BountyController extends Controller
 
         if ($provider === 'bitbucket') {
             $jiraParsed  = JiraApiService::parseIssueUrl($validated['issue_url']);
-            $issueNumber = $jiraParsed['issue_key'] ?? null; // e.g. "PROJ-123"
+            $issueNumber = $jiraParsed['issue_key'] ?? null;
             $issueProvider = 'jira';
         } else {
             preg_match('/\/-\/issues\/(\d+)|\/issues\/(\d+)/', $validated['issue_url'], $matches);
@@ -121,17 +128,27 @@ class BountyController extends Controller
             ]
         );
 
-        $user        = $request->user();
+        $user = $request->user();
+
+        if (!XPHelper::canAffordBounty($user, $validated['reward_xp'])) {
+            return redirect()->back()
+                ->withErrors(['reward_xp' => 'Nincs elég XP-d ehhez a bountyhoz. Jelenlegi egyenleged: ' . $user->xp . ' XP.'])
+                ->withInput();
+        }
+
+        XPHelper::deductBountyXP($user, $validated['reward_xp']);
+
         $repoService = new GitRepoService($user);
         $repoLanguages = $repoService->getRepositoryLanguages($provider, $repoInfo['full_name']);
 
         $bounty = Bounty::create([
-            'issue_id'    => $issue->id,
-            'title'       => $validated['title'],
-            'description' => $validated['description'] ?? '',
-            'reward_xp'   => $validated['reward_xp'],
-            'languages'   => collect($repoLanguages)->sortDesc()->keys()->toArray(),
-            'status'      => 'open',
+            'issue_id'        => $issue->id,
+            'organization_id' => $validated['organization_id'] ?? null,
+            'title'           => $validated['title'],
+            'description'     => $validated['description'] ?? '',
+            'reward_xp'       => $validated['reward_xp'],
+            'languages'       => collect($repoLanguages)->sortDesc()->keys()->toArray(),
+            'status'          => 'open',
         ]);
 
         return redirect()
@@ -149,8 +166,9 @@ class BountyController extends Controller
         }
 
         return Inertia::render('bounties/Submissions', [
-            'bounty'      => $bounty->load(['issue.repo']),
-            'submissions' => $bounty->submissions()->with(['user'])->latest()->paginate(10),
+            'bounty'        => $bounty->load(['issue.repo']),
+            'submissions'   => $bounty->submissions()->with(['user'])->latest()->paginate(10),
+            'acceptedCount' => $bounty->submissions()->where('status', 'accepted')->count(),
         ]);
     }
 
@@ -357,6 +375,7 @@ class BountyController extends Controller
             'title'       => $validated['title'],
             'description' => $validated['description'],
             'reward_xp'   => $validated['reward_xp'],
+            'status'      => $validated['status'] ?? $bounty->status,
         ]);
 
         return redirect()
@@ -386,6 +405,15 @@ class BountyController extends Controller
             ->with('success', 'Bounty restored successfully!');
     }
 
+    public function updateStatus(Request $request, Bounty $bounty): RedirectResponse
+    {
+        $this->authorize('update', $bounty);
+        $validated = $request->validate(['status' => ['required', 'in:open,closed']]);
+        $bounty->update(['status' => $validated['status']]);
+
+        return back()->with('success', 'Bounty status updated.');
+    }
+
     public function searchRepositories(Request $request): RedirectResponse
     {
         return redirect()->route('bounties.create', [
@@ -406,25 +434,25 @@ class BountyController extends Controller
 
     private function getRepositoryData(Request $request): array
     {
-        $user         = $request->user();
-        $query        = $request->input('repository_search', '');
+        $user           = $request->user();
+        $query          = $request->input('repository_search', '');
         $providerFilter = $request->input('provider_filter', '');
-        $page         = $request->input('page', 1);
+        $page           = $request->input('page', 1);
 
         $emptyResponse = [
-            'repositories' => [],
-            'query'        => $query,
+            'repositories'  => [],
+            'query'         => $query,
             'providerFilter' => $providerFilter,
-            'total'        => 0,
-            'page'         => $page,
-            'hasMore'      => false,
+            'total'         => 0,
+            'page'          => $page,
+            'hasMore'       => false,
         ];
 
         if (!$user) {
             return $emptyResponse;
         }
 
-        $repoService       = new GitRepoService($user);
+        $repoService        = new GitRepoService($user);
         $connectedProviders = $repoService->getConnectedProviders();
 
         if (empty($connectedProviders)) {
@@ -453,12 +481,12 @@ class BountyController extends Controller
         }
 
         return [
-            'repositories' => array_values($allRepositories),
-            'query'        => $query,
+            'repositories'  => array_values($allRepositories),
+            'query'         => $query,
             'providerFilter' => $providerFilter,
-            'total'        => count($allRepositories),
-            'page'         => 1,
-            'hasMore'      => false,
+            'total'         => count($allRepositories),
+            'page'          => 1,
+            'hasMore'       => false,
         ];
     }
 

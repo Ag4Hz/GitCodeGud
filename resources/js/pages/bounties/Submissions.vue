@@ -37,13 +37,16 @@ interface Props {
         links?: any;
         meta?: any;
     };
+    acceptedCount: number;
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
 const { formatDate } = useDateFormatter();
 
 const rejectDialogOpen = ref(false);
+const acceptDialogOpen = ref(false);
 const selectedSubmission = ref<Submission | null>(null);
+const pendingAcceptId = ref<number | null>(null);
 
 const updateStatus = (submissionId: number, status: 'accepted' | 'rejected') => {
     const form = useForm({
@@ -53,11 +56,27 @@ const updateStatus = (submissionId: number, status: 'accepted' | 'rejected') => 
     form.patch(`/submissions/${submissionId}/status`, {
         preserveScroll: true,
         onSuccess: () => {
-            console.log(`Submission ${status} successfully`);
             rejectDialogOpen.value = false;
+            acceptDialogOpen.value = false;
             selectedSubmission.value = null;
+            pendingAcceptId.value = null;
         },
     });
+};
+
+const handleAcceptClick = (submissionId: number) => {
+    if (props.acceptedCount > 0) {
+        pendingAcceptId.value = submissionId;
+        acceptDialogOpen.value = true;
+    } else {
+        updateStatus(submissionId, 'accepted');
+    }
+};
+
+const confirmAccept = () => {
+    if (pendingAcceptId.value !== null) {
+        updateStatus(pendingAcceptId.value, 'accepted');
+    }
 };
 
 const openRejectDialog = (submission: Submission) => {
@@ -159,7 +178,7 @@ const getStatusColor = (status: string) => {
                                         <!-- Action buttons for pending submissions -->
                                         <div v-if="submission.status === 'pending'" class="flex gap-2">
                                             <Button
-                                                @click="updateStatus(submission.id, 'accepted')"
+                                                @click="handleAcceptClick(submission.id)"
                                                 size="sm"
                                                 class="bg-green-600/30 text-white hover:bg-green-700/40"
                                             >
@@ -182,7 +201,6 @@ const getStatusColor = (status: string) => {
                                                             a new solution.
                                                         </DialogDescription>
                                                     </DialogHeader>
-
                                                     <div class="flex justify-end space-x-2">
                                                         <Button variant="outline" size="sm" @click="rejectDialogOpen = false"> Cancel </Button>
                                                         <Button variant="destructive" size="sm" @click="handleReject"> Reject Submission </Button>
@@ -207,5 +225,25 @@ const getStatusColor = (status: string) => {
                 </Card>
             </div>
         </div>
+
+        <!-- Extra XP deduction confirmation dialog -->
+        <Dialog v-model:open="acceptDialogOpen">
+            <DialogContent class="sm:max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Additional XP Deduction</DialogTitle>
+                    <DialogDescription>
+                        This bounty already has an accepted submission. Accepting another one will deduct
+                        an additional <strong>{{ bounty.reward_xp }} XP</strong> from your balance.
+                        Are you sure you want to continue?
+                    </DialogDescription>
+                </DialogHeader>
+                <div class="flex justify-end space-x-2">
+                    <Button variant="outline" size="sm" @click="acceptDialogOpen = false">Cancel</Button>
+                    <Button size="sm" class="bg-green-600 text-white hover:bg-green-700" @click="confirmAccept">
+                        Yes, accept
+                    </Button>
+                </div>
+            </DialogContent>
+        </Dialog>
     </AppLayout>
 </template>

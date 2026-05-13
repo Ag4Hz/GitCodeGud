@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Socialite;
 
+use App\Helpers\XPHelper;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\UserProvider;
@@ -41,7 +42,14 @@ class ProviderCallbackController extends Controller
             ]);
         }
 
-        $providerUser = Socialite::driver($provider === 'jira' ? 'atlassian' : $provider)->user();
+        $driverName = $provider === 'jira' ? 'atlassian' : $provider;
+        $driver = Socialite::driver($driverName);
+
+        if (in_array($provider, ['gitlab', 'bitbucket'])) {
+            $driver = $driver->stateless();
+        }
+
+        $providerUser = $driver->user();
 
         $providerId = (string) $providerUser->getId();
         if ($provider === 'jira') {
@@ -98,6 +106,10 @@ class ProviderCallbackController extends Controller
                     'nickname' => $this->getNickname($providerUser, $provider),
                 ]
             );
+            if ($user->wasRecentlyCreated) {
+                XPHelper::grantStarterXP($user);
+            }
+
 
             UserProvider::create([
                 'user_id'           => $user->id,
@@ -121,6 +133,9 @@ class ProviderCallbackController extends Controller
                         'nickname' => $this->getNickname($providerUser, $provider),
                     ]
                 );
+                if ($user->wasRecentlyCreated) {
+                    XPHelper::grantStarterXP($user);
+                }
                 $userProvider->update(['user_id' => $user->id]);
             }
 

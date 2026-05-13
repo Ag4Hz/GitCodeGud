@@ -16,7 +16,6 @@ class BountySearchService
     {
         return Bounty::with(['issue.repo'])
             ->active()
-            ->where('status', 'open')
             ->visibleTo($user)
             ->latest();
     }
@@ -25,7 +24,6 @@ class BountySearchService
     {
         return $query->when($request->filled('search'), function ($q) use ($request) {
             $searchTerm = $request->get('search');
-
             $operator = DB::connection()->getDriverName() === 'pgsql' ? 'ILIKE' : 'LIKE';
 
             return $q->where(function ($query) use ($searchTerm, $operator) {
@@ -50,13 +48,20 @@ class BountySearchService
     {
         return $query->when($request->filled('provider'), function ($q) use ($request) {
             $provider = $request->get('provider');
-
-            $providers = $provider === 'bitbucket'
-                ? ['bitbucket', 'jira']
-                : [$provider];
+            $providers = $provider === 'bitbucket' ? ['bitbucket', 'jira'] : [$provider];
 
             return $q->whereHas('issue', function ($issueQuery) use ($providers) {
                 $issueQuery->whereIn('provider', $providers);
+            });
+        });
+    }
+
+    public function applyOrganizationFilter(Builder $query, Request $request): Builder
+    {
+        return $query->when($request->filled('organization'), function ($q) use ($request) {
+            $orgName = $request->get('organization');
+            return $q->whereHas('organization', function ($orgQuery) use ($orgName) {
+                $orgQuery->where('name', $orgName);
             });
         });
     }
@@ -73,15 +78,22 @@ class BountySearchService
         $query = $this->applySearchFilter($query, $request);
         $query = $this->applyLanguageFilter($query, $request);
         $query = $this->applyProviderFilter($query, $request);
+        $query = $this->applyOrganizationFilter($query, $request);
+
+        $userOrganizations = $user
+            ? $user->organizations()->select('organizations.id', 'organizations.name')->get()->toArray()
+            : [];
 
         return [
-            'bounties'           => $this->getPaginatedBounties($query, $perPage),
-            'availableLanguages' => Bounty::getAvailableLanguages(),
-            'availableProviders' => Issue::getAvailableProviders(),
-            'filters'            => [
-                'search'   => $request->get('search', ''),
-                'language' => $request->get('language', ''),
-                'provider' => $request->get('provider', ''),
+            'bounties'            => $this->getPaginatedBounties($query, $perPage),
+            'availableLanguages'  => Bounty::getAvailableLanguages(),
+            'availableProviders'  => Issue::getAvailableProviders(),
+            'userOrganizations'   => $userOrganizations,
+            'filters'             => [
+                'search'       => $request->get('search', ''),
+                'language'     => $request->get('language', ''),
+                'provider'     => $request->get('provider', ''),
+                'organization' => $request->get('organization', ''),
             ],
         ];
     }

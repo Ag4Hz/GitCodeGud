@@ -22,5 +22,12 @@ class AppServiceProvider extends ServiceProvider
         Submission::observe(SubmissionObserver::class);
 
         Event::listen(SocialiteWasCalled::class, \SocialiteProviders\Atlassian\AtlassianExtendSocialite::class . '@handle');
+        //Event::listen(SocialiteWasCalled::class, \SocialiteProviders\Bitbucket\BitbucketExtendSocialite::class . '@handle');
+
+        $socialite = $this->app->make(\Laravel\Socialite\Contracts\Factory::class);
+        $socialite->extend('bitbucket', function ($app) use ($socialite) {
+            $config = $app['config']['services.bitbucket'];
+            return $socialite->buildProvider(\App\Socialite\BitbucketProvider::class, $config);
+        });
     }
 }

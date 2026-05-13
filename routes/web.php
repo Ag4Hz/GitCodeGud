@@ -60,6 +60,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/bounties/{id}/restore', [BountyController::class, 'restore'])
         ->where('id', '[0-9]+')
         ->name('bounties.restore');
+    Route::patch('/bounties/{bounty}/status', [BountyController::class, 'updateStatus'])
+        ->name('bounties.status.update');
 
     Route::get('/bounty/search-repositories', [BountyController::class, 'searchRepositories'])
         ->name('bounty.search-repositories');

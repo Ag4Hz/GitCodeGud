@@ -9,6 +9,7 @@ export interface Bounty {
     description: string;
     reward_xp: number;
     views?: number;
+    organization_id?: number | null;
     status: BountyStatus;
     created_at: string;
     updated_at: string;

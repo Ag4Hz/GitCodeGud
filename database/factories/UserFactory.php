@@ -31,7 +31,7 @@ class UserFactory extends Factory
             'password' => static::$password ??= Hash::make('password'),
             'oauth_provider' => 'github',
             'oauth_provider_id' => fake()->numberBetween(1, 999999),
-            'xp' => 0,
+            'xp' => 200,
             'remember_token' => Str::random(10),
             'role' => 'user',
         ];

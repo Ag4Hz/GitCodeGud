@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Models\Bounty;
 use App\Models\Issue;
+use App\Models\Organization;
 use App\Rules\GitHubIssueUrl;
 use App\Rules\GitHubRepositoryUrl;
 use App\Rules\IssueBelongsToRepository;
@@ -13,6 +14,7 @@ use App\Services\GitHubApiService;
 use App\Services\GitRepoService;
 use App\Services\JiraApiService;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 class BountyStoreRequest extends FormRequest
@@ -48,6 +50,12 @@ class BountyStoreRequest extends FormRequest
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:2000'],
             'reward_xp' => ['required', 'integer', 'min:1', 'max:1000'],
+            'organization_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('organization_user', 'organization_id')
+                    ->where('user_id', $this->user()->id),
+            ],
         ];
 
         // Support both URL-based and form-based input methods
@@ -101,7 +109,45 @@ class BountyStoreRequest extends FormRequest
                     $this->validateSelectedRepositoryAndIssue($validator);
                 }
             }
+
+            if ($this->filled('organization_id') && !$validator->errors()->has('organization_id')) {
+                $this->validateOrganizationProvider($validator, $provider);
+            }
         });
+    }
+
+    private function validateOrganizationProvider(Validator $validator, string $provider): void
+    {
+        $organizationId = $this->input('organization_id');
+        $org = Organization::find($organizationId);
+
+        if (!$org) {
+            return;
+        }
+
+        $repoFullName = $this->input('repository_full_name');
+
+        $orgRepo = match ($provider) {
+            'github'    => $org->github_repo,
+            'gitlab'    => $org->gitlab_repo,
+            'bitbucket' => $org->bitbucket_repo,
+            default     => null,
+        };
+
+        if (!$orgRepo) {
+            $validator->errors()->add(
+                'organization_id',
+                "This organization has no {$provider} repository configured."
+            );
+            return;
+        }
+
+        if ($repoFullName && $orgRepo !== $repoFullName) {
+            $validator->errors()->add(
+                'organization_id',
+                "This organization is linked to the repository \"{$orgRepo}\". Please select that repository, or choose a different organization."
+            );
+        }
     }
 
     private function validateIssueStatus(Validator $validator): void
@@ -171,6 +217,11 @@ class BountyStoreRequest extends FormRequest
         }
 
         $jiraApi = JiraApiService::fromProvider($jiraProvider);
+
+        if (!$jiraApi->hasAccessToWorkspace($issueInfo['workspace'])) {
+            $validator->errors()->add('jira_issue_url', 'Your linked Jira account does not have access to this Jira instance.');
+            return;
+        }
         $isOpen = $jiraApi->isIssueOpen($issueInfo['workspace'], $issueInfo['issue_key']);
 
         if (!$isOpen) {

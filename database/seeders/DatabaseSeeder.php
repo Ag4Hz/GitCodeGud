@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             ReviewSeeder::class,
             FollowerSeeder::class,
             UserProviderSeeder::class,
+            OrganizationSeeder::class,
         ]);
     }
 }

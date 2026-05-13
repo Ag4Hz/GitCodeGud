@@ -12,9 +12,10 @@ class BountyUpdateRequest extends FormRequest
     public function rules():array
     {
         return [
-            'title' => ['required', 'string', 'max:255'],
+            'title'       => ['required', 'string', 'max:255'],
             'description' => ['required', 'string', 'max:2000'],
-            'reward_xp' => ['required', 'integer', 'min:1', 'max:1000'],
+            'reward_xp'   => ['required', 'integer', 'min:1', 'max:1000'],
+            'status'      => ['sometimes', 'in:open,closed'],
         ];
     }
 }

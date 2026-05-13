@@ -25,6 +25,7 @@ import {
     User as UserIcon,
     Users,
     XCircle,
+    LockIcon,
 } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 
@@ -353,6 +354,13 @@ const shouldShowPagination = computed(() => {
                                         Submit Solution
                                     </Button>
                                 </Link>
+                                <div
+                                    v-else-if="bounty.status === 'closed' && !userSubmission"
+                                    class="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-100 px-4 py-2 text-sm text-gray-500 dark:border-white/10 dark:bg-white/5"
+                                >
+                                    <LockIcon class="h-4 w-4" />
+                                    This bounty is closed
+                                </div>
 
                                 <Link
                                     v-else-if="canUserSubmit && userSubmission && userSubmission.status === 'rejected'"
