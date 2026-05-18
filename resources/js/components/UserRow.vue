@@ -45,11 +45,13 @@ const initials = computed(() => getInitials(user.name || user.nickname || ''));
 const providers = computed(() => {
     if (!user.providers || user.providers.length === 0) return [];
 
-    return user.providers.map((p) => ({
-        provider: p.provider,
-        username: p.provider_username,
-        config: getProviderConfig(p.provider),
-    }));
+    return user.providers
+        .filter((p) => p.provider !== 'atlassian')
+        .map((p) => ({
+            provider: p.provider,
+            username: p.provider_username,
+            config: getProviderConfig(p.provider),
+        }));
 });
 
 </script>

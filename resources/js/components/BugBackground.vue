@@ -6,8 +6,6 @@ import { onBeforeUnmount, onMounted, ref } from 'vue';
 const bugImages = [bug1, bug2];
 const bugs = ref<any[]>([]);
 const totalBugs = 25;
-const documentHeight = ref(window.innerHeight);
-const documentWidth = ref(window.innerWidth);
 
 function seededRandom(seed: number) {
     const x = Math.sin(seed) * 10000;
@@ -15,43 +13,41 @@ function seededRandom(seed: number) {
 }
 
 function generateBugs() {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
     bugs.value = Array.from({ length: totalBugs }, (_, i) => {
         const src = bugImages[Math.floor(seededRandom(i + 1) * bugImages.length)];
         const size = 80 + seededRandom(i + 5) * 40;
-        const top = seededRandom(i + 2) * (documentHeight.value - size);
-        const left = seededRandom(i + 3) * (documentWidth.value - size);
+        const top = seededRandom(i + 2) * (h - size);
+        const left = seededRandom(i + 3) * (w - size);
         const rotation = seededRandom(i + 4) * 360;
         return { src, top, left, rotation, size };
     });
 }
 
 let resizeObserver: ResizeObserver | null = null;
+let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
 onMounted(() => {
-    const updateSize = () => {
-        documentHeight.value = document.body.scrollHeight;
-        documentWidth.value = document.body.scrollWidth;
-        generateBugs();
+    generateBugs();
+
+    const onResize = () => {
+        if (debounceTimer) clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(generateBugs, 300);
     };
 
-    updateSize();
-    window.addEventListener('resize', updateSize);
-
-    resizeObserver = new ResizeObserver(updateSize);
+    resizeObserver = new ResizeObserver(onResize);
     resizeObserver.observe(document.body);
 });
 
 onBeforeUnmount(() => {
-    window.removeEventListener('resize', generateBugs);
+    if (debounceTimer) clearTimeout(debounceTimer);
     if (resizeObserver) resizeObserver.disconnect();
 });
 </script>
 
 <template>
-    <div
-        class="pointer-events-none"
-        :style="{ position: 'absolute', top: 0, left: 0, width: '100%', height: documentHeight + 'px', overflow: 'visible' }"
-    >
+    <div class="pointer-events-none fixed inset-0 overflow-hidden">
         <img
             v-for="(bug, index) in bugs"
             :key="index"

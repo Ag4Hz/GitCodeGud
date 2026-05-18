@@ -20,6 +20,11 @@ class UserProvider extends Model
         'refresh_token',
     ];
 
+    protected $casts = [
+        'token'         => 'encrypted',
+        'refresh_token' => 'encrypted',
+    ];
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
