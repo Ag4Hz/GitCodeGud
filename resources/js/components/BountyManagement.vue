@@ -411,7 +411,7 @@ const restoreBounty = (bounty: Bounty) => {
                             <div v-else>
                                 <!-- Title and Status -->
                                 <div class="flex flex-wrap items-center gap-3">
-                                    <h3 class="text-lg font-medium" :class="{ 'text-gray-500': bounty.deleted_at }">
+                                    <h3 class="truncate text-lg font-medium" :class="{ 'text-gray-500': bounty.deleted_at }">
                                         {{ bounty.title }}
                                     </h3>
 
@@ -546,7 +546,7 @@ const restoreBounty = (bounty: Bounty) => {
                     <div class="flex items-center gap-2">
                         <Link
                             v-if="props.bounties.current_page > 1"
-                            :href="route('profile.show', { page: props.bounties.current_page - 1 })"
+                            :href="route('bounties.create', { page: props.bounties.current_page - 1 })"
                             class="rounded border px-3 py-2 text-sm hover:bg-accent"
                         >
                             Previous
@@ -556,7 +556,7 @@ const restoreBounty = (bounty: Bounty) => {
                         </span>
                         <Link
                             v-if="props.bounties.current_page < props.bounties.last_page"
-                            :href="route('profile.show', { page: props.bounties.current_page + 1 })"
+                            :href="route('bounties.create', { page: props.bounties.current_page + 1 })"
                             class="rounded border px-3 py-2 text-sm hover:bg-accent"
                         >
                             Next

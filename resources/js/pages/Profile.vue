@@ -255,7 +255,7 @@ function unfollow() {
                                 <!-- Large XP Level Badge -->
                                 <div class="absolute -right-1 -bottom-1 flex items-center justify-center">
                                     <Badge
-                                        class="h-6 min-w-6 border-3 border-white bg-purple-600 px-2 text-sm font-bold text-white shadow-lg dark:border-gray-900"
+                                        class="h-4 min-w-4 border-2 border-white bg-purple-600 px-1 text-xs font-bold text-white shadow-lg sm:h-5 sm:min-w-5 sm:text-xs md:h-6 md:min-w-6 md:text-sm dark:border-gray-900"
                                     >
                                         {{ user.level }}
                                     </Badge>

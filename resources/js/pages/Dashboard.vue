@@ -292,12 +292,16 @@ const hasActiveBountyFilters = computed(() => {
                         <!-- Search Bar -->
                         <div class="relative flex-1">
                             <Search class="absolute top-1/2 left-4 z-10 h-5 w-5 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
-                            <Input v-model="localSearchQuery" placeholder="Search bounties by title, description, or repository..." />
+
+                            <Input
+                                v-model="localSearchQuery"
+                                placeholder="Search bounties by title, description, or repository..."
+                            />
 
                             <img
                                 src="/assets/images/sitting.png"
                                 alt="sitting bug"
-                                class="absolute top-[-460px] right-0 z-50 translate-x-[350px] scale-[0.25] drop-shadow-[0_-10px_15px_rgba(255,255,255,0.1)]"
+                                class="absolute -top-34 right-0 z-50 w-48"
                             />
                         </div>
 
@@ -360,8 +364,8 @@ const hasActiveBountyFilters = computed(() => {
                                 @click="navigateToBounty(bounty)"
                             >
                                 <CardHeader class="pb-3">
-                                    <div class="flex items-start justify-between gap-2">
-                                        <div class="flex items-center justify-center gap-2">
+                                    <div class="flex flex-wrap items-start justify-between gap-2">
+                                        <div class="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
                                             <svg
                                                 v-if="bounty.issue.provider === 'github'"
                                                 xmlns="http://www.w3.org/2000/svg"
@@ -400,11 +404,11 @@ const hasActiveBountyFilters = computed(() => {
                                                     d="M2.4 3A1.3 1.3 0 0 0 1.1 4.5l2.7 15.9c.1.5.6.9 1.2.9h13a1.3 1.3 0 0 0 1.2-1.1l2.7-15.7A1.3 1.3 0 0 0 20.7 3H2.4zm9.6 12.3H9.3l-.9-6.6h7.2l-.9 6.6h-2.7z"
                                                 />
                                             </svg>
-                                            <h3 class="line-clamp-2 text-lg leading-tight font-semibold">
+                                            <h3 class="line-clamp-2 min-w-0 break-all text-lg leading-tight font-semibold">
                                                 {{ bounty.title }}
                                             </h3>
                                         </div>
-                                        <div class="flex items-center gap-2">
+                                        <div class="flex flex-wrap items-center gap-1.5">
                                             <Badge
                                                 :class="getProviderConfig(bounty.issue.provider).badgeColor"
                                                 class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
@@ -495,7 +499,7 @@ const hasActiveBountyFilters = computed(() => {
 
                     <!-- Pagination -->
                     <div v-if="bounties && bounties.last_page > 1" class="mt-8 flex justify-center">
-                        <div class="flex items-center gap-2">
+                        <div class="flex flex-shrink-0 flex-wrap items-center gap-1.5">
                             <Button
                                 v-if="bounties.current_page > 1"
                                 variant="button"

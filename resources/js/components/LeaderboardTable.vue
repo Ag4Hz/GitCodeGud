@@ -53,7 +53,7 @@ const displayXP = (user: User) => (showLevel.value ? formatXP(user.skill_xp ?? 0
         <img
             src="/assets/images/peek.png"
             alt=""
-            class="absolute -top-25 left-1/2 z-50 h-32 w-32 -translate-x-1/2 drop-shadow-[0_-10px_15px_rgba(255,255,255,0.1)]"
+            class="absolute -top-25 left-1/2 z-50 h-32 w-32 -translate-x-1/2 drop-shadow-[0_-10px_15px_rgba(255,255,255,0.1)] sm:scale-100"
         />
 
         <div class="z-0 mx-auto w-full max-w-7xl overflow-x-auto rounded-2xl border border-gray-200 bg-white/40 dark:border-white/10 dark:bg-white/5">
