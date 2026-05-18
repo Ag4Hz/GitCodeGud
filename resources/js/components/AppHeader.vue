@@ -148,12 +148,17 @@ const mainNavItems = computed((): NavItem[] => {
                 </div>
 
                 <div class="ml-auto flex items-center space-x-2">
-                    <Button v-if="!isAuthenticated" as-child>
-                        <Link :href="route('login')" class="flex items-center gap-2"> <LogIn class="size-4" /> Login </Link>
+                    <Button v-if="!isAuthenticated" as-child size="sm">
+                        <Link :href="route('login')" class="flex items-center gap-1 sm:gap-2">
+                            <LogIn class="size-4" />
+                            <span class="text-xs sm:text-sm">Login</span>
+                        </Link>
                     </Button>
 
-                    <Button v-if="!isAuthenticated" variant="ghost" as-child>
-                        <Link :href="route('register')" class="btn-register flex items-center gap-2"> Register </Link>
+                    <Button v-if="!isAuthenticated" variant="ghost" as-child size="sm">
+                        <Link :href="route('register')" class="btn-register flex items-center gap-1 sm:gap-2">
+                            <span class="text-xs sm:text-sm">Register</span>
+                        </Link>
                     </Button>
 
                     <template v-else>

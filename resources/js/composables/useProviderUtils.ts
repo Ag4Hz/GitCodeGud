@@ -32,13 +32,21 @@ export function useProviderUtils() {
                     badgeColor: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
                     bgColor: 'bg-orange-50 dark:bg-orange-900/20',
                 };
-            case 'jira':
             case 'bitbucket':
                 return {
                     name: 'Bitbucket',
                     icon: BitbucketIcon,
                     color: 'text-blue-600 dark:text-blue-400',
                     borderColor: 'border-blue-500 dark:border-blue-400',
+                    badgeColor: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+                    bgColor: 'bg-blue-50 dark:bg-blue-900/20',
+                };
+            case 'jira':
+                return {
+                    name: 'Jira',
+                    icon: JiraIcon,
+                    color: 'text-blue-700 dark:text-blue-400',
+                    borderColor: 'border-blue-600 dark:border-blue-400',
                     badgeColor: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
                     bgColor: 'bg-blue-50 dark:bg-blue-900/20',
                 };
@@ -87,7 +95,7 @@ export function useProviderUtils() {
         if (hostname.includes('github.com')) return 'github';
         if (hostname.includes('gitlab.com')) return 'gitlab';
         if (hostname.includes('bitbucket.org')) return 'bitbucket';
-        if (hostname.includes('atlassian.net')) return 'bitbucket';
+        if (hostname.includes('atlassian.net')) return 'jira';
 
         return 'github';
     };
@@ -124,6 +132,14 @@ const BitbucketIcon: Component = {
     template: `
         <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <path d="M2.39 9.73L12 22l9.61-12.27a.7.7 0 0 0-.25-.97L19.07 7 16.7 1.27a.7.7 0 0 0-1.32 0L12 7.33 8.62 1.27a.7.7 0 0 0-1.32 0L4.93 7 2.64 8.76a.7.7 0 0 0-.25.97Z"/>
+        </svg>
+    `,
+};
+
+const JiraIcon: Component = {
+    template: `
+        <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path d="M11.975 0C9.914 5.717 9.128 7.737 7.096 13.07c1.36 1.428 3.573 1.428 4.933 0L16.855 1.77A11.946 11.946 0 0 0 11.975 0zM4.242 6.18C1.59 8.148 0 11.205 0 14.5c0 5.247 4.253 9.5 9.5 9.5 2.326 0 4.456-.838 6.113-2.222L4.242 6.18zm15.516 1.64l-5.37 12.33A9.504 9.504 0 0 0 19.5 14.5c0-2.388-.879-4.57-2.328-6.24-.141-.163-.283-.323-.414-.48z"/>
         </svg>
     `,
 };
