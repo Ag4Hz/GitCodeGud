@@ -345,7 +345,7 @@ watch(flashSuccess, (newValue) => {
                         <img
                             src="/assets/images/sitting-laptop.png"
                             alt="sitting bug"
-                            class="absolute top-[-458px] z-50 translate-x-[-350px] -scale-x-[-1] scale-[0.15] [transform:rotateY(180deg)] drop-shadow-[0_-10px_15px_rgba(255,255,255,0.1)]"
+                            class="absolute top-4 left-12 z-50 w-[20vw] min-w-[140px] max-w-[190px] h-auto -translate-x-[40%] -translate-y-[87%] scale-x-[-1] drop-shadow-[0_-10px_15px_rgba(255,255,255,0.1)]"
                         />
 
                         <div class="flex gap-4 border-t py-6 dark:border-t-white/30">

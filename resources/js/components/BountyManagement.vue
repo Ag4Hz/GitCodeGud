@@ -492,7 +492,7 @@ const restoreBounty = (bounty: Bounty) => {
                         </div>
 
                         <!-- Action Buttons -->
-                        <div v-if="props.canEditBounties" class="flex flex-shrink-0 gap-2">
+                        <div v-if="props.canEditBounties" class="flex shrink-0 flex-col gap-2 sm:flex-row">
                             <!-- Archived Bounty Actions -->
                             <template v-if="bounty.deleted_at">
                                 <Button
@@ -510,8 +510,7 @@ const restoreBounty = (bounty: Bounty) => {
                             <!-- Active Bounty Actions -->
                             <template v-else>
                                 <!-- View Mode Buttons -->
-                                <div v-if="editingBounty !== bounty.id" class="flex gap-2">
-                                    <Button @click="startEdit(bounty)" variant="button" size="sm" class="flex items-center gap-1">
+                                <div v-if="editingBounty !== bounty.id" class="flex flex-col gap-2 sm:flex-row">                                    <Button @click="startEdit(bounty)" variant="button" size="sm" class="flex items-center gap-1">
                                         <Edit2 class="h-3 w-3" />
                                         Edit
                                     </Button>
