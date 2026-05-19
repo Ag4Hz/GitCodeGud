@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import FollowModal from '@/components/FollowModal.vue';
+import ProviderSyncButtons from '@/components/ProviderSyncButtons.vue';
 import ReviewForm from '@/components/ReviewForm.vue';
 import ReviewList from '@/components/ReviewList.vue';
-import ProviderSyncButtons from '@/components/ProviderSyncButtons.vue';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -201,7 +201,6 @@ const syncProviderSkills = (provider: 'github' | 'gitlab' | 'bitbucket') => {
     );
 };
 
-
 function follow() {
     if (followingBusy.value) return;
     followingBusy.value = true;
@@ -242,58 +241,61 @@ function unfollow() {
             <div class="mx-auto max-w-4xl space-y-6 px-4 sm:px-6 lg:px-8">
                 <!-- Profile Header -->
                 <Card class="border-gray-200 bg-white/40 dark:border-white/10 dark:bg-white/5">
-                    <CardHeader>
-                        <div class="flex items-center gap-6">
-                            <div class="relative">
-                                <Avatar class="overflow-hidden rounded-full sm:h-15 sm:w-15 md:h-18 md:w-18 lg:h-22 lg:w-22">
-                                    <AvatarImage v-if="user.avatar" :src="user.avatar.url" :alt="user.name" />
-                                    <AvatarFallback class="rounded-lg bg-neutral-200 font-semibold text-black dark:bg-neutral-700 dark:text-white">
-                                        {{ getInitials(user.name) }}
-                                    </AvatarFallback>
-                                </Avatar>
+                    <CardHeader class="p-4 sm:p-6">
+                        <div class="flex w-full min-w-0 flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div class="flex w-full min-w-0 items-center gap-4 sm:flex-1">
+                                <div class="relative shrink-0">
+                                    <Avatar class="h-12 w-12 overflow-hidden rounded-full sm:h-15 sm:w-15 md:h-18 md:w-18 lg:h-22 lg:w-22">
+                                        <AvatarImage v-if="user.avatar" :src="user.avatar.url" :alt="user.name" />
+                                        <AvatarFallback
+                                            class="rounded-lg bg-neutral-200 font-semibold text-black dark:bg-neutral-700 dark:text-white"
+                                        >
+                                            {{ getInitials(user.name) }}
+                                        </AvatarFallback>
+                                    </Avatar>
 
-                                <!-- Large XP Level Badge -->
-                                <div class="absolute -right-1 -bottom-1 flex items-center justify-center">
-                                    <Badge
-                                        class="h-4 min-w-4 border-2 border-white bg-purple-600 px-1 text-xs font-bold text-white shadow-lg sm:h-5 sm:min-w-5 sm:text-xs md:h-6 md:min-w-6 md:text-sm dark:border-gray-900"
-                                    >
-                                        {{ user.level }}
-                                    </Badge>
+                                    <div class="absolute -right-1 -bottom-1 flex items-center justify-center">
+                                        <Badge
+                                            class="h-4 min-w-4 border-2 border-white bg-purple-600 px-1 text-xs font-bold text-white shadow-lg sm:h-5 sm:min-w-5 sm:text-xs md:h-6 md:min-w-6 md:text-sm dark:border-gray-900"
+                                        >
+                                            {{ user.level }}
+                                        </Badge>
+                                    </div>
+                                </div>
+
+                                <div class="min-w-0 flex-1">
+                                    <CardTitle class="truncate text-sm sm:text-base md:text-lg lg:text-2xl">
+                                        {{ user.name }}
+                                    </CardTitle>
+
+                                    <CardDescription class="truncate text-xs sm:text-sm md:text-base lg:text-base">
+                                        {{ user.email }}
+                                    </CardDescription>
+
+                                    <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
+                                        <div class="flex items-center gap-1 text-[11px] font-medium sm:text-sm md:text-base">
+                                            <Trophy class="h-4 w-4 text-orange-500" />
+                                            Level {{ user.level }}
+                                        </div>
+
+                                        <div class="flex items-center gap-1 text-[11px] font-medium sm:text-sm md:text-base">
+                                            <Zap class="h-4 w-4 text-purple-600" />
+                                            {{ formatXP(user.total_xp) }} XP
+                                        </div>
+
+                                        <div class="flex gap-2 text-[10px] sm:gap-3 sm:text-sm md:text-base lg:gap-4">
+                                            <FollowModal prop-name="followers" title="Followers" :count="user.followers_count" />
+                                            <FollowModal prop-name="followings" title="Followings" :count="user.followings_count" />
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div class="flex-1">
-                                <CardTitle class="text-xs sm:text-sm md:text-lg lg:text-2xl">
-                                    {{ user.name }}
-                                </CardTitle>
-
-                                <CardDescription class="text-[11px] sm:text-sm md:text-base lg:text-base">
-                                    {{ user.email }}
-                                </CardDescription>
-
-                                <div class="mt-2 flex flex-wrap items-center gap-4">
-                                    <div class="flex items-center gap-1 text-[11px] font-medium sm:text-sm md:text-base">
-                                        <Trophy class="h-4 w-4 text-orange-500" />
-                                        Level {{ user.level }}
-                                    </div>
-
-                                    <div class="flex items-center gap-1 text-[11px] font-medium sm:text-sm md:text-base">
-                                        <Zap class="h-4 w-4 text-purple-600" />
-                                        {{ formatXP(user.total_xp) }} XP
-                                    </div>
-
-                                    <div class="flex gap-2 text-[10px] sm:gap-3 sm:text-sm md:text-base lg:gap-4">
-                                        <FollowModal prop-name="followers" title="Followers" :count="user.followers_count" />
-                                        <FollowModal prop-name="followings" title="Followings" :count="user.followings_count" />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div v-if="!isOwner" class="mt-3 flex items-center gap-2">
+                            <div v-if="!isOwner" class="mt-2 w-full shrink-0 sm:mt-0 sm:w-auto">
                                 <Button
                                     v-if="!isFollowing"
                                     type="button"
-                                    class="rounded-md bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600"
+                                    class="w-full justify-center rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 sm:w-auto dark:bg-green-500 dark:hover:bg-green-600"
                                     :loading="followingBusy"
                                     :disabled="followingBusy"
                                     @click="follow"
@@ -304,7 +306,7 @@ function unfollow() {
                                 <Button
                                     v-else
                                     type="button"
-                                    class="rounded-md bg-gray-200 px-3 py-1.5 text-sm font-medium text-gray-900 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"
+                                    class="w-full justify-center rounded-md bg-gray-200 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-300 sm:w-auto dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"
                                     :loading="followingBusy"
                                     :disabled="followingBusy"
                                     @click="unfollow"
@@ -314,7 +316,7 @@ function unfollow() {
                             </div>
                         </div>
 
-                        <div class="mt-2 ml-4 flex items-center gap-1 text-lg font-medium text-gray-800 dark:text-gray-200">
+                        <div class="mt-3 ml-2 flex items-center gap-1 text-base font-medium text-gray-800 dark:text-gray-200">
                             <Star class="h-4 w-4 text-yellow-500" />
                             <span> {{ Number(props.ratingAvg ?? 0).toFixed(1) }} </span>
                         </div>
@@ -362,7 +364,7 @@ function unfollow() {
                     <img
                         src="/assets/images/bugs.png"
                         alt="bug"
-                        class="pointer-events-none absolute right-12 bottom-4 h-auto w-[164px] origin-bottom-right drop-shadow-[0_-10px_15px_rgba(0,0,0,0.2)] select-none dark:drop-shadow-[0_-10px_15px_rgba(255,255,255,0.1)]"
+                        class="pointer-events-none absolute right-4 bottom-8 h-auto w-[15vw] max-w-[164px] min-w-[100px] origin-bottom-right drop-shadow-[0_-10px_15px_rgba(0,0,0,0.2)] select-none md:right-12 md:bottom-4 dark:drop-shadow-[0_-10px_15px_rgba(255,255,255,0.1)]"
                     />
 
                     <CardContent>
@@ -388,15 +390,15 @@ function unfollow() {
                     <!-- Skills organized by categories -->
                     <Card v-if="user.skills && user.skills.length > 0" class="border-gray-200 bg-white/40 dark:border-white/10 dark:bg-white/5">
                         <CardHeader>
-                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between sm:gap-4 px-4">
+                            <div class="flex flex-col px-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                                 <div>
                                     <CardTitle class="flex items-center gap-2">
                                         <Star class="h-5 w-5" />
                                         Skills & Experience
                                     </CardTitle>
                                     <CardDescription>{{
-                                            isOwner ? 'Sync your skills' : `${user.name} hasn't earned any skills yet.`
-                                        }}</CardDescription>
+                                        isOwner ? 'Sync your skills' : `${user.name} hasn't earned any skills yet.`
+                                    }}</CardDescription>
                                 </div>
 
                                 <ProviderSyncButtons
@@ -405,7 +407,6 @@ function unfollow() {
                                     :connected-providers="props.connectedProviders"
                                     @sync="syncProviderSkills"
                                 />
-
                             </div>
                         </CardHeader>
                         <CardContent class="space-y-6">
@@ -460,7 +461,6 @@ function unfollow() {
                                     :connected-providers="props.connectedProviders"
                                     @sync="syncProviderSkills"
                                 />
-
                             </div>
                         </CardHeader>
                         <CardContent>
