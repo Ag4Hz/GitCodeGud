@@ -13,8 +13,8 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import type { AppPageProps, BreadcrumbItem } from '@/types';
 import { BountyStatus, ProviderOption, type Bounty, type BountyPagination } from '@/types/bounty';
 import { Head, router } from '@inertiajs/vue3';
-import { computed, ref, watch } from 'vue';
 import { Calendar, DollarSign, Eye, Loader2, Lock, Search, Target } from 'lucide-vue-next';
+import { computed, ref, watch } from 'vue';
 
 type Provider = {
     provider: string;
@@ -98,7 +98,6 @@ const debounce = <T extends (...args: any[]) => void>(func: T, wait: number): ((
     };
 };
 
-
 const localSelectedOrganization = ref(props.filters?.organization ?? '');
 
 const selectedOrganizationDisplay = computed(() => {
@@ -146,7 +145,7 @@ const debouncedBountySearch = debounce(() => {
             isBountySearching.value = false;
         },
     });
-}, 300);
+}, 600);
 
 watch([localSearchQuery, localSelectedLanguage], () => {
     debouncedBountySearch();
@@ -164,7 +163,9 @@ watch(localSelectedProvider, () => {
     debouncedBountySearch();
 });
 
-watch(localSelectedOrganization, () => { debouncedBountySearch(); });
+watch(localSelectedOrganization, () => {
+    debouncedBountySearch();
+});
 
 const clearBountyFilters = () => {
     localSearchQuery.value = '';
@@ -237,9 +238,13 @@ const navigateToBountyPage = (page: number) => {
 };
 
 const hasActiveBountyFilters = computed(() => {
-    return localSearchQuery.value.trim() !== '' || localSelectedLanguage.value !== '' || localSelectedProvider.value != '' || localSelectedOrganization.value !== '';
+    return (
+        localSearchQuery.value.trim() !== '' ||
+        localSelectedLanguage.value !== '' ||
+        localSelectedProvider.value != '' ||
+        localSelectedOrganization.value !== ''
+    );
 });
-
 </script>
 
 <template>
@@ -293,15 +298,12 @@ const hasActiveBountyFilters = computed(() => {
                         <div class="relative flex-1">
                             <Search class="absolute top-1/2 left-4 z-10 h-5 w-5 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
 
-                            <Input
-                                v-model="localSearchQuery"
-                                placeholder="Search bounties by title, description, or repository..."
-                            />
+                            <Input v-model="localSearchQuery" placeholder="Search bounties by title, description, or repository..." />
 
                             <img
                                 src="/assets/images/sitting.png"
                                 alt="sitting bug"
-                                class="absolute -top-34 right-0 z-50 w-48"
+                                class="absolute top-0 right-0 z-50 w-[18vw] max-w-[192px] min-w-[120px] -translate-y-[70%]"
                             />
                         </div>
 
@@ -318,7 +320,7 @@ const hasActiveBountyFilters = computed(() => {
                             <div v-if="userOrganizations && userOrganizations.length > 0" class="sm:w-48">
                                 <LanguageFilter
                                     v-model="localSelectedOrganization"
-                                    :languages="(userOrganizations ?? []).map(o => o.name)"
+                                    :languages="(userOrganizations ?? []).map((o) => o.name)"
                                     placeholder="All Organizations"
                                 />
                             </div>
@@ -344,157 +346,158 @@ const hasActiveBountyFilters = computed(() => {
                             </Badge>
                         </div>
                     </div>
-
-                    <!-- Loading State -->
-                    <div v-if="isBountySearching" class="flex items-center justify-center py-8">
-                        <Loader2 class="h-8 w-8 animate-spin text-muted-foreground" />
-                        <span class="ml-2 text-muted-foreground">Searching bounties...</span>
-                    </div>
-
-                    <!-- All Bounties Section -->
-                    <div v-else-if="bounties && bounties.data && bounties.data.length > 0">
-                        <div class="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
-                            <Card
-                                v-for="bounty in bounties.data"
-                                :key="bounty.id"
-                                :class="[
-                                    'min-h-[238px] min-w-0 cursor-pointer border border-l-4 bg-white/40 backdrop-blur-xl transition-all transition-colors hover:-translate-y-1 hover:shadow-lg dark:bg-white/5',
-                                    getProviderBorderColor(bounty.issue.provider),
-                                ]"
-                                @click="navigateToBounty(bounty)"
-                            >
-                                <CardHeader class="pb-3">
-                                    <div class="flex flex-wrap items-start justify-between gap-2">
-                                        <div class="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
-                                            <svg
-                                                v-if="bounty.issue.provider === 'github'"
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                viewBox="0 0 24 24"
-                                                :class="getProviderConfig(bounty.issue?.provider).color"
-                                                class="h-6 w-6 flex-shrink-0"
-                                                fill="currentColor"
-                                            >
-                                                <path
-                                                    d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
-                                                />
-                                            </svg>
-
-                                            <svg
-                                                v-else-if="bounty.issue.provider === 'gitlab'"
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                viewBox="0 0 24 24"
-                                                :class="getProviderConfig(bounty.issue?.provider).color"
-                                                class="h-6 w-6 flex-shrink-0"
-                                                fill="currentColor"
-                                            >
-                                                <path
-                                                    d="M2.39 9.73L12 22l9.61-12.27a.7.7 0 0 0-.25-.97L19.07 7 16.7 1.27a.7.7 0 0 0-1.32 0L12 7.33 8.62 1.27a.7.7 0 0 0-1.32 0L4.93 7 2.64 8.76a.7.7 0 0 0-.25.97Z"
-                                                />
-                                            </svg>
-
-                                            <svg
-                                                v-else
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                viewBox="0 0 24 24"
-                                                :class="getProviderConfig(bounty.issue?.provider).color"
-                                                class="h-6 w-6 flex-shrink-0"
-                                                fill="currentColor"
-                                            >
-                                                <path
-                                                    d="M2.4 3A1.3 1.3 0 0 0 1.1 4.5l2.7 15.9c.1.5.6.9 1.2.9h13a1.3 1.3 0 0 0 1.2-1.1l2.7-15.7A1.3 1.3 0 0 0 20.7 3H2.4zm9.6 12.3H9.3l-.9-6.6h7.2l-.9 6.6h-2.7z"
-                                                />
-                                            </svg>
-                                            <h3 class="line-clamp-2 min-w-0 break-all text-lg leading-tight font-semibold">
-                                                {{ bounty.title }}
-                                            </h3>
-                                        </div>
-                                        <div class="flex flex-wrap items-center gap-1.5">
-                                            <Badge
-                                                :class="getProviderConfig(bounty.issue.provider).badgeColor"
-                                                class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
-                                            >
-                                                {{ getProviderConfig(bounty.issue.provider).name }}
-                                            </Badge>
-                                            <Badge
-                                                :class="getStatusColor(bounty.status)"
-                                                class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
-                                            >
-                                                {{ getStatusDisplayText(bounty.status) }}
-                                            </Badge>
-                                            <Badge
-                                                v-if="bounty.organization_id"
-                                                variant="secondary"
-                                                class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
-                                            >
-                                                <Lock class="h-3 w-3" />
-                                                Private
-                                            </Badge>
-                                        </div>
-                                    </div>
-                                </CardHeader>
-                                <CardContent class="flex flex-1 flex-col space-y-4">
-                                    <!-- Short Description -->
-                                    <p v-if="bounty.description" class="text-sm break-all text-muted-foreground">
-                                        {{ bounty.description.length > 100 ? bounty.description.substring(0, 100) + '...' : bounty.description }}
-                                    </p>
-
-                                    <!-- Languages -->
-                                    <div v-if="bounty.languages && bounty.languages.length > 0" class="flex flex-wrap gap-1">
-                                        <Badge v-for="language in bounty.languages.slice(0, 3)" :key="language" variant="outline" class="text-xs">
-                                            {{ language }}
-                                        </Badge>
-                                        <Badge v-if="bounty.languages.length > 3" variant="outline" class="text-xs">
-                                            +{{ bounty.languages.length - 3 }}
-                                        </Badge>
-                                    </div>
-
-                                    <!-- Metadata with views -->
-                                    <div class="mt-auto flex items-center justify-between text-sm">
-                                        <div class="flex items-center gap-3">
-                                            <div class="flex items-center gap-1 font-medium text-yellow-700">
-                                                <DollarSign class="h-4 w-4" />
-                                                {{ bounty.reward_xp }} XP
-                                            </div>
-                                            <!-- Views megjelenítése -->
-                                            <div v-if="bounty.views && bounty.views > 0" class="flex items-center gap-1 text-muted-foreground">
-                                                <Eye class="h-3 w-3" />
-                                                {{ bounty.views }}
-                                            </div>
-                                            <!-- Submissions count ha van -->
-                                            <div
-                                                v-if="bounty.submissions_count && bounty.submissions_count > 0"
-                                                class="flex items-center gap-1 text-muted-foreground"
-                                            >
-                                                <Target class="h-3 w-3" />
-                                                {{ bounty.submissions_count }}
-                                            </div>
-                                        </div>
-
-                                        <!-- Created Date -->
-                                        <span class="flex items-center gap-1 text-xs text-muted-foreground">
-                                            <Calendar class="h-3 w-3" />
-                                            {{ formatDate(bounty.created_at) }}
-                                        </span>
-                                    </div>
-                                </CardContent>
-                            </Card>
+                    <div class="relative min-h-[400px]">
+                        <!-- Loading State -->
+                        <div v-if="isBountySearching" class="flex items-center justify-center py-8">
+                            <Loader2 class="h-8 w-8 animate-spin text-muted-foreground" />
+                            <span class="ml-2 text-muted-foreground">Searching bounties...</span>
                         </div>
-                    </div>
 
-                    <!-- Empty State -->
-                    <div v-else class="py-12 text-center">
-                        <Target class="mx-auto mb-6 h-16 w-16 text-muted-foreground" />
-                        <h3 class="mb-2 text-xl font-semibold">
-                            {{ hasActiveBountyFilters ? 'No bounties found' : 'No bounties available' }}
-                        </h3>
-                        <p class="mb-4 text-muted-foreground">
-                            {{
-                                hasActiveBountyFilters
-                                    ? 'Try adjusting your search terms or filters to find bounties.'
-                                    : 'There are no open bounties at the moment. Check back later!'
-                            }}
-                        </p>
-                        <Button v-if="hasActiveBountyFilters" @click="clearBountyFilters" variant="outline"> Clear all filters </Button>
+                        <!-- All Bounties Section -->
+                        <div v-else-if="bounties && bounties.data && bounties.data.length > 0">
+                            <div class="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
+                                <Card
+                                    v-for="bounty in bounties.data"
+                                    :key="bounty.id"
+                                    :class="[
+                                        'min-h-[238px] min-w-0 cursor-pointer border border-l-4 bg-white/40 backdrop-blur-xl transition-all transition-colors hover:-translate-y-1 hover:shadow-lg dark:bg-white/5',
+                                        getProviderBorderColor(bounty.issue.provider),
+                                    ]"
+                                    @click="navigateToBounty(bounty)"
+                                >
+                                    <CardHeader class="pb-3">
+                                        <div class="flex flex-wrap items-start justify-between gap-2">
+                                            <div class="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
+                                                <svg
+                                                    v-if="bounty.issue.provider === 'github'"
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    viewBox="0 0 24 24"
+                                                    :class="getProviderConfig(bounty.issue?.provider).color"
+                                                    class="h-6 w-6 flex-shrink-0"
+                                                    fill="currentColor"
+                                                >
+                                                    <path
+                                                        d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
+                                                    />
+                                                </svg>
+
+                                                <svg
+                                                    v-else-if="bounty.issue.provider === 'gitlab'"
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    viewBox="0 0 24 24"
+                                                    :class="getProviderConfig(bounty.issue?.provider).color"
+                                                    class="h-6 w-6 flex-shrink-0"
+                                                    fill="currentColor"
+                                                >
+                                                    <path
+                                                        d="M2.39 9.73L12 22l9.61-12.27a.7.7 0 0 0-.25-.97L19.07 7 16.7 1.27a.7.7 0 0 0-1.32 0L12 7.33 8.62 1.27a.7.7 0 0 0-1.32 0L4.93 7 2.64 8.76a.7.7 0 0 0-.25.97Z"
+                                                    />
+                                                </svg>
+
+                                                <svg
+                                                    v-else
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    viewBox="0 0 24 24"
+                                                    :class="getProviderConfig(bounty.issue?.provider).color"
+                                                    class="h-6 w-6 flex-shrink-0"
+                                                    fill="currentColor"
+                                                >
+                                                    <path
+                                                        d="M2.4 3A1.3 1.3 0 0 0 1.1 4.5l2.7 15.9c.1.5.6.9 1.2.9h13a1.3 1.3 0 0 0 1.2-1.1l2.7-15.7A1.3 1.3 0 0 0 20.7 3H2.4zm9.6 12.3H9.3l-.9-6.6h7.2l-.9 6.6h-2.7z"
+                                                    />
+                                                </svg>
+                                                <h3 class="line-clamp-2 min-w-0 text-lg leading-tight font-semibold break-all">
+                                                    {{ bounty.title }}
+                                                </h3>
+                                            </div>
+                                            <div class="flex flex-wrap items-center gap-1.5">
+                                                <Badge
+                                                    :class="getProviderConfig(bounty.issue.provider).badgeColor"
+                                                    class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
+                                                >
+                                                    {{ getProviderConfig(bounty.issue.provider).name }}
+                                                </Badge>
+                                                <Badge
+                                                    :class="getStatusColor(bounty.status)"
+                                                    class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
+                                                >
+                                                    {{ getStatusDisplayText(bounty.status) }}
+                                                </Badge>
+                                                <Badge
+                                                    v-if="bounty.organization_id"
+                                                    variant="secondary"
+                                                    class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
+                                                >
+                                                    <Lock class="h-3 w-3" />
+                                                    Private
+                                                </Badge>
+                                            </div>
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent class="flex flex-1 flex-col space-y-4">
+                                        <!-- Short Description -->
+                                        <p v-if="bounty.description" class="text-sm break-all text-muted-foreground">
+                                            {{ bounty.description.length > 100 ? bounty.description.substring(0, 100) + '...' : bounty.description }}
+                                        </p>
+
+                                        <!-- Languages -->
+                                        <div v-if="bounty.languages && bounty.languages.length > 0" class="flex flex-wrap gap-1">
+                                            <Badge v-for="language in bounty.languages.slice(0, 3)" :key="language" variant="outline" class="text-xs">
+                                                {{ language }}
+                                            </Badge>
+                                            <Badge v-if="bounty.languages.length > 3" variant="outline" class="text-xs">
+                                                +{{ bounty.languages.length - 3 }}
+                                            </Badge>
+                                        </div>
+
+                                        <!-- Metadata with views -->
+                                        <div class="mt-auto flex items-center justify-between text-sm">
+                                            <div class="flex items-center gap-3">
+                                                <div class="flex items-center gap-1 font-medium text-yellow-700">
+                                                    <DollarSign class="h-4 w-4" />
+                                                    {{ bounty.reward_xp }} XP
+                                                </div>
+                                                <!-- Views megjelenítése -->
+                                                <div v-if="bounty.views && bounty.views > 0" class="flex items-center gap-1 text-muted-foreground">
+                                                    <Eye class="h-3 w-3" />
+                                                    {{ bounty.views }}
+                                                </div>
+                                                <!-- Submissions count ha van -->
+                                                <div
+                                                    v-if="bounty.submissions_count && bounty.submissions_count > 0"
+                                                    class="flex items-center gap-1 text-muted-foreground"
+                                                >
+                                                    <Target class="h-3 w-3" />
+                                                    {{ bounty.submissions_count }}
+                                                </div>
+                                            </div>
+
+                                            <!-- Created Date -->
+                                            <span class="flex items-center gap-1 text-xs text-muted-foreground">
+                                                <Calendar class="h-3 w-3" />
+                                                {{ formatDate(bounty.created_at) }}
+                                            </span>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </div>
+                        </div>
+
+                        <!-- Empty State -->
+                        <div v-else class="py-12 text-center">
+                            <Target class="mx-auto mb-6 h-16 w-16 text-muted-foreground" />
+                            <h3 class="mb-2 text-xl font-semibold">
+                                {{ hasActiveBountyFilters ? 'No bounties found' : 'No bounties available' }}
+                            </h3>
+                            <p class="mb-4 text-muted-foreground">
+                                {{
+                                    hasActiveBountyFilters
+                                        ? 'Try adjusting your search terms or filters to find bounties.'
+                                        : 'There are no open bounties at the moment. Check back later!'
+                                }}
+                            </p>
+                            <Button v-if="hasActiveBountyFilters" @click="clearBountyFilters" variant="outline"> Clear all filters </Button>
+                        </div>
                     </div>
 
                     <!-- Pagination -->

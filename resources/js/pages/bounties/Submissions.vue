@@ -3,7 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useDateFormatter } from '@/composables/useDateFormatter';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
@@ -116,53 +116,54 @@ const getStatusColor = (status: string) => {
 <template>
     <AppLayout>
         <Head title="Manage Submissions" />
-        <div class="px-4 py-6">
-            <div class="mx-auto max-w-4xl space-y-6 px-4 sm:px-6 lg:px-8">
-                <!-- Header -->
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h1 class="text-2xl font-bold">Manage Submissions</h1>
-                        <p class="text-muted-foreground">{{ bounty.title }}</p>
+        <div class="px-2 py-6 sm:px-4">
+            <div class="mx-auto max-w-4xl space-y-6">
+                <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between w-full min-w-0">
+                    <div class="min-w-0 flex-1">
+                        <h1 class="text-2xl font-bold truncate">Manage Submissions</h1>
+                        <p class="text-muted-foreground truncate">{{ bounty.title }}</p>
                     </div>
-                    <Link :href="`/bounties/${bounty.id}`">
-                        <Button variant="outline" class="flex items-center gap-2">
+                    <Link :href="`/bounties/${bounty.id}`" class="shrink-0">
+                        <Button variant="outline" class="flex items-center gap-2 w-full sm:w-auto">
                             <ArrowLeft class="h-4 w-4" />
                             Back to Bounty
                         </Button>
                     </Link>
                 </div>
 
-                <!-- Submissions List -->
-                <Card class="border-gray-200 bg-white/40 dark:border-white/10 dark:bg-white/5">
+                <Card class="border-gray-200 bg-white/40 dark:border-white/10 dark:bg-white/5 overflow-hidden">
                     <CardHeader>
                         <CardTitle class="flex items-center gap-2">
                             <Users class="h-5 w-5" />
                             Submissions ({{ submissions.data.length }})
                         </CardTitle>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent class="p-3 sm:p-6">
                         <div v-if="submissions.data.length > 0" class="space-y-4">
-                            <div v-for="submission in submissions.data" :key="submission.id" class="rounded-lg border p-6">
-                                <div class="flex items-start justify-between">
-                                    <div class="flex items-center gap-4">
-                                        <Avatar class="h-12 w-12">
+                            <div v-for="submission in submissions.data" :key="submission.id" class="rounded-lg border p-4 sm:p-6 bg-white/50 dark:bg-black/10">
+                                <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between w-full min-w-0">
+
+                                    <div class="flex items-start gap-4 min-w-0 flex-1">
+                                        <Avatar class="h-12 w-12 shrink-0">
                                             <AvatarImage :src="`https://github.com/${submission.user.nickname}.png`" />
                                             <AvatarFallback>{{ submission.user.name.charAt(0) }}</AvatarFallback>
                                         </Avatar>
-                                        <div>
-                                            <h3 class="font-semibold">{{ submission.user.name }}</h3>
-                                            <p class="text-sm text-muted-foreground">@{{ submission.user.nickname }}</p>
-                                            <div class="mt-2 flex items-center gap-2">
+                                        <div class="min-w-0 flex-1">
+                                            <h3 class="font-semibold truncate">{{ submission.user.name }}</h3>
+                                            <p class="text-sm text-muted-foreground truncate">@{{ submission.user.nickname }}</p>
+
+                                            <div class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
                                                 <a
                                                     :href="submission.pr_url"
                                                     target="_blank"
-                                                    class="flex items-center gap-1 text-sm text-purple-600 hover:underline"
+                                                    class="flex items-center gap-1 text-purple-600 hover:underline shrink-0"
                                                 >
                                                     <ExternalLink class="h-3 w-3" />
                                                     View Pull Request
                                                 </a>
-                                                <span class="text-sm text-muted-foreground">
-                                                    • Submitted {{ formatDate(submission.created_at) }}
+                                                <span class="text-muted-foreground hidden xs:inline">•</span>
+                                                <span class="text-muted-foreground">
+                                                    Submitted {{ formatDate(submission.created_at) }}
                                                 </span>
                                             </div>
                                             <div class="mt-2 flex items-center gap-2">
@@ -174,44 +175,33 @@ const getStatusColor = (status: string) => {
                                         </div>
                                     </div>
 
-                                    <div class="flex items-center gap-6">
-                                        <!-- Action buttons for pending submissions -->
-                                        <div v-if="submission.status === 'pending'" class="flex gap-2">
+                                    <div class="flex items-center gap-2 w-full sm:w-auto sm:justify-end shrink-0">
+                                        <div v-if="submission.status === 'pending'" class="flex gap-2 w-full sm:w-auto">
                                             <Button
                                                 @click="handleAcceptClick(submission.id)"
                                                 size="sm"
-                                                class="bg-green-600/30 text-white hover:bg-green-700/40"
+                                                class="bg-green-600/30 text-white hover:bg-green-700/40 flex-1 sm:flex-initial"
                                             >
                                                 <CheckCircle class="mr-1 h-4 w-4" />
                                                 Accept & Award XP
                                             </Button>
 
-                                            <Dialog v-model:open="rejectDialogOpen">
-                                                <DialogTrigger asChild>
-                                                    <Button @click="openRejectDialog(submission)" size="sm" variant="destructive">
-                                                        <XCircle class="mr-1 h-4 w-4" />
-                                                        Reject
-                                                    </Button>
-                                                </DialogTrigger>
-                                                <DialogContent class="sm:max-w-md">
-                                                    <DialogHeader>
-                                                        <DialogTitle>Reject Submission</DialogTitle>
-                                                        <DialogDescription>
-                                                            Are you sure you want to reject this submission? The contributor will be able to resubmit
-                                                            a new solution.
-                                                        </DialogDescription>
-                                                    </DialogHeader>
-                                                    <div class="flex justify-end space-x-2">
-                                                        <Button variant="outline" size="sm" @click="rejectDialogOpen = false"> Cancel </Button>
-                                                        <Button variant="destructive" size="sm" @click="handleReject"> Reject Submission </Button>
-                                                    </div>
-                                                </DialogContent>
-                                            </Dialog>
+                                            <Button
+                                                @click="openRejectDialog(submission)"
+                                                size="sm"
+                                                variant="destructive"
+                                                class="flex-1 sm:flex-initial"
+                                            >
+                                                <XCircle class="mr-1 h-4 w-4" />
+                                                Reject
+                                            </Button>
                                         </div>
 
-                                        <!-- Status info for processed submissions -->
-                                        <div v-else-if="submission.status === 'accepted'" class="text-sm font-medium text-green-600">XP Awarded!</div>
+                                        <div v-else-if="submission.status === 'accepted'" class="text-sm font-medium text-green-600 w-full text-center sm:text-right">
+                                            XP Awarded!
+                                        </div>
                                     </div>
+
                                 </div>
                             </div>
                         </div>
@@ -226,7 +216,6 @@ const getStatusColor = (status: string) => {
             </div>
         </div>
 
-        <!-- Extra XP deduction confirmation dialog -->
         <Dialog v-model:open="acceptDialogOpen">
             <DialogContent class="sm:max-w-md">
                 <DialogHeader>
@@ -242,6 +231,22 @@ const getStatusColor = (status: string) => {
                     <Button size="sm" class="bg-green-600 text-white hover:bg-green-700" @click="confirmAccept">
                         Yes, accept
                     </Button>
+                </div>
+            </DialogContent>
+        </Dialog>
+
+        <Dialog v-model:open="rejectDialogOpen">
+            <DialogContent class="sm:max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Reject Submission</DialogTitle>
+                    <DialogDescription>
+                        Are you sure you want to reject this submission? The contributor will be able to resubmit
+                        a new solution.
+                    </DialogDescription>
+                </DialogHeader>
+                <div class="flex justify-end space-x-2">
+                    <Button variant="outline" size="sm" @click="rejectDialogOpen = false"> Cancel </Button>
+                    <Button variant="destructive" size="sm" @click="handleReject"> Reject Submission </Button>
                 </div>
             </DialogContent>
         </Dialog>

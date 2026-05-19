@@ -293,10 +293,9 @@ const shouldShowPagination = computed(() => {
                     class="gap-0 rounded-2xl border border-gray-200 bg-white/40 p-0 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-white/5"
                 >
                     <CardHeader class="rounded-t-2xl bg-white/40 px-2 py-4 backdrop-blur-xl sm:px-5 md:px-6 dark:bg-white/5">
-                        <div class="flex items-start justify-between">
-                            <div class="space-y-2">
-                                <div class="flex items-center gap-3">
-                                    <!-- GitHub Icon -->
+                        <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between md:gap-6 w-full min-w-0">                            <div class="flex min-w-0 items-center gap-2">
+                                <div class="flex min-w-0 items-start justify-between gap-2">
+                                <!-- GitHub Icon -->
                                     <svg
                                         v-if="bounty.issue?.provider === 'github'"
                                         xmlns="http://www.w3.org/2000/svg"
@@ -338,8 +337,7 @@ const shouldShowPagination = computed(() => {
                                         />
                                     </svg>
 
-                                    <h1 class="text-2xl font-bold">{{ bounty.title }}</h1>
-                                    <Badge :class="getStatusColor(bounty.status)" class="text-sm">
+                                    <h1 class="min-w-0 truncate text-lg font-bold sm:text-2xl">{{ bounty.title }}</h1>                                    <Badge :class="getStatusColor(bounty.status)" class="text-sm">
                                         {{ getStatusDisplayText(bounty.status) }}
                                     </Badge>
                                 </div>
@@ -483,11 +481,11 @@ const shouldShowPagination = computed(() => {
                                 <Target class="h-5 w-5" />
                                 Bounty Description
                             </h3>
-                            <div class="prose prose-sm max-w-none">
-                                <div class="w-full rounded-xl border border-gray-200 bg-white/40 p-4 dark:border-white/10 dark:bg-white/5">
+                            <div class="prose prose-sm max-w-none w-full overflow-hidden">
+                                <div class="w-full rounded-xl border border-gray-200 bg-white/40 p-4 dark:border-white/10 dark:bg-white/5 overflow-hidden">
                                     <p
                                         v-if="bounty.description && bounty.description.trim()"
-                                        class="leading-relaxed whitespace-pre-wrap text-muted-foreground"
+                                        class="leading-relaxed whitespace-pre-wrap break-words text-muted-foreground w-full"
                                     >
                                         {{ bounty.description }}
                                     </p>
@@ -589,7 +587,7 @@ const shouldShowPagination = computed(() => {
 
                             <Card class="w-full rounded-xl border border-gray-200 bg-white/40 p-4 dark:border-white/10 dark:bg-white/5">
                                 <CardContent class="p-4">
-                                    <div class="flex items-center gap-4">
+                                    <div class="flex items-center gap-4 flex-wrap">
                                         <Avatar class="h-12 w-12">
                                             <AvatarImage :src="ownerInfo.avatar || ''" :alt="ownerInfo.name" />
                                             <AvatarFallback class="text-lg">
@@ -606,10 +604,11 @@ const shouldShowPagination = computed(() => {
                                         </div>
 
                                         <!-- Contact Owner Button -->
-                                        <Link :href="`/users/${ownerInfo.id}`">
-                                            <Button variant="button" size="sm" class="flex items-center gap-2">
-                                                <UserIcon class="h-4 w-4" />
-                                                View Profile
+                                        <Link :href="`/users/${ownerInfo.id}`" class="ml-auto sm:ml-0">
+                                            <Button variant="button" size="sm" class="flex items-center gap-2 text-xs sm:text-sm">
+                                                <UserIcon class="h-3 w-3 sm:h-4 sm:w-4" />
+                                                <span class="hidden sm:inline">View Profile</span>
+                                                <span class="sm:hidden">Profile</span>
                                             </Button>
                                         </Link>
                                     </div>
@@ -692,7 +691,7 @@ const shouldShowPagination = computed(() => {
                                     class="border-gray-200 bg-white/40 dark:border-white/10 dark:bg-white/5"
                                 >
                                     <CardContent class="p-4">
-                                        <div class="flex items-center justify-between">
+                                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                                             <div class="flex items-center gap-3">
                                                 <Avatar class="h-8 w-8">
                                                     <AvatarImage :src="getAvatarUrl(submission.user.avatar) || ''" :alt="submission.user.name" />
@@ -707,7 +706,7 @@ const shouldShowPagination = computed(() => {
                                                 </div>
                                             </div>
 
-                                            <div class="flex items-center gap-3">
+                                            <div class="flex flex-wrap items-center gap-2 text-xs">
                                                 <!-- Provider Badge -->
                                                 <a
                                                     v-if="submission.pr_url"

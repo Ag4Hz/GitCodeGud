@@ -5,7 +5,6 @@ import { onBeforeUnmount, onMounted, ref } from 'vue';
 
 const bugImages = [bug1, bug2];
 const bugs = ref<any[]>([]);
-const totalBugs = 25;
 
 function seededRandom(seed: number) {
     const x = Math.sin(seed) * 10000;
@@ -15,9 +14,24 @@ function seededRandom(seed: number) {
 function generateBugs() {
     const w = window.innerWidth;
     const h = window.innerHeight;
-    bugs.value = Array.from({ length: totalBugs }, (_, i) => {
+
+    let count = 25;
+    let minSize = 80;
+    let sizeVariance = 40;
+
+    if (w < 640) {
+        count = 8;
+        minSize = 40;
+        sizeVariance = 20;
+    } else if (w < 1024) {
+        count = 15;
+        minSize = 60;
+        sizeVariance = 30;
+    }
+
+    bugs.value = Array.from({ length: count }, (_, i) => {
         const src = bugImages[Math.floor(seededRandom(i + 1) * bugImages.length)];
-        const size = 80 + seededRandom(i + 5) * 40;
+        const size = minSize + seededRandom(i + 5) * sizeVariance;
         const top = seededRandom(i + 2) * (h - size);
         const left = seededRandom(i + 3) * (w - size);
         const rotation = seededRandom(i + 4) * 360;
@@ -59,7 +73,7 @@ onBeforeUnmount(() => {
                 height: bug.size + 'px',
                 transform: `rotate(${bug.rotation}deg)`,
             }"
-            class="absolute opacity-10"
+            class="absolute opacity-10 transition-all duration-300"
             alt="bug"
         />
     </div>
