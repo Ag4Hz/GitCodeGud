@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\BountyStatusChanged;
 use App\Helpers\XPHelper;
 use App\Http\Requests\BountyStoreRequest;
 use App\Http\Requests\BountyUpdateRequest;
@@ -18,6 +19,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Events\BountyCreated;
 
 class BountyController extends Controller
 {
@@ -150,6 +152,9 @@ class BountyController extends Controller
             'languages'       => collect($repoLanguages)->sortDesc()->keys()->toArray(),
             'status'          => 'open',
         ]);
+
+        $bounty->load('issue');
+        BountyCreated::dispatch($bounty);
 
         return redirect()
             ->route('bounties.create')
@@ -409,7 +414,11 @@ class BountyController extends Controller
     {
         $this->authorize('update', $bounty);
         $validated = $request->validate(['status' => ['required', 'in:open,closed']]);
+
+        $oldStatus = $bounty->status;
+
         $bounty->update(['status' => $validated['status']]);
+        BountyStatusChanged::dispatch($bounty, $oldStatus);
 
         return back()->with('success', 'Bounty status updated.');
     }
