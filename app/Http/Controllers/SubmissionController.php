@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\SubmissionCreated;
 use App\Http\Requests\SubmissionStoreRequest;
 use App\Models\Bounty;
 use App\Models\Submission;
@@ -62,19 +63,22 @@ class SubmissionController extends Controller
                 'provider' => $request->provider(),
                 'updated_at' => now(),
             ]);
+            SubmissionCreated::dispatch($existingSubmission->fresh()->load('bounty.issue.repo', 'user'));
+
 
             return redirect()
                 ->route('bounties.show', $bounty)
                 ->with('success', 'Solution resubmitted successfully! Your submission is now pending review.');
         }
 
-        Submission::create([
+        $submission = Submission::create([
             'bounty_id' => $validated['bounty_id'],
             'user_id' => $user->id,
             'pr_url' => $validated['pr_url'],
             'status' => 'pending',
             'provider' => $request->provider(),
         ]);
+        SubmissionCreated::dispatch($submission->load('bounty.issue.repo', 'user'));
 
         return redirect()
             ->route('bounties.show', $bounty)

@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Events\LeaderboardUpdated;
 use App\Models\Submission;
 use App\Helpers\XPHelper;
 
@@ -14,6 +15,9 @@ class SubmissionObserver
             $submission->getOriginal('status') !== 'accepted') {
 
             XPHelper::awardSubmissionXP($submission);
+
+            $submission->user->refresh();
+            LeaderboardUpdated::dispatch($submission->user, $submission->user->xp);
         }
     }
 }

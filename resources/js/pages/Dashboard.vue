@@ -15,6 +15,13 @@ import { BountyStatus, ProviderOption, type Bounty, type BountyPagination } from
 import { Head, router } from '@inertiajs/vue3';
 import { Calendar, DollarSign, Eye, Loader2, Lock, Search, Target } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
+import echo from '@/echo';
+import { onMounted, onUnmounted } from 'vue';
+import { usePage } from '@inertiajs/vue3';
+import { useToast } from '@/composables/useToast';
+
+const { auth } = usePage<AppPageProps>().props;
+const { success: showSuccess } = useToast();
 
 type Provider = {
     provider: string;
@@ -167,6 +174,12 @@ watch(localSelectedOrganization, () => {
     debouncedBountySearch();
 });
 
+watch(() => props.bounties?.data, (newData) => {
+    if (newData) {
+        localBounties.value = newData;
+    }
+});
+
 const clearBountyFilters = () => {
     localSearchQuery.value = '';
     localSelectedLanguage.value = '';
@@ -244,6 +257,30 @@ const hasActiveBountyFilters = computed(() => {
         localSelectedProvider.value != '' ||
         localSelectedOrganization.value !== ''
     );
+});
+
+const localBounties = ref(props.bounties?.data ?? []);
+
+onMounted(() => {
+    echo.channel('bounties')
+        .listen('BountyCreated', (e: any) => {
+            localBounties.value.unshift(e);
+        })
+        .listen('BountyStatusChanged', (e: any) => {
+            const idx = localBounties.value.findIndex((b) => b.id === e.id);
+            if (idx !== -1) {
+                localBounties.value[idx].status = e.status;
+            }
+        });
+    echo.private(`user.${auth.user.id}`)
+        .listen('SubmissionCreated', (e: any) => {
+            showSuccess(`New submission on "${e.bounty_title}" from ${e.submitter}!`);
+        });
+});
+
+onUnmounted(() => {
+    echo.leaveChannel('bounties');
+    echo.leaveChannel(`user.${auth.user.id}`);
 });
 </script>
 
@@ -354,10 +391,10 @@ const hasActiveBountyFilters = computed(() => {
                         </div>
 
                         <!-- All Bounties Section -->
-                        <div v-else-if="bounties && bounties.data && bounties.data.length > 0">
+                        <div v-else-if="localBounties && localBounties.length > 0">
                             <div class="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
                                 <Card
-                                    v-for="bounty in bounties.data"
+                                    v-for="bounty in localBounties"
                                     :key="bounty.id"
                                     :class="[
                                         'min-h-[238px] min-w-0 cursor-pointer border border-l-4 bg-white/40 backdrop-blur-xl transition-all transition-colors hover:-translate-y-1 hover:shadow-lg dark:bg-white/5',
