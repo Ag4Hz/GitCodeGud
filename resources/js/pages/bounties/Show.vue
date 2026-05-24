@@ -27,7 +27,8 @@ import {
     XCircle,
     LockIcon,
 } from 'lucide-vue-next';
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted, onUnmounted } from 'vue';
+import echo from '@/echo';
 
 interface SubmissionType {
     id: number;
@@ -143,8 +144,8 @@ const getSubmissionStatusColor = (status: string) => {
 };
 
 const submissionStatusVariant = computed(() => {
-    if (!props.userSubmission) return 'outline';
-    switch (props.userSubmission.status) {
+    if (!localUserSubmission.value) return 'outline';
+    switch (localUserSubmission.value.status) {
         case 'pending':
             return 'secondary';
         case 'accepted':
@@ -157,8 +158,8 @@ const submissionStatusVariant = computed(() => {
 });
 
 const submissionStatusText = computed(() => {
-    if (!props.userSubmission) return '';
-    switch (props.userSubmission.status) {
+    if (!localUserSubmission.value) return '';
+    switch (localUserSubmission.value.status) {
         case 'pending':
             return 'Pending Review';
         case 'accepted':
@@ -242,7 +243,7 @@ const canUserSubmit = computed(() => {
         currentUser &&
         props.bounty.status === 'open' &&
         currentUser.id !== ownerInfo.value.id &&
-        (!props.userSubmission || props.userSubmission.status === 'rejected')
+        (!localUserSubmission.value || localUserSubmission.value.status === 'rejected')
     );
 });
 
@@ -280,6 +281,25 @@ const hasComments = computed(() => {
 
 const shouldShowPagination = computed(() => {
     return props.comments && props.comments.links && props.comments.links.length > 3;
+});
+
+const localUserSubmission = ref(props.userSubmission ? { ...props.userSubmission } : null);
+
+onMounted(() => {
+    if (currentUser) {
+        echo.private(`user.${currentUser.id}`)
+            .listen('SubmissionStatusChanged', (e: any) => {
+                if (localUserSubmission.value && e.bounty_id === props.bounty.id) {
+                    localUserSubmission.value.status = e.status;
+                }
+            });
+    }
+});
+
+onUnmounted(() => {
+    if (currentUser) {
+        echo.leaveChannel(`user.${currentUser.id}`);
+    }
 });
 </script>
 
@@ -346,14 +366,14 @@ const shouldShowPagination = computed(() => {
 
                             <!-- Action Buttons -->
                             <div class="flex flex-wrap gap-2">
-                                <Link v-if="canUserSubmit && !userSubmission" :href="`/bounties/${bounty.id}/submit`" as="button">
+                                <Link v-if="canUserSubmit && !localUserSubmission" :href="`/bounties/${bounty.id}/submit`" as="button">
                                     <Button class="flex items-center gap-2">
                                         <Target class="h-4 w-4" />
                                         Submit Solution
                                     </Button>
                                 </Link>
                                 <div
-                                    v-else-if="bounty.status === 'closed' && !userSubmission"
+                                    v-else-if="bounty.status === 'closed' && !localUserSubmission"
                                     class="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-100 px-4 py-2 text-sm text-gray-500 dark:border-white/10 dark:bg-white/5"
                                 >
                                     <LockIcon class="h-4 w-4" />
@@ -361,7 +381,7 @@ const shouldShowPagination = computed(() => {
                                 </div>
 
                                 <Link
-                                    v-else-if="canUserSubmit && userSubmission && userSubmission.status === 'rejected'"
+                                    v-else-if="canUserSubmit && localUserSubmission && localUserSubmission.status === 'rejected'"
                                     :href="`/bounties/${bounty.id}/submit`"
                                     as="button"
                                 >
@@ -371,11 +391,11 @@ const shouldShowPagination = computed(() => {
                                     </Button>
                                 </Link>
 
-                                <div v-else-if="userSubmission" class="flex items-center gap-2">
+                                <div v-else-if="localUserSubmission" class="flex items-center gap-2">
                                     <Badge :variant="submissionStatusVariant" class="capitalize">
                                         {{ submissionStatusText }}
                                     </Badge>
-                                    <span v-if="userSubmission.status === 'accepted'" class="text-sm font-medium text-green-600"> XP Awarded! </span>
+                                    <span v-if="localUserSubmission.status === 'accepted'" class="text-sm font-medium text-green-600"> XP Awarded! </span>
                                 </div>
 
                                 <!-- Bounty Owner Actions -->
@@ -396,19 +416,19 @@ const shouldShowPagination = computed(() => {
                             <span>{{ bounty.reward_xp }} XP Reward</span>
                         </div>
 
-                        <div v-if="userSubmission" class="rounded-lg border-l-4 border-l-purple-500 bg-purple-50 p-4 dark:bg-purple-900/20">
+                        <div v-if="localUserSubmission" class="rounded-lg border-l-4 border-l-purple-500 bg-purple-50 p-4 dark:bg-purple-900/20">
                             <div class="flex items-start justify-between">
                                 <div class="flex-1">
                                     <h4 class="mb-1 font-semibold text-purple-800 dark:text-purple-200">Your Submission</h4>
                                     <p class="mb-2 text-sm text-purple-700 dark:text-purple-300">Status: {{ submissionStatusText }}</p>
                                     <div class="mb-3 flex items-center gap-2">
                                         <component
-                                            :is="getSubmissionStatusIcon(userSubmission.status)"
+                                            :is="getSubmissionStatusIcon(localUserSubmission.status)"
                                             class="h-4 w-4"
                                             :class="
-                                                userSubmission.status === 'accepted'
+                                                localUserSubmission.status === 'accepted'
                                                     ? 'text-green-600'
-                                                    : userSubmission.status === 'rejected'
+                                                    : localUserSubmission.status === 'rejected'
                                                       ? 'text-red-600'
                                                       : 'text-yellow-600'
                                             "
@@ -416,9 +436,9 @@ const shouldShowPagination = computed(() => {
                                         <span
                                             class="text-sm"
                                             :class="
-                                                userSubmission.status === 'accepted'
+                                                localUserSubmission.status === 'accepted'
                                                     ? 'text-green-700 dark:text-green-300'
-                                                    : userSubmission.status === 'rejected'
+                                                    : localUserSubmission.status === 'rejected'
                                                       ? 'text-red-700 dark:text-red-300'
                                                       : 'text-blue-700 dark:text-blue-300'
                                             "
@@ -426,7 +446,7 @@ const shouldShowPagination = computed(() => {
                                             Status: {{ submissionStatusText }}
                                         </span>
                                         <Badge
-                                            v-if="userSubmission.status === 'accepted'"
+                                            v-if="localUserSubmission.status === 'accepted'"
                                             variant="secondary"
                                             class="bg-green-100 text-xs text-green-800"
                                         >
@@ -436,14 +456,14 @@ const shouldShowPagination = computed(() => {
 
                                     <div class="mb-3 flex items-center gap-2">
                                         <a
-                                            :href="userSubmission.pr_url"
+                                            :href="localUserSubmission.pr_url"
                                             target="_blank"
                                             class="flex items-center gap-1 text-sm text-purple-600 transition-colors hover:text-purple-800"
                                         >
                                             <ExternalLink class="h-3 w-3" />
-                                            View {{ extractProviderFromUrl(userSubmission.pr_url) === 'gitlab' ? 'Merge Request' : 'Pull Request' }}
+                                            View {{ extractProviderFromUrl(localUserSubmission.pr_url) === 'gitlab' ? 'Merge Request' : 'Pull Request' }}
                                         </a>
-                                        <span class="text-sm text-muted-foreground"> • Submitted {{ formatDate(userSubmission.created_at) }} </span>
+                                        <span class="text-sm text-muted-foreground"> • Submitted {{ formatDate(localUserSubmission.created_at) }} </span>
                                     </div>
                                 </div>
                             </div>
