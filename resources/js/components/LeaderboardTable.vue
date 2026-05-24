@@ -9,7 +9,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 type User = {
     id: number;
     nickname: string;
-    avatar: string;
+    avatar: string | { url: string; provider: string; label: string };
     name: string;
     xp: number;
     skill_xp?: number | null;
@@ -118,7 +118,7 @@ const filteredUsers = computed(() => {
                             <div class="min-w-0 truncate">
                                 <ul class="m-0 list-none p-0">
                                     <UserRow
-                                        :user="{ id: user.id, nickname: user.nickname, avatar: user.avatar, name: user.name, providers: user.providers }"
+                                        :user="{ id: user.id, nickname: user.nickname,  avatar: typeof user.avatar === 'string' ? undefined : user.avatar, name: user.name, providers: user.providers }"
                                         :rank="(user as any).rank"
                                         :active="false"
                                         :order-direction="props.sortDir"
