@@ -12,13 +12,15 @@ import { useProviderUtils } from '@/composables/useProviderUtils';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { AppPageProps, BreadcrumbItem } from '@/types';
 import { BountyStatus, ProviderOption, type Bounty, type BountyPagination } from '@/types/bounty';
-import { Head, router } from '@inertiajs/vue3';
-import { Calendar, DollarSign, Eye, Loader2, Lock, Search, Target } from 'lucide-vue-next';
-import { computed, ref, watch } from 'vue';
+import { Head, router, usePage  } from '@inertiajs/vue3';
+import { Calendar, DollarSign, Eye, Loader2, Lock, Search, Target, TrendingUp, Sparkles, Flame } from 'lucide-vue-next';
+import { computed, ref, watch, onMounted, onUnmounted } from 'vue';
 import echo from '@/echo';
-import { onMounted, onUnmounted } from 'vue';
-import { usePage } from '@inertiajs/vue3';
 import { useToast } from '@/composables/useToast';
+
+type RecommendedBounty = Bounty & {
+    recommendation_reason: string;
+};
 
 const { auth } = usePage<AppPageProps>().props;
 const { success: showSuccess } = useToast();
@@ -261,10 +263,19 @@ const hasActiveBountyFilters = computed(() => {
 
 const localBounties = ref(props.bounties?.data ?? []);
 
+const newBountiesCount = ref(0);
+
+const refreshBounties = () => {
+    newBountiesCount.value = 0;
+    router.reload({ only: ['bounties'] });
+};
+
 onMounted(() => {
     echo.channel('bounties')
-        .listen('BountyCreated', (e: any) => {
-            localBounties.value.unshift(e);
+        .listen('BountyCreated', () => {
+            if (newBountiesCount.value < 99) {
+                newBountiesCount.value++;
+            }
         })
         .listen('BountyStatusChanged', (e: any) => {
             const idx = localBounties.value.findIndex((b) => b.id === e.id);
@@ -272,10 +283,45 @@ onMounted(() => {
                 localBounties.value[idx].status = e.status;
             }
         });
-    echo.private(`user.${auth.user.id}`)
-        .listen('SubmissionCreated', (e: any) => {
-            showSuccess(`New submission on "${e.bounty_title}" from ${e.submitter}!`);
-        });
+
+    if (auth?.user) {
+        echo.leaveChannel(`private-user.${auth.user.id}`);
+        echo.private(`user.${auth.user.id}`)
+            .listen('SubmissionCreated', (e: any) => {
+                showSuccess(`New submission on "${e.bounty_title}" from ${e.submitter}!`);
+            });
+    }
+});
+
+
+const isRecommendedMode = ref(false);
+const recommendedBounties = ref<RecommendedBounty[]>([]);
+const isLoadingRecommendations = ref(false);
+
+const toggleRecommended = async () => {
+    if (isRecommendedMode.value) {
+        isRecommendedMode.value = false;
+        return;
+    }
+
+    if (recommendedBounties.value.length > 0) {
+        isRecommendedMode.value = true;
+        return;
+    }
+
+    isLoadingRecommendations.value = true;
+    try {
+        const res = await fetch('/api/recommendations');
+        const data = await res.json();
+        recommendedBounties.value = data.recommendations ?? [];
+        isRecommendedMode.value = true;
+    } finally {
+        isLoadingRecommendations.value = false;
+    }
+};
+
+const displayedBounties = computed(() => {
+    return isRecommendedMode.value ? recommendedBounties.value : localBounties.value;
 });
 
 onUnmounted(() => {
@@ -362,6 +408,18 @@ onUnmounted(() => {
                                 />
                             </div>
 
+                            <Button
+                                v-if="auth?.user"
+                                @click="toggleRecommended"
+                                :variant="isRecommendedMode ? 'default' : 'outline'"
+                                size="default"
+                                class="rounded-xl"
+                                :disabled="isLoadingRecommendations"
+                            >
+                                <Loader2 v-if="isLoadingRecommendations" class="mr-2 h-4 w-4 animate-spin" />
+                                <Sparkles v-else class="mr-2 h-4 w-4" />
+                                {{ isRecommendedMode ? 'Show All' : 'Recommended' }}
+                            </Button>
                             <Button v-if="hasActiveBountyFilters" @click="clearBountyFilters" variant="button" size="default" class="rounded-xl">
                                 Clear Filters
                             </Button>
@@ -384,6 +442,14 @@ onUnmounted(() => {
                         </div>
                     </div>
                     <div class="relative min-h-[400px]">
+                        <!--BOUNTIES BANNER -->
+                        <div
+                            v-if="newBountiesCount > 0"
+                            @click="refreshBounties"
+                            class="mb-4 cursor-pointer rounded-xl bg-purple-600 px-4 py-3 text-center text-sm font-medium text-white hover:bg-purple-700 transition-colors"
+                        >
+                            ↑ {{ newBountiesCount === 99 ? '99+' : newBountiesCount }} new {{ newBountiesCount === 1 ? 'bounty' : 'bounties' }} available — click to load
+                        </div>
                         <!-- Loading State -->
                         <div v-if="isBountySearching" class="flex items-center justify-center py-8">
                             <Loader2 class="h-8 w-8 animate-spin text-muted-foreground" />
@@ -391,10 +457,10 @@ onUnmounted(() => {
                         </div>
 
                         <!-- All Bounties Section -->
-                        <div v-else-if="localBounties && localBounties.length > 0">
+                        <div v-else-if="displayedBounties && displayedBounties.length > 0">
                             <div class="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
                                 <Card
-                                    v-for="bounty in localBounties"
+                                    v-for="bounty in displayedBounties"
                                     :key="bounty.id"
                                     :class="[
                                         'min-h-[238px] min-w-0 cursor-pointer border border-l-4 bg-white/40 backdrop-blur-xl transition-all transition-colors hover:-translate-y-1 hover:shadow-lg dark:bg-white/5',
@@ -515,6 +581,16 @@ onUnmounted(() => {
                                                 {{ formatDate(bounty.created_at) }}
                                             </span>
                                         </div>
+                                        <!-- Recommendation reason -->
+                                        <p
+                                            v-if="isRecommendedMode && (bounty as any).recommendation_reason"
+                                            class="mt-2 flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 italic"
+                                        >
+                                            <Sparkles v-if="(bounty as any).recommendation_category === 'skill_match'" class="h-3 w-3 shrink-0" />
+                                            <TrendingUp v-else-if="(bounty as any).recommendation_category === 'level_up'" class="h-3 w-3 shrink-0" />
+                                            <Flame v-else-if="(bounty as any).recommendation_category === 'similar_work'" class="h-3 w-3 shrink-0" />
+                                            {{ (bounty as any).recommendation_reason }}
+                                        </p>
                                     </CardContent>
                                 </Card>
                             </div>
