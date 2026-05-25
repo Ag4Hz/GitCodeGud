@@ -16,6 +16,7 @@ use App\Http\Controllers\ReviewController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
+use App\Http\Controllers\BountyRecommendationController;
 
 Route::get('/', [DashboardController::class, 'index'])->name('home');
 Route::get('/dashboard', [DashboardController::class, 'index'])
@@ -97,6 +98,9 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::get('/admin/xp-events', [AdminController::class, 'xpEvents'])->name('admin.xp-events');
     Route::get('/admin/xp-events/export', [AdminController::class, 'exportXpEvents'])->name('admin.xp-events.export');
 });
+
+Route::get('/api/recommendations', [BountyRecommendationController::class, 'index'])
+    ->middleware('auth');
 
 Route::get('/api/xp-settings/last-update', function () {
     $general = DB::table('general_settings')->max('updated_at');

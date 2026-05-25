@@ -59,5 +59,8 @@ return [
         'client_secret' => env('JIRA_CLIENT_SECRET'),
         'redirect'      => env('JIRA_REDIRECT_URI', 'http://localhost:8000/auth/jira/callback'),
     ],
+    'openai' => [
+        'key' => env('OPENAI_API_KEY'),
+    ]
 
 ];
