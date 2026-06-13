@@ -19,7 +19,7 @@ return [
     ],
 
     'ses' => [
-        'key'    => env('AWS_ACCESS_KEY_ID'),
+        'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
@@ -31,33 +31,37 @@ return [
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
-            'channel'              => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
+            'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
 
     'github' => [
-        'client_id'     => env('GITHUB_CLIENT_ID'),
+        'client_id' => env('GITHUB_CLIENT_ID'),
         'client_secret' => env('GITHUB_CLIENT_SECRET'),
-        'redirect'      => env('GITHUB_REDIRECT_URI', 'http://localhost:8000/auth/github/callback'),
+        'redirect' => env('GITHUB_REDIRECT_URI', 'http://localhost:8000/auth/github/callback'),
     ],
 
     'gitlab' => [
-        'client_id'    => env('GITLAB_CLIENT_ID'),
+        'client_id' => env('GITLAB_CLIENT_ID'),
         'client_secret' => env('GITLAB_CLIENT_SECRET'),
-        'redirect'      => env('GITLAB_REDIRECT_URI', 'http://localhost:8000/auth/gitlab/callback'),
-        'instance_uri'  => env('GITLAB_INSTANCE_URI', 'https://gitlab.com'),
+        'redirect' => env('GITLAB_REDIRECT_URI', 'http://localhost:8000/auth/gitlab/callback'),
+        'instance_uri' => env('GITLAB_INSTANCE_URI', 'https://gitlab.com'),
     ],
 
     'bitbucket' => [
-        'client_id'     => env('BITBUCKET_CLIENT_ID'),
+        'client_id' => env('BITBUCKET_CLIENT_ID'),
         'client_secret' => env('BITBUCKET_CLIENT_SECRET'),
-        'redirect'      => env('BITBUCKET_REDIRECT_URI', 'http://localhost:8000/auth/bitbucket/callback'),
+        'redirect' => env('BITBUCKET_REDIRECT_URI', 'http://localhost:8000/auth/bitbucket/callback'),
     ],
 
     'atlassian' => [
-        'client_id'     => env('JIRA_CLIENT_ID'),
+        'client_id' => env('JIRA_CLIENT_ID'),
         'client_secret' => env('JIRA_CLIENT_SECRET'),
-        'redirect'      => env('JIRA_REDIRECT_URI', 'http://localhost:8000/auth/jira/callback'),
+        'redirect' => env('JIRA_REDIRECT_URI', 'http://localhost:8000/auth/jira/callback'),
+    ],
+
+    'openai' => [
+        'api_key' => env('OPENAI_API_KEY'),
     ],
     'openai' => [
         'key' => env('OPENAI_API_KEY'),
