@@ -13,6 +13,8 @@ import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { AlertCircle, CheckCircle, Github, Plus, Search } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
 import OrganizationSelect from '@/components/OrganizationSelect.vue';
+import AiXpEstimator from '@/components/AiXpEstimator.vue';
+
 
 interface Repository {
     id: number;
@@ -328,6 +330,17 @@ watch(flashSuccess, (newValue) => {
                             <InputError :message="bountyForm.errors.reward_xp" />
                         </div>
 
+                        <AiXpEstimator
+                            :issue-title="bountyForm.title"
+                            :issue-body="bountyForm.description"
+                            :issue-url="bountyForm.jira_issue_url"
+                            :repo-full-name="bountyForm.repository_full_name"
+                            :provider="bountyForm.provider"
+                            v-model="bountyForm.reward_xp"
+                        />
+
+
+
                         <!-- Assign to Organization -->
                         <div v-if="ownedOrganizations.length > 0" class="space-y-2">
                             <Label>Assign to Organization</Label>
@@ -345,7 +358,7 @@ watch(flashSuccess, (newValue) => {
                         <img
                             src="/assets/images/sitting-laptop.png"
                             alt="sitting bug"
-                            class="absolute top-4 left-12 z-50 w-[20vw] min-w-[140px] max-w-[190px] h-auto -translate-x-[40%] -translate-y-[87%] scale-x-[-1] drop-shadow-[0_-10px_15px_rgba(255,255,255,0.1)]"
+                            class="absolute top-4 left-12 z-50 h-auto w-[20vw] max-w-[190px] min-w-[140px] -translate-x-[40%] -translate-y-[87%] scale-x-[-1] drop-shadow-[0_-10px_15px_rgba(255,255,255,0.1)]"
                         />
 
                         <div class="flex gap-4 border-t py-6 dark:border-t-white/30">

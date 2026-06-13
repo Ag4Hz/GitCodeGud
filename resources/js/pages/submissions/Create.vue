@@ -40,7 +40,7 @@ function submit() {
         <div v-else class="py-12">
             <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 space-y-6">
                 <!-- Back Button with glassmorphism -->
-                <div class="mb-6 rounded-lg bg-white/40 p-4 backdrop-blur md:sticky md:top-0 md:z-10 dark:bg-white/10">
+                <div class="mb-6 rounded-lg bg-white/40 p-4 backdrop-blur dark:bg-white/10">
                     <a
                         :href="`/bounties/${bounty.id}`"
                         class="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100"
@@ -51,7 +51,7 @@ function submit() {
                 </div>
 
                 <!-- Bounty Info -->
-                <Card class="mb-8 bg-white/40 backdrop-blur md:sticky md:top-0 md:z-10 dark:bg-white/10">
+                <Card class="mb-8 bg-white/40 backdrop-blur dark:bg-white/10">
                     <CardHeader>
                         <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                             <div class="min-w-0">
@@ -97,9 +97,9 @@ function submit() {
                                     required
                                     :class="[form.errors.pr_url && 'border-red-500 focus:border-red-500']"
                                 />
-                                <div class="rounded-lg bg-white/40 p-4 backdrop-blur md:sticky md:top-0 md:z-10 dark:bg-white/10">
+                                <div class="rounded-lg bg-white/40 p-4 backdrop-blur dark:bg-white/10">
                                     <p class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Your Pull Request/Merge Request must be submitted to:</p>
-                                    <p class="rounded-2xl bg-white/40 p-4 backdrop-blur md:sticky md:top-0 md:z-10 dark:bg-white/10">
+                                    <p class="rounded-2xl bg-white/40 p-4 backdrop-blur dark:bg-white/10">
                                         {{ bounty.issue?.repo?.url || 'Repository URL not available' }}
                                     </p>
                                     <p class="mt-2 text-xs text-gray-600 dark:text-gray-400">

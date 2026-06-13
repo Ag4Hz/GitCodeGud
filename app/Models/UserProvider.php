@@ -13,6 +13,7 @@ class UserProvider extends Model
         'provider',
         'provider_id',
         'provider_username',
+
         'provider_email',
         'nickname',
         'avatar',
@@ -21,7 +22,7 @@ class UserProvider extends Model
     ];
 
     protected $casts = [
-        'token'         => 'encrypted',
+        'token' => 'encrypted',
         'refresh_token' => 'encrypted',
     ];
 
