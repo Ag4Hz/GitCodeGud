@@ -2,12 +2,14 @@
 import UserRow from '@/components/UserRow.vue';
 import { useXP } from '@/composables/useXP';
 import { Link, router } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import echo from '@/echo';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+
 
 type User = {
     id: number;
     nickname: string;
-    avatar: string;
+    avatar: string | { url: string; provider: string; label: string };
     name: string;
     xp: number;
     skill_xp?: number | null;
@@ -35,17 +37,41 @@ const { formatXP } = useXP();
 const goToUser = (id: number) => {
     router.visit(`/users/${id}`, { preserveScroll: true });
 };
-const filteredUsers = computed(() => {
-    if (props.selectedLanguage) {
-        return props.users.data.filter((u) => (u.skill_xp ?? 0) > 0);
-    }
-    return props.users.data;
-});
 
 const showLevel = computed(() => !!props.selectedLanguage);
 const xpHeader = computed(() => (showLevel.value ? `XP${props.selectedLanguage ? ` (${props.selectedLanguage})` : ''}` : 'XP'));
 
 const displayXP = (user: User) => (showLevel.value ? formatXP(user.skill_xp ?? 0) : formatXP(user.xp));
+
+
+onMounted(() => {
+    echo.channel('leaderboard')
+        .listen('LeaderboardUpdated', (e: any) => {
+            const idx = localLeaderboardUsers.value.data.findIndex((u) => u.id === e.user_id);
+            if (idx !== -1) {
+                localLeaderboardUsers.value.data[idx].xp = e.new_xp;
+                localLeaderboardUsers.value.data.sort((a, b) => b.xp - a.xp);
+            }
+        });
+});
+
+onUnmounted(() => {
+    echo.leaveChannel('leaderboard');
+});
+
+const localLeaderboardUsers = ref(props.users);
+
+watch(() => props.users, (newVal) => {
+    localLeaderboardUsers.value = newVal;
+});
+
+const filteredUsers = computed(() => {
+    if (props.selectedLanguage) {
+        return localLeaderboardUsers.value.data.filter((u) => (u.skill_xp ?? 0) > 0);
+    }
+    return localLeaderboardUsers.value.data;
+});
+
 </script>
 
 <template>
@@ -92,7 +118,7 @@ const displayXP = (user: User) => (showLevel.value ? formatXP(user.skill_xp ?? 0
                             <div class="min-w-0 truncate">
                                 <ul class="m-0 list-none p-0">
                                     <UserRow
-                                        :user="{ id: user.id, nickname: user.nickname, avatar: user.avatar, name: user.name, providers: user.providers }"
+                                        :user="{ id: user.id, nickname: user.nickname,  avatar: typeof user.avatar === 'string' ? undefined : user.avatar, name: user.name, providers: user.providers }"
                                         :rank="(user as any).rank"
                                         :active="false"
                                         :order-direction="props.sortDir"

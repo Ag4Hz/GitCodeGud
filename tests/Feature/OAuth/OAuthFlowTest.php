@@ -4,7 +4,6 @@ use App\Models\User;
 use App\Models\UserProvider;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
-use Mockery;
 use Tests\Support\FakeSocialiteUser;
 
 function socialiteDriverMockForRedirect(string $provider, array $expectedScopes): void
@@ -21,6 +20,12 @@ function socialiteDriverMockForRedirect(string $provider, array $expectedScopes)
         ->with($expectedScopes)
         ->andReturnSelf();
 
+    if (in_array($provider, ['gitlab', 'bitbucket'])) {
+        $driver->shouldReceive('stateless')
+            ->once()
+            ->andReturnSelf();
+    }
+
     $driver->shouldReceive('redirect')
         ->once()
         ->andReturn(redirect('https://example.com/oauth/' . $provider));
@@ -32,8 +37,14 @@ function socialiteDriverMockForCallback(string $provider, FakeSocialiteUser $pro
 
     Socialite::shouldReceive('driver')
         ->once()
-        ->with($provider)
+        ->with($provider === 'jira' ? 'atlassian' : $provider)
         ->andReturn($driver);
+
+    if (in_array($provider, ['gitlab', 'bitbucket'])) {
+        $driver->shouldReceive('stateless')
+            ->once()
+            ->andReturnSelf();
+    }
 
     $driver->shouldReceive('user')
         ->once()
@@ -49,7 +60,7 @@ describe('OAuth redirect', function () {
     });
 
     it('user can login with GitLab (redirect endpoint returns redirect)', function () {
-        socialiteDriverMockForRedirect('gitlab', ['read_user', 'read_api']);
+        socialiteDriverMockForRedirect('gitlab', ['read_user', 'api']);
 
         $this->get(route('oauth.redirect', ['provider' => 'gitlab'], absolute: false))
             ->assertRedirect('https://example.com/oauth/gitlab');
@@ -96,9 +107,14 @@ describe('OAuth callback (login/registration flow)', function () {
             'provider' => $provider,
             'provider_id' => 'p-1',
             'provider_email' => 'new-oauth@example.com',
-            'token' => 'token-a',
-            'refresh_token' => 'refresh-a',
         ]);
+
+        $userProvider = UserProvider::where('user_id', $user->id)
+            ->where('provider', $provider)
+            ->firstOrFail();
+
+        expect($userProvider->token)->toBe('token-a');
+        expect($userProvider->refresh_token)->toBe('refresh-a');
     });
 
     it('OAuth links to existing user by email match', function () {
@@ -131,9 +147,14 @@ describe('OAuth callback (login/registration flow)', function () {
             'provider' => $provider,
             'provider_id' => 'p-2',
             'provider_email' => 'existing@example.com',
-            'token' => 'token-b',
-            'refresh_token' => null,
         ]);
+
+        $userProvider = UserProvider::where('user_id', $existing->id)
+            ->where('provider', $provider)
+            ->firstOrFail();
+
+        expect($userProvider->token)->toBe('token-b');
+        expect($userProvider->refresh_token)->toBeNull();
     });
 
     it('OAuth updates provider tokens on re-authentication', function () {
@@ -243,4 +264,3 @@ describe('OAuth callback (linking additional account while authenticated)', func
         ]);
     });
 });
-
