@@ -33,11 +33,6 @@ class ProviderRedirectController extends Controller
 
             return $driver->redirect();
         } catch (\Exception $e) {
-            \Log::error("OAuth redirect error for {$provider}: " . $e->getMessage(), [
-                'exception' => class_basename($e),
-                'file'      => $e->getFile(),
-                'line'      => $e->getLine(),
-            ]);
             return redirect(route('login'))->withErrors(['provider' => "Unable to connect to {$provider}."]);
         }
     }
