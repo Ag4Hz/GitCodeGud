@@ -1,21 +1,21 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AiBountyEstimatorController;
 use App\Http\Controllers\BountyController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FollowerController;
+use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\OrganizationInviteController;
 use App\Http\Controllers\OrganizationLeaderboardController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\LeaderboardController;
-use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\SkillController;
 use App\Http\Controllers\SubmissionController;
 use App\Http\Controllers\SubmissionStatusController;
-use App\Http\Controllers\ReviewController;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
-use Inertia\Inertia;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', [DashboardController::class, 'index'])->name('home');
 Route::get('/dashboard', [DashboardController::class, 'index'])
@@ -31,6 +31,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/users/{user}/follow', [FollowerController::class, 'destroy'])->name('users.unfollow');
 
     Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+    Route::post('/api/bounties/estimate-xp', [AiBountyEstimatorController::class, 'estimate'])->name('bounties.estimate-xp');
 });
 
 Route::middleware('auth')->group(function () {
@@ -43,7 +44,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/profile/sync-bitbucket-skills', [SkillController::class, 'syncBitbucket'])
         ->name('profile.sync-bitbucket-skills');
 });
-
 
 Route::middleware('auth')->group(function () {
     Route::get('/bounties/{bounty}/submit', [SubmissionController::class, 'create'])->name('submissions.create');
@@ -108,5 +108,5 @@ Route::get('/api/xp-settings/last-update', function () {
     return response()->json(['updated_at' => $latest]);
 });
 
-require __DIR__ . '/settings.php';
-require __DIR__ . '/auth.php';
+require __DIR__.'/settings.php';
+require __DIR__.'/auth.php';
